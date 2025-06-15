@@ -1,0 +1,139 @@
+import { Button } from "@/components/ui/button";
+import { CircleArrowLeft } from "lucide-react";
+import { Link, useParams } from "react-router-dom";
+import { UseLayout } from "@/Actions/LayoutAction";
+import { useEffect, useState } from "react";
+import { Form } from "@/components/ui/form";
+import { Ring } from "ldrs/react";
+import "ldrs/react/Ring.css";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { ScholarEdit } from "@/Actions/ScholarAction";
+import { Toaster } from "sonner";
+import Elegibility from "../ScholarForm/Eligibility";
+import Incentive from "../ScholarForm/Incentive";
+import Training from "../ScholarForm/Training";
+import Beneficiary from "../ScholarForm/Beneficiary";
+import AdditionalInformation from "../ScholarForm/AddtionalInfo/AdditionalInformation";
+import Location from "../ScholarForm/Location";
+import PersonalInformation from "../ScholarForm/PersonalInformation";
+import { ScholarformSchema } from "../../../Validation/CreateScholarValidation";
+import LoadingScreen from "@/LoadingScreen";
+import ScholarValueSet from "./ScholarValueSet";
+import { useCreateScholarForm } from "@/forms/CreateScholarForm";
+
+export default function EditScholar() {
+    const { setItem, setBItem } = UseLayout();
+    const [loading, setLoading] = useState(false);
+    const { scholarData, getScholarData, clearScholarData, update } =
+        ScholarEdit();
+    const { form, setFormBulk } = useCreateScholarForm();
+
+    const id = useParams().id;
+
+    useEffect(() => {
+        setItem("Scholars");
+        setBItem("Edit");
+        clearScholarData();
+        getScholarData(id);
+    }, []);
+
+    const defaultValues = {
+        first_name: "",
+        name_on_id: "",
+        id_no: "",
+        benificiary_name: "",
+        relationship: "",
+        classification: "",
+        philhealth_no: "",
+        birth_date: "",
+        civil_status: "",
+        complete_address: "",
+        middle_name: "",
+        last_name: "",
+        sex: "",
+        contact_number: "",
+        district_id: "",
+        citymuni_id: "",
+        barangay_id: "",
+        status: "",
+        bns_type: "",
+        place_of_assignment: "",
+        educational_attainment: "",
+        first_employment_date: "",
+        fund: "",
+        incentive_prov: "",
+        incentive_mun: "",
+        incentive_brgy: "",
+    };
+
+    const scholarForm = useForm<any>({
+        resolver: zodResolver(ScholarformSchema),
+        defaultValues: defaultValues,
+    });
+
+    useEffect(() => {
+        if (scholarData) {
+            const updated = ScholarValueSet({ scholarData, defaultValues });
+            scholarForm.reset(updated);
+            setTimeout(() => {
+                setFormBulk(updated);
+            }, 100);
+        }
+    }, [scholarData]);
+
+    const handleSubmit = () => {
+        update({ form, setLoading, id, clearScholarData });
+    };
+
+    if (!scholarData) return <LoadingScreen />;
+    return (
+        <>
+            <Toaster />
+            <title>BNS | Edit Scholar</title>
+            <Link to={"/scholars"}>
+                <Button variant={"primary"} className="text-xs h-8">
+                    <CircleArrowLeft className="w-8" /> Back
+                </Button>
+            </Link>
+            <Form {...scholarForm}>
+                <form onSubmit={scholarForm.handleSubmit(handleSubmit)}>
+                    <PersonalInformation
+                        scholarForm={scholarForm}
+                        scholarData={scholarData}
+                    />
+                    <Location
+                        scholarForm={scholarForm}
+                        scholarData={scholarData}
+                    />
+                    <AdditionalInformation />
+                    <Beneficiary scholarForm={scholarForm} />
+                    <Incentive scholarForm={scholarForm} />
+                    <div className="flex gap-5">
+                        <Training />
+                        <Elegibility />
+                    </div>
+                    <center>
+                        <Button
+                            disabled={loading}
+                            className="mt-4 disabled:cursor-not-allowed"
+                            variant={"warning"}
+                        >
+                            {loading ? (
+                                <Ring
+                                    size="25"
+                                    stroke="5"
+                                    bgOpacity="0"
+                                    speed="2"
+                                    color="white"
+                                />
+                            ) : (
+                                "Update"
+                            )}
+                        </Button>
+                    </center>
+                </form>
+            </Form>
+        </>
+    );
+}
