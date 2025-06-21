@@ -1,3 +1,11 @@
+This is Barangay Nutrition Scholar System. 
+
+This project has already a template, which an estimate of 20% of the files are already finished, or just need a modification
+I didn't start the project but I modified almost all of it.
+
+I'm currently converting this into a react front-end. It is currently not finished, and I just recently uploaded it.
+Thank you for reading this! Happy viewing!
+
 <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
 <p align="center">
