@@ -53,7 +53,7 @@ export default function Training({trainings, setTrainings}: any) {
                                                 placeholder="--Training Name--"
                                                 type="text"
                                                 required
-                                                // value={training.id}
+                                                value={training.name}
                                                 onInput={(e: any) =>
                                                     updateTraining(
                                                         "name",
@@ -69,6 +69,7 @@ export default function Training({trainings, setTrainings}: any) {
                                                 placeholder="--Date--"
                                                 type="date"
                                                 required
+                                                value={training.date}
                                                   onInput={(e: any) =>
                                                     updateTraining(
                                                         "date",
@@ -86,6 +87,7 @@ export default function Training({trainings, setTrainings}: any) {
                                                 placeholder="--Trainor--"
                                                 type="text"
                                                 required
+                                                value={training.trainor}
                                                   onInput={(e: any) =>
                                                     updateTraining(
                                                         "trainor",

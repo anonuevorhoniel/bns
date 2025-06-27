@@ -25,6 +25,7 @@ class APIController extends Controller
 {
     public function getMunicipalities(Request $request)
     {
+        return response()->json($request->all());
         $district = $request->district;
         if (Auth::user()->classification == "Field Officer") {
             $data = DB::table('tbl_assignments as a')
@@ -36,7 +37,7 @@ class APIController extends Controller
             $data = Municipality::where('district_no', $district)->get();
         }
 
-        return response()->json( $data);
+        return response()->json($data);
     }
 
     public function getBarangays(Request $request)
@@ -65,18 +66,38 @@ class APIController extends Controller
     {
         # Get Volunteers with Completed Requirements and Accomplishment per Quarter
         # Get all Municipality Volunteers.
+        if (!$request->form) {
+            return;
+        }
+        $fund = $request->form['fund'];
 
         $volunteers = DB::table('tbl_scholars as v')
             ->select('v.id as id', 'v.*', 'b.name', DB::raw('CONCAT(v.last_name, ", ", v.first_name, " ", v.middle_name) as full_name'))
             ->leftJoin('tbl_barangays as b', 'v.barangay_id', 'b.code')
-            ->where('v.citymuni_id', $request->municipality_code)
-            ->where(function ($q) use ($request) {
-                $q->where('fund', 'like', "$request->fund%")
+            ->where('v.citymuni_id', $request->form['municipality_code'])
+            ->where(function ($q) use ($fund) {
+                $q->where('fund', 'like', $fund . "%")
                     ->orWhere('fund', 'like', "BOTH%");
             })
             ->where('v.deleted_at', null)
+            ->when(function () {})
             ->orderBy('v.last_name')
             ->get();
+
+        // $scholar_ids = $volunteers->pluck('id');
+        // $page = $request->page;
+        // $count = (clone $volunteers)->count();
+        // $limit = 8;
+        // $total_page = ceil($count / $limit);
+        // $offset = ($page - 1) * $limit;
+        $year_from = date('Y', strtotime($request->form['from']));
+        $year_to = date('Y', strtotime($request->form['to']));
+
+        // $volunteers = $volunteers
+        //     ->offset($offset)
+        //     ->limit($limit)
+        //     ->get();
+
         $results = array();
 
         $months_array = array('January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December');
@@ -85,10 +106,10 @@ class APIController extends Controller
             $months = ServicePeriod::where('volunteer_id', $volunteer->id)->first();
             $parameters = array(
                 "volunteer_id" => $volunteer->id,
-                "from" => $request->from,
-                "to" => $request->to,
-                "year_from" => $request->year_from,
-                "year_to" => $request->year_to,
+                "from" => $request->form['from'],
+                "to" => $request->form['to'],
+                "year_from" => $year_from,
+                "year_to" => $year_to,
             );
             $service_period = Scholar::getServicePeriodPerRange($parameters);
 
@@ -101,8 +122,18 @@ class APIController extends Controller
                     'months' => $months_array[intval($months->month_from) - 1] . ' ' . $months->year_from . ' - ' . $months_to
                 );
             }
+            // $scholar_ids = $volunteers->pluck('id');
         }
-        return $results;
+        $page = $request->page ?? 1;
+        $count = count($results);
+        $limit = 8;
+        $total_page = ceil($count / $limit);
+        $offset = ($page - 1) * $limit;
+        $year_from = date('Y', strtotime($request->form['from']));
+        $year_to = date('Y', strtotime($request->form['to']));
+        $scholar_ids = array_column($results, 'volunteer_id');
+        $results = array_slice($results, $offset, $limit);
+        return response()->json(compact('results', 'total_page', 'scholar_ids'));
     }
 
     public function getVolunteerRequirementsPerQuarter(Request $request)

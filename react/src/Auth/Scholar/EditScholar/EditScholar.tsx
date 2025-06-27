@@ -28,6 +28,8 @@ export default function EditScholar() {
     const { scholarData, getScholarData, clearScholarData, update } =
         ScholarEdit();
     const { form, setFormBulk } = useCreateScholarForm();
+    const [eligibilities, setEligibilities] = useState([]);
+    const [trainings, setTrainings] = useState<any>([]);
 
     const id = useParams().id;
 
@@ -35,7 +37,7 @@ export default function EditScholar() {
         setItem("Scholars");
         setBItem("Edit");
         clearScholarData();
-        getScholarData(id);
+        getScholarData({id, setEligibilities, setTrainings});
     }, []);
 
     const defaultValues = {
@@ -83,7 +85,7 @@ export default function EditScholar() {
     }, [scholarData]);
 
     const handleSubmit = () => {
-        update({ form, setLoading, id, clearScholarData });
+        update({ form, setLoading, id, eligibilities, trainings });
     };
 
     if (!scholarData) return <LoadingScreen />;
@@ -109,9 +111,15 @@ export default function EditScholar() {
                     <AdditionalInformation />
                     <Beneficiary scholarForm={scholarForm} />
                     <Incentive scholarForm={scholarForm} />
-                    <div className="flex gap-5">
-                        <Training />
-                        <Elegibility />
+                    <div className="grid grid-cols-1 xl:grid-cols-2 lg:grid-cols-2 gap-5 ">
+                        <Training
+                            trainings={trainings}
+                            setTrainings={setTrainings}
+                        />
+                        <Elegibility
+                            eligibilities={eligibilities}
+                            setEligibilities={setEligibilities}
+                        />
                     </div>
                     <center>
                         <Button

@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\APIController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\PayrollController;
+use App\Http\Controllers\RateController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VolunteerController;
 use Illuminate\Http\Request;
@@ -39,5 +41,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::controller(APIController::class)->group(function () {
         Route::post('/getMunicipalities', 'getMunicipalities');
         Route::post('/getBarangays', 'getBarangays');
+    });
+
+    Route::prefix('/rates')->controller(RateController::class)->group(function () {
+        Route::get('/', 'index');
+    });
+
+    Route::post('/getScholars', [APIController::class, 'getCompletedVolunteers']);
+    Route::prefix('/payrolls')->controller(PayrollController::class)->group(function () {
+        Route::post('/store', 'store');
+        Route::post('/', 'index');
     });
 });

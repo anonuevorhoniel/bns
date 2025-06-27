@@ -81,7 +81,6 @@ export default function Scholars() {
                 <Button variant={"link"}>
                     <Upload /> Upload Data
                 </Button>
-
                 <DropdownMenu>
                     <DropdownMenuTrigger
                         className="bg-gradient-to-r from-emerald-400 to-emerald-600 text-white flex rounded-sm p-3 shadow-emerald-500/25 hover:-translate-y-0.5 hover:shadow-xl h-9 

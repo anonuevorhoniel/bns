@@ -3,7 +3,7 @@ import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CirclePlus, ShieldCheck, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect,  } from "react";
 
 export default function Elegibility({eligibilities, setEligibilities}: any) {
 
@@ -15,8 +15,6 @@ export default function Elegibility({eligibilities, setEligibilities}: any) {
     useEffect(() => {
         console.log(eligibilities);
     }, [eligibilities]);
-
-    // const clearEligibilities = () => set({ eligibilities: [] });
 
     const removeEligibilities = (id: any) => {
         let updated = eligibilities.filter((e: any) => e.id != id);
@@ -59,6 +57,7 @@ export default function Elegibility({eligibilities, setEligibilities}: any) {
                                 <Input
                                     placeholder="--Eligibility Name--"
                                     type="text"
+                                    value={ev.value}
                                     onInput={(e: any) => {
                                         updateEligibilities(
                                             ev.id,

@@ -253,10 +253,10 @@ class VolunteerController extends Controller
             // 'incentive_brgy' => 'required',
         ]);
 
-        if ($request->status == 'REPLACEMENT') {
+        if ($request->form['status'] == 'REPLACEMENT') {
             $request->validate([
-                'replacing' => 'required',
-                'replacement_date' => 'required'
+                'form.replacing' => 'required',
+                'form.replacement_date' => 'required'
             ]);
         }
         try {
@@ -334,14 +334,6 @@ class VolunteerController extends Controller
         }
 
         if ($trainings) {
-            // for ($i = 0; $i < $training_count; $i++) {
-            //     $training = new ScholarTraining();
-            //     $training->name = $trainings[$i];
-            //     $training->date = $date_tr[$i];
-            //     $training->trainor = $trainor[$i];
-            //     $training->scholar_id = $scholar->id;
-            //     $training->save();
-            // }
             try {
                 foreach ($trainings as $t) {
                     $training = new ScholarTraining();
@@ -452,7 +444,7 @@ class VolunteerController extends Controller
      */
     public function edit($id)
     {
-        $trainings =  ScholarTraining::where('scholar_id', $id)->get();
+        $trainings =  ScholarTraining::select('id', 'date', 'name', 'scholar_id', 'trainor')->where('scholar_id', $id)->get();
         Scholar::findOrFail($id);
         $scholar = DB::table('tbl_scholars')->where('id', $id)->first();
         $muni_scholars = DB::table('tbl_scholars')
@@ -483,6 +475,7 @@ class VolunteerController extends Controller
         $positions = Position::all();
         $eligibilities = DB::table('tbl_eligibilities')
             ->where('scholar_id', $scholar->id)
+            ->select('id', 'name as value', 'scholar_id')
             ->get();
 
         $sp_exists = DB::table('tbl_service_periods')
@@ -513,32 +506,31 @@ class VolunteerController extends Controller
      */
     public function update(Request $request, $id)
     {
-        // dd($request->all());
         $scholar = Scholar::findOrFail($id);
         $request->validate([
-            'first_name' => 'required',
-            'last_name' => 'required',
-            'citymuni_id' => 'required',
-            'barangay_id' => 'required'
+            'form.first_name' => 'required',
+            'form.last_name' => 'required',
+            'form.citymuni_id' => 'required',
+            'form.barangay_id' => 'required'
         ]);
 
         if ($request->status == 'REPLACEMENT') {
             $request->validate([
-                'replacing' => 'required|exists:tbl_scholars,id',
-                'replacement_date' => 'required|date',
-                'first_employment_date' => 'required|date',
+                'form.replacing' => 'required|exists:tbl_scholars,id',
+                'form.replacement_date' => 'required|date',
+                'form.first_employment_date' => 'required|date',
             ]);
 
             try {
                 DB::table('tbl_scholars')
                     ->where('id', $id)
                     ->update([
-                        'replacement_date' => $request->replacement_date,
-                        'replaced_scholar_id' => $request->replacing
+                        'replacement_date' => $request->form['replacement_date'],
+                        'replaced_scholar_id' => $request->form['replacing']
                     ]);
 
-                $month_from =  date('m', strtotime($request->first_employment_date));
-                $year_from =  date('Y', strtotime($request->first_employment_date));
+                $month_from =  date('m', strtotime($request->form['first_employment_date']));
+                $year_from =  date('Y', strtotime($request->form['first_employment_date']));
 
                 if ($request->service_period_status == "new_service_period") {
 
@@ -546,9 +538,9 @@ class VolunteerController extends Controller
                     $sp->volunteer_id = $id;
                     $sp->month_from = $month_from;
                     $sp->year_from = $year_from;
-                    $sp->month_to = $request->end_employment_date ?  date('m', strtotime($request->end_employment_date)) : 0;
-                    $sp->year_to =  $request->end_employment_date ?  date('Y', strtotime($request->end_employment_date)) : 0;
-                    $sp->status =  $request->end_employment_date ? 'specific' : 'present';
+                    $sp->month_to = $request->form['end_employment_date'] ?  date('m', strtotime($request->form['end_employment_date'])) : 0;
+                    $sp->year_to =  $request->form['end_employment_date'] ?  date('Y', strtotime($request->form['end_employment_date'])) : 0;
+                    $sp->status =  $request->form['end_employment_date'] ? 'specific' : 'present';
                     $sp->save();
                 } elseif ($request->service_period_status == "update_service_period") {
                     $max_id =  DB::table('tbl_service_periods')
@@ -562,9 +554,9 @@ class VolunteerController extends Controller
                             ->update([
                                 'month_from' => $month_from,
                                 'year_from' => $year_from,
-                                'month_to' => $request->end_employment_date ?  date('m', strtotime($request->end_employment_date)) : 0,
-                                'year_to' =>  $request->end_employment_date ?  date('Y', strtotime($request->end_employment_date)) : 0,
-                                'status' => $request->end_employment_date ? 'specific' : 'present'
+                                'month_to' => $request->form['end_employment_date'] ?  date('m', strtotime($request->form['end_employment_date'])) : 0,
+                                'year_to' =>  $request->form['end_employment_date'] ?  date('Y', strtotime($request->form['end_employment_date'])) : 0,
+                                'status' => $request->form['end_employment_date'] ? 'specific' : 'present'
                             ]);
                     }
                 }
@@ -599,78 +591,74 @@ class VolunteerController extends Controller
             $end_employment = null;
 
             if ($request->select_end_employ == "specific") {
-                $end_employment = $request->end_employment_date;
+                $end_employment = $request->form['end_employment_date'];
             }
             DB::table('tbl_scholars')
                 ->where('id', $id)
                 ->update([
-                    'first_name' => $request->first_name,
-                    'middle_name' => $request->middle_name,
-                    'last_name' => $request->last_name,
-                    'name_extension' => $request->name_extension,
-                    'name_on_id' => $request->name_on_id,
-                    'id_no' => $request->id_no,
-                    'citymuni_id' => $request->citymuni_id,
-                    'bns_type' => $request->bns_type,
-                    'barangay_id' => $request->barangay_id,
-                    'complete_address' => $request->complete_address,
-                    'sex' => $request->sex,
-                    'birth_date' => $request->birth_date,
-                    'civil_status' => $request->civil_status,
-                    'educational_attainment' => $request->educational_attainment,
-                    'benificiary_name' => $request->benificiary_name,
-                    'relationship' => $request->relationship,
-                    'district_id' => $request->district_id,
-                    'classification' => $request->classification,
-                    'philhealth_no' => $request->philhealth_no,
-                    'first_employment_date' => $request->first_employment_date,
+                    'first_name' => $request->form['first_name'],
+                    'middle_name' => $request->form['middle_name'],
+                    'last_name' => $request->form['last_name'],
+                    'name_extension' => $request->form['name_extension'],
+                    'name_on_id' => $request->form['name_on_id'],
+                    'id_no' => $request->form['id_no'],
+                    'citymuni_id' => $request->form['citymuni_id'],
+                    'bns_type' => $request->form['bns_type'],
+                    'barangay_id' => $request->form['barangay_id'],
+                    'complete_address' => $request->form['complete_address'],
+                    'sex' => $request->form['sex'],
+                    'birth_date' => $request->form['birth_date'],
+                    'civil_status' => $request->form['civil_status'],
+                    'educational_attainment' => $request->form['educational_attainment'],
+                    'benificiary_name' => $request->form['benificiary_name'],
+                    'relationship' => $request->form['relationship'],
+                    'district_id' => $request->form['district_id'],
+                    'classification' => $request->form['classification'],
+                    'philhealth_no' => $request->form['philhealth_no'],
+                    'first_employment_date' => $request->form['first_employment_date'],
                     'end_employment_date' => $end_employment,
-                    'contact_number' => $request->contact_number,
-                    'status' => $request->status,
+                    'contact_number' => $request->form['contact_number'],
+                    'status' => $request->form['status'],
                     'place_of_assignment' => $place_of_assignment,
-                    'fund' => $request->fund,
-                    'incentive_prov' => $request->incentive_prov,
-                    'incentive_mun' => $request->incentive_mun,
-                    'incentive_brgy' => $request->incentive_brgy,
+                    'fund' => $request->form['fund'],
+                    'incentive_prov' => $request->form['incentive_prov'],
+                    'incentive_mun' => $request->form['incentive_mun'],
+                    'incentive_brgy' => $request->form['incentive_brgy'],
                 ]);
 
             DB::table('tbl_eligibilities')
                 ->where('scholar_id', $id)
                 ->delete();
 
-            if ($request->eligibilities && count($request->eligibilities) > 0) {
-                foreach ($request->eligibilities as $el) {
-                    if ($el != null) {
-                        $eligibility = new Eligibility();
-                        $eligibility->name = $el;
-                        $eligibility->scholar_id = $id;
-                        $eligibility->save();
-                    }
-                }
-            }
-
             DB::table('tbl_scholar_training_name')
                 ->where('scholar_id', $id)
                 ->delete();
-            $trainings = $request->training;
-            $date_tr = $request->date_training;
-            $trainor = $request->trainor;
-            $training_filter = $trainings ? array_filter($trainings) : null;
-            $date_tr_filter = $date_tr ? array_filter($date_tr) : null;
-            $trainor_filter = $trainor ? array_filter($trainor) : null;
 
-            if ($trainings && count($trainings) > 0 && $training_filter != null && $date_tr_filter != null && $trainor_filter != null) {
-                $training_count = count($trainings);
-                for ($i = 0; $i < $training_count; $i++) {
-                    $training = new ScholarTraining();
-                    $training->name = $trainings[$i];
-                    $training->date = $date_tr[$i];
-                    $training->trainor = $trainor[$i];
-                    $training->scholar_id = $scholar->id;
-                    $training->save();
+            $eligibilities = $request->eligibilities;
+            $trainings = $request->trainings;
+            if ($eligibilities && count($eligibilities) > 0) {
+                foreach ($eligibilities as $el) {
+                    $eligibility = new Eligibility();
+                    $eligibility->scholar_id = $scholar->id;
+                    $eligibility->name = $el["value"];
+                    $eligibility->save();
                 }
             }
 
+            if ($trainings) {
+                try {
+                    foreach ($trainings as $t) {
+                        $training = new ScholarTraining();
+                        $training->scholar_id = $scholar->id;
+                        $training->name = $t['name'];
+                        $training->date = $t['date'];
+                        $training->trainor = $t['trainor'];
+                        $training->save();
+                    }
+                } catch (Exception $e) {
+                    return response()->json($e->getMessage());
+                }
+            }
 
             return response()->json(['message' => 'Scholar updated successfully']);
         } catch (Exception $e) {

@@ -1,5 +1,5 @@
 import { UseMuni } from "@/Actions/MunicipalityAction";
-import { UseGetScholar } from "@/Actions/ScholarAction";
+import { UsePayroll } from "@/Actions/PayrollAction";
 import { Button } from "@/components/ui/button";
 import {
     Command,
@@ -18,14 +18,24 @@ import { cn } from "@/lib/utils";
 import { Building2, Check, ChevronsUpDown } from "lucide-react";
 import { useEffect, useState } from "react";
 
-export default function MunicipalityDropDown({ open, setOpen }: any) {
+export default function MunicipalityDropDown({
+    open,
+    setOpen,
+    field,
+}: any) {
     const { allMuni, getAllMuni } = UseMuni();
     const [muniValue, setmuniValue] = useState<any>();
-    const [code, setCode] = useState<any>();
+    const [code, setCode] = useState();
+    const {setForm} = UsePayroll();
 
     useEffect(() => {
         getAllMuni();
     }, []);
+
+    useEffect(() => {
+        field.onChange(code)
+        setForm({name: "municipality_code", value: code})
+    }, [code]);
 
     return (
         <>

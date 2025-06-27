@@ -20,14 +20,8 @@ class RateController extends Controller
      */
     public function index()
     {
-        $page = [
-            'name'      =>  'Rate',
-            'title'     =>  'Rate Management',
-            'crumb'     =>  array('Rates' => '/rates')
-        ];
-
         $rates = Rate::all();
-        return view('rates.index', compact('page', 'rates'));
+        return response()->json(compact( 'rates'));
     }
 
     /**

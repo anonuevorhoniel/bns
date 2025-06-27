@@ -91,10 +91,20 @@ export const UseBarangay = create<UseBarangayType>((set: any) => ({
 }));
 
 export const ScholarStore = create<any>(() => ({
-    store: async (form: any, setLoading: any, nav: any, eligibilities: any, trainings: any ) => {
+    store: async (
+        form: any,
+        setLoading: any,
+        nav: any,
+        eligibilities: any,
+        trainings: any
+    ) => {
         setLoading(true);
         try {
-            const r = await ax.post("/scholars/store", {form, eligibilities, trainings});
+            const r = await ax.post("/scholars/store", {
+                form,
+                eligibilities,
+                trainings,
+            });
             nav("/scholars");
             setTimeout(
                 () => toast.success("Success", { description: r.data.message }),
@@ -112,20 +122,23 @@ export const ScholarStore = create<any>(() => ({
 export const ScholarEdit = create<any>((set: any, get: any) => ({
     scholarData: null,
     clearScholarData: () => set({ scholarData: null }),
-    getScholarData: async (id: any) => {
+    getScholarData: async ({id, setEligibilities, setTrainings}: any) => {
         try {
             const r = await ax.get(`/scholars/${id}/edit`);
             set({ scholarData: r.data.scholar });
-            console.log(r.data.scholar);
+            setEligibilities(r.data.eligibilities);
+            setTrainings(r.data.trainings);
         } catch (err) {
             console.log(err);
         }
     },
 
-    update: async ({ form, setLoading, id }: any) => {
+    update: async ({ form, setLoading, id, eligibilities, trainings }: any) => {
+        console.log(eligibilities);
         setLoading(true);
         try {
-            const r = await ax.post(`/scholars/${id}/update`, form);
+            const r = await ax.post(`/scholars/${id}/update`, {form, eligibilities, trainings});
+            console.log(r.data);
             toast.success("Updated", { description: r.data.message });
         } catch (err: any) {
             console.log(err);
@@ -160,7 +173,26 @@ export const UseScholarShow = create<any>((set: any) => ({
     },
 }));
 
-export const AdditionalInfo = create<any>((set: any) => ({
+export const AdditionalInfo = create<any>((set: any, get: any) => ({
     show: false,
-    setShow: (e: boolean) => set({show: e})
-}))
+    code: null,
+    search: null,
+    page: 1,
+
+    setCode: (code: any) => set({ code: code }),
+    setSearch: (search: any) => set({ search: search }),
+    setPage: (page: any) => set({ page: page }),
+    setShow: (e: boolean) => set({ show: e }),
+
+    getScholars: async () => {
+        try {
+            const r = await ax.post("/scholars/get", {
+            code: get().code,
+            page: get().page,
+            search: get().search,
+        });
+        } catch (err) {
+            console.log(err);
+        }
+    },
+}));

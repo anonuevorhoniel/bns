@@ -49,7 +49,6 @@ export const useCreateScholarForm = create<any>((set: any, get: any) => ({
     },
 
     setFormBulk: (payload: any) => {
-        console.log(payload);
         set((state: any) => ({
             form: { ...state.form, ...payload },
         }));

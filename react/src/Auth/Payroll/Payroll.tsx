@@ -1,4 +1,5 @@
 import { UseLayout } from "@/Actions/LayoutAction";
+import { UsePayroll } from "@/Actions/PayrollAction";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,18 +11,31 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
+import LoadingScreen from "@/LoadingScreen";
 import AutoPagination from "@/Reusable/AutoPagination";
 import { ChartArea, CirclePlus } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
 export default function Payroll() {
-    const {setItem, setBItem} = UseLayout();
-     useEffect(() => {
-            setItem("Payrolls");
-            setBItem("");
-        }, []);
-        
+    const { setItem, setBItem } = UseLayout();
+    const { payrolls, getPayroll, indexPage } = UsePayroll();
+    const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        setItem("Payrolls");
+        setBItem("");
+    }, []);
+
+    useEffect(() => {
+        getPayroll(setLoading);
+        console.log(payrolls);
+    }, [indexPage]);
+
+    useEffect(() => {
+        console.log(payrolls?.length);
+    }, [payrolls]);
+
     return (
         <>
             <title>BNS | Payroll</title>
@@ -48,7 +62,8 @@ export default function Payroll() {
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <div className="border-1">
+                    <div className="border-1 relative">
+                        {loading && <LoadingScreen />}
                         <Table>
                             <TableHeader>
                                 <TableRow>
@@ -67,34 +82,34 @@ export default function Payroll() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                <TableRow>
-                                    <TableCell className="text-center">
-                                        adasd
-                                    </TableCell>
-                                    <TableCell className="text-center">
-                                        adasd
-                                    </TableCell>
-                                    <TableCell className="text-center">
-                                        adasd
-                                    </TableCell>
-                                    <TableCell className="text-center">
-                                        adasd
-                                    </TableCell>
-                                </TableRow>
-                                <TableRow>
-                                    <TableCell className="text-center">
-                                        adasd
-                                    </TableCell>
-                                    <TableCell className="text-center">
-                                        adasd
-                                    </TableCell>
-                                    <TableCell className="text-center">
-                                        adasd
-                                    </TableCell>
-                                    <TableCell className="text-center">
-                                        adasd
-                                    </TableCell>
-                                </TableRow>
+                                {payrolls &&
+                                    payrolls.map((p: any) => {
+                                        return (
+                                            <TableRow>
+                                                <TableCell className="text-center">
+                                                    {p.fund}
+                                                </TableCell>
+                                                <TableCell className="text-center">
+                                                    {p.created_at}
+                                                </TableCell>
+                                                <TableCell className="text-center">
+                                                    {p.name}
+                                                </TableCell>
+                                                <TableCell className="text-center">
+                                                    {p.period_cover}
+                                                </TableCell>
+                                            </TableRow>
+                                        );
+                                    })}
+                                {payrolls?.length > 0 ? (
+                                    ""
+                                ) : (
+                                    <TableRow>
+                                        <TableCell colSpan={4} className="text-center">
+                                            No Payrolls
+                                        </TableCell>
+                                    </TableRow>
+                                )}
                             </TableBody>
                         </Table>
                     </div>

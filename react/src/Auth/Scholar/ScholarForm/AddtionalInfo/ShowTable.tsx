@@ -8,9 +8,12 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
-import { AdditionalInfo, UseGetScholar, UseScholarShow } from "@/Actions/ScholarAction";
+import {
+    AdditionalInfo,
+    UseGetScholar,
+    UseScholarShow,
+} from "@/Actions/ScholarAction";
 import "ldrs/react/Ring2.css";
-import LabelLoad from "@/Reusable/LabelLoad";
 import { useMediaQuery } from "usehooks-ts";
 import {
     Drawer,
@@ -21,24 +24,26 @@ import {
     DrawerHeader,
     DrawerTitle,
 } from "@/components/ui/drawer";
-import { Label } from "@/components/ui/label";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import AddInfoTable from "./AddInfoTable";
+import { Input } from "@/components/ui/input";
+import SelectCode from "../SelectCode";
 
 export function ShowTable() {
     const isDesktop = useMediaQuery("(min-width: 768px)");
-
-    const { fullName } = UseScholarShow();
-    const {show, setShow} = AdditionalInfo();
-    const {setCode} = UseGetScholar();
+    const { show, setShow } = AdditionalInfo();
+    // const { setCode } = UseGetScholar();
+    const [open, setOpen] = useState();
+    const {code, setCode} = AdditionalInfo();
 
     useEffect(() => {
-        setCode()
-    }, [])
-    
+        setCode();
+    }, []);
 
     const content = (
         <>
             <div className="h-[60vh] overflow-auto">
+                <AddInfoTable />
             </div>
         </>
     );
@@ -50,6 +55,10 @@ export function ShowTable() {
                     <DialogDescription />
                     <DialogHeader />
                     <DialogTitle />
+                    <div className="grid gap-3 grid-cols-2 gap-3 ">
+                        <SelectCode open={open} setOpen={setOpen} />
+                        <Input placeholder="Search" />
+                    </div>
                     {content}
                     <DialogFooter>
                         <DialogClose asChild>
@@ -65,26 +74,12 @@ export function ShowTable() {
             <Drawer open={show} onOpenChange={setShow}>
                 <DrawerContent>
                     <DrawerHeader>
-                        <DrawerTitle>
-                            <div className="flex gap-3 border-1 rounded-lg p-3 shadow-lg -translate-y-0.5 justify-center items-center ">
-                                <div>
-                                    <img
-                                        src={user}
-                                        className="h-10 rounded-full shadow-lg"
-                                        alt=""
-                                    />
-                                </div>
-                                <div>
-                                    <Label className="font-bold text-shadow-md">
-                                        <LabelLoad
-                                            value={fullName && fullName}
-                                        />
-                                    </Label>
-                                </div>
-                            </div>
-                        </DrawerTitle>
+                        <DrawerTitle />
                         <DrawerDescription />
                     </DrawerHeader>
+                     <div className="grid gap-3 grid-cols-2 gap-3 ">
+                        <Input placeholder="Search" />
+                    </div>
                     {content}
                     <DrawerFooter>
                         <DrawerClose className="border-1 shadow-lg rounded-lg p-2">

@@ -31,14 +31,13 @@ class PayrollController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        $page = [
-            'name'      =>  'Payroll',
-            'title'     =>  'Payroll Management',
-            'crumb'     =>  array('Payrolls' => '/payrolls')
-        ];
-
+        $page = $request->page;
+        $limit = 10;
+        $total_payroll = DB::table('tbl_payrolls')->count();
+        $total_page = ceil($total_payroll / $limit);
+        $offset = ($page - 1) * $limit;
         $payrolls = DB::table('tbl_payrolls as p')
             ->select(
                 'p.id as id',
@@ -52,9 +51,18 @@ class PayrollController extends Controller
                 'p.fund'
             )
             ->leftJoin('tbl_municipalities as m', 'p.municipality_code', 'm.code')
+            ->limit($limit)
+            ->offset($offset)
             ->get();
+
+        $payrolls->map(function($p) {
+            $from = "$p->year_from-$p->month_from"; 
+            $to = "$p->year_to-$p->month_to"; 
+            $p->period_cover = date('F Y', strtotime($from)) . " - " . date('F Y', strtotime($to));
+            $p->created_at = date('F j, Y | h:i:s', strtotime($p->created_at));
+        });
         // dd($payrolls);
-        return view('payrolls.index', compact('page', 'payrolls'));
+        return response()->json(compact('payrolls'));
     }
 
     /**
@@ -254,37 +262,32 @@ class PayrollController extends Controller
      */
     public function store(Request $request)
     {
-        // dd($request->all());
         $request->validate([
-            'rate_id' => 'required'
+            'form.rate' => 'required'
         ]);
+
+        $scholars = $request->scholars;
+
         // Validate that volunteers are selected
-        if (empty($request->volunteers)) {
+        if (empty($scholars)) {
             // If no volunteers are selected, redirect back with an error message
             return back()->withErrors('Minimum of one Scholar selected is required');
         }
+
+        $month_from = date('m', strtotime($request->form['from']));
+        $month_to = date('m', strtotime($request->form['to']));
+        $year_from = date('Y', strtotime($request->form['from']));
+        $year_to = date('Y', strtotime($request->form['to']));
+        $rate = $request->form['rate'];
+        $fund = $request->form['fund'];
+        $municipality_code = $request->form['municipality_code'];
 
         #Get latest rate.
         #Get active Signatories.
         DB::beginTransaction();
         try {
-            // dd($request->month_from, $request->month_to);
-            $payroll_period_months = range($request->month_from, $request->month_to);
-            // $rates = Rate::whereIn('month', $payroll_period_months)
-            //     ->where('year', date('Y'))
-            //     ->orderBy('month', 'asc')
-            //     ->get();
-            // // dd($rates);
-
-            // if ($rates->count() == 0) {
-            //     $rate_id = Rate::max('id');
-            //     $rate = Rate::find($rate_id);
-            // } else if ($rates->count() == 1) {
-            //     $rate = $rates[0];
-            // } else {
-            //     return back()->withErrors("You are trying to generate a payroll with more than one rate setting");
-            // }
-            $rate_id = $request->rate_id;
+            $payroll_period_months = range($month_from, $month_to);
+            $rate_id = $rate;
             $rate = Rate::find($rate_id);
 
             $signatories = Signatory::where('status', 1)->get();
@@ -297,18 +300,18 @@ class PayrollController extends Controller
             $payroll = new Payroll;
             $payroll->rate_id = $rate->id;
             // $payroll->quarter_id = Quarter::isActive();
-            $payroll->month_from = $request->month_from;
-            $payroll->month_to = $request->month_to;
-            $payroll->year_from = $request->year_from;
-            $payroll->year_to = $request->year_to;
+            $payroll->month_from = $month_from;
+            $payroll->month_to = $month_to;
+            $payroll->year_from = $year_from;
+            $payroll->year_to = $year_to;
             $payroll->signatories = json_encode($signatory);
-            $payroll->municipality_code = $request->municipality_code;
-            $payroll->fund = $request->fund;
+            $payroll->municipality_code = $municipality_code;
+            $payroll->fund = $fund;
             $payroll->save();
 
             AuditTrail::createTrail("Create Payroll", $payroll);
             $try = array();
-            $total_request_volunteers = array_chunk($request->volunteers, 100);
+            $total_request_volunteers = array_chunk($scholars, 100);
 
             foreach ($total_request_volunteers[0] as $volunteer_id) {
                 #Get Service Period Range
@@ -318,24 +321,21 @@ class PayrollController extends Controller
                 $vmf = ServicePeriod::where('volunteer_id', $volunteer_id)
                     ->where('year_from', Quarter::currentYear())
                     ->min('month_from');
-                // dd($vmf);
 
                 $present = ServicePeriod::where('status', 'present')
                     ->where('volunteer_id', $volunteer_id)->get();
-                // dd($present);
+
                 if ($present->count() > 0) {
                     $vmt = $request->month_to;
-                    //if more than one na may to present
                 } else {
                     $vmt = ServicePeriod::where('volunteer_id', $volunteer_id)
                         ->where('year_to', Quarter::currentYear())
                         ->max('month_to');
-                    // dd($vmt);
                 }
                 $parameters = array(
                     "volunteer_id" => $volunteer_id,
-                    "from" => Carbon::now()->year . '-' . $request->month_from,
-                    "to" => Carbon::now()->year . '-' . $request->month_to,
+                    "from" => Carbon::now()->year . '-' . $month_from,
+                    "to" => Carbon::now()->year . '-' . $month_to,
                 );
 
                 $service_period = Volunteer::getServicePeriodPerRange($parameters);
@@ -348,8 +348,8 @@ class PayrollController extends Controller
                     $payroll_detail = new PayrollDetails;
                     $payroll_detail->volunteer_id = $volunteer_id;
                     $payroll_detail->payroll_id = $payroll->id;
-                    $payroll_detail->month_from = intval($request->month_from);
-                    $payroll_detail->month_to = intval($request->month_to);
+                    $payroll_detail->month_from = intval($month_from);
+                    $payroll_detail->month_to = intval($month_to);
                     $payroll_detail->total = $rate->rate * $count_months;
                     $payroll_detail->save();
                 }
@@ -363,7 +363,7 @@ class PayrollController extends Controller
                 ->update(['grand_total' => $grand_total]);
 
             DB::commit();
-            return redirect('/payrolls/' . $payroll->id)->with('success', 'A new payroll has been added.');
+            return response()->json(['success' => 'A new payroll has been added.']);
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->withErrors($e->getMessage());

@@ -16,16 +16,15 @@ import { Button } from "@/components/ui/button";
 import { Building2, Check, ChevronsUpDown, Info } from "lucide-react";
 import { UseGetScholar } from "@/Actions/ScholarAction";
 import { UseMuni } from "@/Actions/MunicipalityAction";
+import { useEffect } from "react";
 
-export default function SelectCode({open, setOpen} : any) {
+export default function SelectCode({ open, setOpen }: any) {
+    const { allMuni, getAllMuni } = UseMuni();
+    const { code, setCode, muniValue, setmuniValue } = UseGetScholar();
 
-    const { allMuni} = UseMuni();
-    const {
-        code,
-        setCode,
-        muniValue,
-        setmuniValue,
-    } = UseGetScholar();
+    useEffect(() => {
+        getAllMuni();
+    }, []);
 
     return (
         <div className="flex flex-col gap-1">
