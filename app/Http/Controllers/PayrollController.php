@@ -34,7 +34,7 @@ class PayrollController extends Controller
     public function index(Request $request)
     {
         $page = $request->page;
-        $limit = 10;
+        $limit = 8;
         $total_payroll = DB::table('tbl_payrolls')->count();
         $total_page = ceil($total_payroll / $limit);
         $offset = ($page - 1) * $limit;
@@ -55,14 +55,14 @@ class PayrollController extends Controller
             ->offset($offset)
             ->get();
 
-        $payrolls->map(function($p) {
-            $from = "$p->year_from-$p->month_from"; 
-            $to = "$p->year_to-$p->month_to"; 
+        $payrolls->map(function ($p) {
+            $from = "$p->year_from-$p->month_from";
+            $to = "$p->year_to-$p->month_to";
             $p->period_cover = date('F Y', strtotime($from)) . " - " . date('F Y', strtotime($to));
             $p->created_at = date('F j, Y | h:i:s', strtotime($p->created_at));
         });
         // dd($payrolls);
-        return response()->json(compact('payrolls'));
+        return response()->json(compact('payrolls', 'total_page'));
     }
 
     /**
@@ -379,12 +379,6 @@ class PayrollController extends Controller
     public function show(Payroll $payroll)
     {
 
-        $page = [
-            'name'      =>  'Payroll',
-            'title'     =>  'Payroll Management',
-            'crumb'     =>  array('Payrolls' => '/payrolls', 'Details' => '')
-        ];
-
         $volunteers = DB::table('tbl_payroll_details as pd')
             ->leftJoin('tbl_scholars as v', 'pd.volunteer_id', 'v.id')
             ->leftjoin('tbl_barangays as b', 'b.code', 'v.barangay_id')
@@ -392,17 +386,16 @@ class PayrollController extends Controller
             ->where('pd.payroll_id', $payroll->id)
             ->orderBy('v.last_name')
             ->select('v.*', 'b.name as barangay_name', 'm.name as municity_name',)
+            ->limit(5)
             ->get();
-
+            
         $rate = Rate::find($payroll->rate_id);
         $signatories = Signatory::whereIn('id', json_decode($payroll->signatories))->get();
-
         $heads = Signatory::where('designation_id', Signatory::HEAD)->get();
         $administrators = Signatory::where('designation_id', Signatory::ADMINISTRATOR)->get();
         $governors = Signatory::where('designation_id', Signatory::GOVERNOR)->get();
         $accountants = Signatory::where('designation_id', Signatory::ACCOUNTANT)->get();
         $months = array('January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December');
-
 
         $volunteers->map(function ($scholar) use ($months) {
             $service_period = DB::table('tbl_service_periods')
@@ -417,15 +410,11 @@ class PayrollController extends Controller
             $scholar->service_period = $month_from . ' to ' . $month_to . ', ' . $year_from;
             return $scholar;
         });
-        // dd($volunteers);
-
         $month_from   = DateTime::createFromFormat('!m', $payroll->month_from)->format('F'); // March
         $month_to   = DateTime::createFromFormat('!m', $payroll->month_to)->format('F');
         $year = Quarter::currentYear();
         $municipality = Municipality::where('code', $payroll->municipality_code)->get();
-        // dd($payroll);
-        return view('payrolls.show', compact(
-            'page',
+        return response()->json(compact(
             'volunteers',
             'rate',
             'payroll',

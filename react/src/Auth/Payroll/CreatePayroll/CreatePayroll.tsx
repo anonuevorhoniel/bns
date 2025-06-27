@@ -29,7 +29,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeftCircle, CirclePlus, UsersRound } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import CreatePayrollTable from "./CreatePayrollTable";
 import AutoPagination from "@/Reusable/AutoPagination";
 import { Toaster } from "sonner";
@@ -46,11 +46,12 @@ export default function CreatePayroll() {
         total_page,
         submitPayroll,
         scholar_ids,
-        form
+        form,
     } = UsePayroll();
     const [loading, setLoading] = useState<boolean>(false);
     const [checked, setChecked] = useState([]);
     const [page, setPage] = useState<number>(1);
+    const nav = useNavigate();
 
     useEffect(() => {
         setItem("Payrolls");
@@ -61,6 +62,10 @@ export default function CreatePayroll() {
     useEffect(() => {
         getScholars({ setLoading, page, pageChange: true });
     }, [page]);
+
+    useEffect(() => {
+        console.log(form);
+    }, [form]);
 
     const defaultValues = {
         from: "",
@@ -80,7 +85,7 @@ export default function CreatePayroll() {
     };
 
     const handleSubmitPayroll = () => {
-        submitPayroll({checked, form});
+        submitPayroll({ checked, form, nav });
     };
 
     return (

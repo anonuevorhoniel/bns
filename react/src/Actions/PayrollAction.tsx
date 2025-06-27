@@ -11,6 +11,7 @@ export const UsePayroll = create<any>((set: any, get: any) => ({
     scholar_ids: [],
     payrolls: null,
     indexPage: 1,
+    totalPage: 0,
 
     setIndexPage: (page: number) => {
         set({ indexPage: page });
@@ -21,8 +22,8 @@ export const UsePayroll = create<any>((set: any, get: any) => ({
         let page = get().indexPage;
         try {
             const r = await ax.post("/payrolls", { page });
-            console.log(r);
             set({ payrolls: r.data.payrolls });
+            set({ totalPage: r.data.total_page });
         } catch (err) {
             console.log(err);
         } finally {
@@ -70,7 +71,11 @@ export const UsePayroll = create<any>((set: any, get: any) => ({
         }));
     },
 
-    submitPayroll: ({ checked, form }: any) => {
+    clearForm: () => {
+        set({ form: null });
+    },
+
+    submitPayroll: ({ checked, form, nav }: any) => {
         if (checked.length == 0) {
             toast.error("None selected", {
                 description: "Please select atleast one scholar",
@@ -81,12 +86,34 @@ export const UsePayroll = create<any>((set: any, get: any) => ({
 
         async function storeScholarPayroll(checked: any, form: any) {
             try {
-                const r = await ax.post("/payrolls/store", {
+                await ax.post("/payrolls/store", {
                     scholars: checked,
                     form,
                 });
+                get().clearForm();
+                nav("/payrolls");
+                setTimeout(() => {
+                    toast.success("Created", { description: "Payroll Added" });
+                }, 100);
+            } catch (err) {
+                console.log(err);
+            }
+        }
+    },
+}));
 
-                console.log(r.data.message);
+export const UseViewPayroll = create<any>((set: any) => ({
+    viewPayroll: false,
+    viewPayrollScholar: null,
+
+    setViewPayroll: async (open: boolean, id: number) => {
+        console.log(id);
+        set({ viewPayroll: open });
+        if (id != undefined) {
+            try {
+                const r = await ax.post(`/payrolls/show/${id}`);
+                console.log(r);
+                set({viewPayrollScholar: r.data.volunteers})
             } catch (err) {
                 console.log(err);
             }

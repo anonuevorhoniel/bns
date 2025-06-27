@@ -30,7 +30,6 @@ export default function AutoPagination({
 
     useEffect(() => {
         if (page > endPage || page < startPage) {
-            console.log("dapat nagset page");
             setPage(startPage);
         }
     }, [totalPage, page, startPage, endPage]);

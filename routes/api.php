@@ -35,7 +35,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/directory/download', 'directory_download');
         Route::post('/masterlist/download', 'masterlist_download');
     });
-
     // /get_completed_volunteers
 
     Route::controller(APIController::class)->group(function () {
@@ -51,5 +50,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('/payrolls')->controller(PayrollController::class)->group(function () {
         Route::post('/store', 'store');
         Route::post('/', 'index');
+        Route::post('/show/{payroll}', 'show');
     });
 });

@@ -3,23 +3,18 @@ import { UsePayroll } from "@/Actions/PayrollAction";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table";
 import LoadingScreen from "@/LoadingScreen";
 import AutoPagination from "@/Reusable/AutoPagination";
-import { ChartArea, CirclePlus } from "lucide-react";
+import { CirclePlus, ScrollText } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-
+import { Toaster } from "sonner";
+import ViewPayroll from "./ViewPayroll";
+import PayrollTable from "./PayrollTable";
 export default function Payroll() {
     const { setItem, setBItem } = UseLayout();
-    const { payrolls, getPayroll, indexPage } = UsePayroll();
+    const { payrolls, getPayroll, indexPage, setIndexPage, totalPage } =
+        UsePayroll();
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
@@ -29,15 +24,12 @@ export default function Payroll() {
 
     useEffect(() => {
         getPayroll(setLoading);
-        console.log(payrolls);
     }, [indexPage]);
-
-    useEffect(() => {
-        console.log(payrolls?.length);
-    }, [payrolls]);
 
     return (
         <>
+            <Toaster />
+            <ViewPayroll />
             <title>BNS | Payroll</title>
             <Card className="p-0 pb-5">
                 <CardHeader className="bg-muted">
@@ -52,7 +44,7 @@ export default function Payroll() {
                                 variant={"outline"}
                                 className="border-yellow-600 text-yellow-600 hover:text-yellow-600"
                             >
-                                <ChartArea />
+                                <ScrollText />
                                 Summary
                             </Button>
                         </div>
@@ -64,57 +56,13 @@ export default function Payroll() {
                 <CardContent>
                     <div className="border-1 relative">
                         {loading && <LoadingScreen />}
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead className="rounded-tl-lg text-center text-black/50">
-                                        Fund
-                                    </TableHead>
-                                    <TableHead className="text-center  text-black/50">
-                                        Date Created
-                                    </TableHead>
-                                    <TableHead className="text-center  text-black/50">
-                                        Municipality
-                                    </TableHead>
-                                    <TableHead className="text-center  text-black/50 rounded-tr-lg">
-                                        Period Covered
-                                    </TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {payrolls &&
-                                    payrolls.map((p: any) => {
-                                        return (
-                                            <TableRow>
-                                                <TableCell className="text-center">
-                                                    {p.fund}
-                                                </TableCell>
-                                                <TableCell className="text-center">
-                                                    {p.created_at}
-                                                </TableCell>
-                                                <TableCell className="text-center">
-                                                    {p.name}
-                                                </TableCell>
-                                                <TableCell className="text-center">
-                                                    {p.period_cover}
-                                                </TableCell>
-                                            </TableRow>
-                                        );
-                                    })}
-                                {payrolls?.length > 0 ? (
-                                    ""
-                                ) : (
-                                    <TableRow>
-                                        <TableCell colSpan={4} className="text-center">
-                                            No Payrolls
-                                        </TableCell>
-                                    </TableRow>
-                                )}
-                            </TableBody>
-                        </Table>
+                        <PayrollTable payrolls={payrolls} />
                     </div>
-
-                    <AutoPagination page={1} setPage={""} totalPage={1} />
+                    <AutoPagination
+                        page={indexPage}
+                        setPage={setIndexPage}
+                        totalPage={totalPage}
+                    />
                 </CardContent>
             </Card>
         </>
