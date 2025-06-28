@@ -1,4 +1,4 @@
-import {  UseViewPayroll } from "@/Actions/PayrollAction";
+import { UseDownloadMasterlist, UseDownloadPayroll, UseViewPayroll } from "@/Actions/PayrollAction";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -10,9 +10,23 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { ChevronsUpDown, Download, Eye, ListChecks } from "lucide-react";
+import { Ring2 } from "ldrs/react";
+import "ldrs/react/Ring2.css";
 
-export default function PayrollTable({payrolls}: any) {
-    const {  setViewPayroll } = UseViewPayroll();
+export default function PayrollTable({ payrolls }: any) {
+    const { setViewPayroll } = UseViewPayroll();
+    const { download, loadingId } = UseDownloadPayroll();
+    const {downloadMasterlist, loadingIdMasterlist} = UseDownloadMasterlist();
+    const ring = (
+        <Ring2
+            size="20"
+            stroke="5"
+            strokeLength="0.25"
+            bgOpacity="0.1"
+            speed="0.8"
+            color="white"
+        />
+    );
     return (
         <>
             <Table>
@@ -69,21 +83,34 @@ export default function PayrollTable({payrolls}: any) {
                                         <Button
                                             variant={"primary"}
                                             size={"icon"}
-                                            onClick={() => setViewPayroll(true, p.id)}
+                                            onClick={() =>
+                                                setViewPayroll(true, p.id, 1)
+                                            }
                                         >
                                             <Eye />
                                         </Button>
                                         <Button
                                             className="ml-2"
                                             variant={"success"}
+                                            disabled={loadingId == p.id}
+                                            onClick={() => download(p.id)}
                                         >
-                                            <Download />
+                                            {loadingId == p.id ? (
+                                                ring
+                                            ) : (
+                                                <Download />
+                                            )}
                                         </Button>
                                         <Button
                                             className="ml-2"
                                             variant={"warning"}
+                                                  onClick={() => downloadMasterlist(p.id)}
                                         >
-                                            <ListChecks /> Masterlist
+                                            {loadingIdMasterlist == p.id ? (
+                                                ring
+                                            ) : (
+                                                <><ListChecks /> Masterlist</>
+                                            )}
                                         </Button>
                                     </TableCell>
                                 </TableRow>

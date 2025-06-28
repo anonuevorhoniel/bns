@@ -371,7 +371,6 @@ class VolunteerController extends Controller
 
         // Commit the transaction
         $scholars = Scholar::all();
-        // return redirect()->route('volunteers.index', compact('scholars'))->withSuccess('A new scholar has been added.');
         return response()->json(['message' => 'Scholar Created Successfully']);
     }
 
@@ -382,7 +381,6 @@ class VolunteerController extends Controller
         $barangay = Barangay::where('code', $volunteer->barangay_code)->first();
         $id_code = Municipality::code($municipality->code);
         $id_code = $id_code . '-' . $volunteer->id;
-
         return view('volunteers.include.id', compact('volunteer', 'municipality', 'barangay', 'id_code'));
     }
 

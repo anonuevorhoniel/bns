@@ -119,7 +119,6 @@ export default function Scholars() {
                             <SelectCode open={open} setOpen={setOpen} />
 
                         </div>
-
                       <div >
                           <div className="flex justify-center items-center bg-white rounded-lg  max-w-70 float-right px-3 py-1 space-x-2">
                             <Search className="text-gray-500 w-5 h-5" />

@@ -51,5 +51,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/store', 'store');
         Route::post('/', 'index');
         Route::post('/show/{payroll}', 'show');
+        Route::get('/{payroll}/download', 'download');
+        Route::get('/masterlists/{id}/download', 'masterlist_payroll_download');
     });
 });

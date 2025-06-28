@@ -47,7 +47,7 @@ const data = {
         },
         {
             title: "Users",
-            url: "#",
+            url: "/users",
             icon: UsersRound,
             isActive: window.location.pathname == "/users"
                 ? true

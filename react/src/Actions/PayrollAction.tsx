@@ -102,21 +102,107 @@ export const UsePayroll = create<any>((set: any, get: any) => ({
     },
 }));
 
-export const UseViewPayroll = create<any>((set: any) => ({
+export const UseViewPayroll = create<any>((set: any, get: any) => ({
+    page: 1,
     viewPayroll: false,
     viewPayrollScholar: null,
+    totalPpage: 1,
+    id: null,
+    loading: false,
+    payroll: null,
 
-    setViewPayroll: async (open: boolean, id: number) => {
-        console.log(id);
+    setPage: (page: number) => set({ page: page }),
+    setViewPayroll: async (open: boolean, id: number, page: number) => {
+        // set({ payroll: null });
+        set({ loading: true });
+        set({ id: id });
         set({ viewPayroll: open });
         if (id != undefined) {
             try {
-                const r = await ax.post(`/payrolls/show/${id}`);
-                console.log(r);
-                set({viewPayrollScholar: r.data.volunteers})
+                const r = await ax.post(`/payrolls/show/${id}`, {
+                    page: page,
+                });
+                set({ viewPayrollScholar: r.data.volunteers });
+                set({ totalPage: r.data.total_page });
+                set({ payroll: r.data.payroll });
+                console.log(r.data);
             } catch (err) {
                 console.log(err);
+            } finally {
+                set({ loading: false });
             }
+        }
+    },
+}));
+
+export const UseDownloadPayroll = create<any>((set: any) => ({
+    loadingId: null,
+
+    download: async (id: any) => {
+        set({ loadingId: id });
+        try {
+            const r = await ax.get(`/payrolls/${id}/download`, {
+                responseType: "blob",
+            });
+            const url = URL.createObjectURL(r.data);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "Payroll.xlsx";
+            a.style.display = "none";
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            toast.success("Downloaded", {
+                description: "Payroll Downloaded",
+            });
+        } catch (error: any) {
+            try {
+                let responseObj = await error.response.data.text();
+                const r = JSON.parse(responseObj);
+                toast.error("Failed", { description: r.message });
+            } catch {
+                toast.error("Failed", {
+                    description: "An unexpected error occurred.",
+                });
+            }
+        } finally {
+            set({ loadingId: false });
+        }
+    },
+}));
+
+export const UseDownloadMasterlist = create<any>((set: any) => ({
+    loadingIdMasterlist: null,
+
+    downloadMasterlist: async (id: any) => {
+        set({ loadingIdMasterlist: id });
+        try {
+            const r = await ax.get(`/payrolls/masterlists/${id}/download`, {
+                responseType: "blob",
+            });
+            const url = URL.createObjectURL(r.data);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "Masterlist.xlsx";
+            a.style.display = "none";
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            toast.success("Downloaded", {
+                description: "Masterlist Downloaded",
+            });
+        } catch (error: any) {
+            try {
+                let responseObj = await error.response.data.text();
+                const r = JSON.parse(responseObj);
+                toast.error("Failed", { description: r.message });
+            } catch {
+                toast.error("Failed", {
+                    description: "An unexpected error occurred.",
+                });
+            }
+        } finally {
+            set({ loadingIdMasterlist: false });
         }
     },
 }));

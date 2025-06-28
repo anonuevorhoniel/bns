@@ -53,6 +53,7 @@ class PayrollController extends Controller
             ->leftJoin('tbl_municipalities as m', 'p.municipality_code', 'm.code')
             ->limit($limit)
             ->offset($offset)
+            ->orderBy('p.created_at', 'desc')
             ->get();
 
         $payrolls->map(function ($p) {
@@ -62,7 +63,7 @@ class PayrollController extends Controller
             $p->created_at = date('F j, Y | h:i:s', strtotime($p->created_at));
         });
         // dd($payrolls);
-        return response()->json(compact('payrolls', 'total_page'));
+        return response()->json(compact('payrolls', 'total_page', ));
     }
 
     /**
@@ -121,6 +122,7 @@ class PayrollController extends Controller
             ->get();
 
         #Load Template
+        $filePath = public_path('/templates/Payroll.xlsx');
         $reader = new Xlsx();
         $spreadsheet = $reader->load(public_path('/templates/BVW_Payroll_Template.xlsx'));
         $sheet = $spreadsheet->getActiveSheet();
@@ -220,38 +222,10 @@ class PayrollController extends Controller
             ->setDescription('This is a system generated report.') //Comment
             ->setCreator('Barangay Nutritional Scholar System') //Author
             ->setLastModifiedBy('Developer - Rhoniel L. Añonuevo');
-        $filename = $municipality[0]->name . ' Payroll - '
-            //  .$quarter->quarter.' ( '.$payroll_period.')'
-        ;
 
-        /* Remove the template sheet and 
-         * set first sheet as active sheet
-         */
-        // $spreadsheet->removeSheetByIndex(0); //template
-        // $spreadsheet->setActiveSheetIndex(0);
-
-        /* Redirect output to a client's web browser (Xlsx) 
-         */
-        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        header('Content-Disposition: attachment;filename="' . $filename . '.xlsx"');
-        header('Cache-Control: max-age=0');
-
-        /* NOTE: If you're serving to IE 9, then the 
-         * following may be needed 
-         */
-        header('Cache-Control: max-age=1');
-
-        /* NOTE: If you're serving to IE over SSL, then the 
-         * following may be needed 
-         */
-        header('Expires: Mon, 26 Jul 1997 05:00:00 GMT'); // Date in the past
-        header('Last-Modified: ' . gmdate('D, d M Y H:i:s') . ' GMT'); // Date modified
-        header('Cache-Control: cache, must-revalidate'); // HTTP/1.1
-        header('Pragma: public');  // HTTP/1.0
-
-        /* Download/Export as xlsx */
         $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
-        $writer->save('php://output');
+        $writer->save($filePath);
+        return response()->download($filePath)->deleteFileAfterSend(true);
     }
 
     /**
@@ -376,8 +350,18 @@ class PayrollController extends Controller
      * @param  \App\Payroll  $payroll
      * @return \Illuminate\Http\Response
      */
-    public function show(Payroll $payroll)
+    public function show(Payroll $payroll, Request $request)
     {
+        $page = $request->page;
+        $limit = 5;
+        $total_scholar = DB::table('tbl_payroll_details as pd')
+            ->leftJoin('tbl_scholars as v', 'pd.volunteer_id', 'v.id')
+            ->leftjoin('tbl_barangays as b', 'b.code', 'v.barangay_id')
+            ->join('tbl_municipalities as m', 'm.code', 'v.citymuni_id')
+            ->where('pd.payroll_id', $payroll->id)
+            ->count();
+        $total_page = ceil($total_scholar / $limit);
+        $offset = ($page - 1) * $limit;
 
         $volunteers = DB::table('tbl_payroll_details as pd')
             ->leftJoin('tbl_scholars as v', 'pd.volunteer_id', 'v.id')
@@ -386,9 +370,10 @@ class PayrollController extends Controller
             ->where('pd.payroll_id', $payroll->id)
             ->orderBy('v.last_name')
             ->select('v.*', 'b.name as barangay_name', 'm.name as municity_name',)
-            ->limit(5)
+            ->limit($limit)
+            ->offset($offset)
             ->get();
-            
+
         $rate = Rate::find($payroll->rate_id);
         $signatories = Signatory::whereIn('id', json_decode($payroll->signatories))->get();
         $heads = Signatory::where('designation_id', Signatory::HEAD)->get();
@@ -413,20 +398,25 @@ class PayrollController extends Controller
         $month_from   = DateTime::createFromFormat('!m', $payroll->month_from)->format('F'); // March
         $month_to   = DateTime::createFromFormat('!m', $payroll->month_to)->format('F');
         $year = Quarter::currentYear();
-        $municipality = Municipality::where('code', $payroll->municipality_code)->get();
+        $municipality = Municipality::where('code', $payroll->municipality_code)->first();
+        $payroll->month_from = $month_from;
+        $payroll->municipality = $municipality->name;
+        $payroll->month_to = $month_to;
+        $payroll->year = $year;
+        $payroll->signatories = $signatories;
+        $payroll->grand_total = number_format($payroll->grand_total, 2);
+
         return response()->json(compact(
             'volunteers',
             'rate',
             'payroll',
-            'month_from',
-            'month_to',
             'year',
             'municipality',
-            'signatories',
             'heads',
             'administrators',
             'governors',
-            'accountants'
+            'accountants',
+            'total_page',
         ));
     }
 

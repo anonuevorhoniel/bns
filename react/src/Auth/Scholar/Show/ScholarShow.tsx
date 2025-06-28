@@ -130,7 +130,7 @@ export function ScholarShow() {
     if (!isDesktop)
         return (
             <Drawer open={show} onOpenChange={setShow}>
-                <DrawerContent>
+                <DrawerContent className="p-3">
                     <DrawerHeader>
                         <DrawerTitle>
                             <div className="flex gap-3 border-1 rounded-lg p-3 shadow-lg -translate-y-0.5 justify-center items-center ">

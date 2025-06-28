@@ -7,6 +7,7 @@ import CreateScholars from "./Auth/Scholar/CreateScholarForm/CreateScholar";
 import Payroll from "./Auth/Payroll/Payroll";
 import EditScholar from "./Auth/Scholar/EditScholar/EditScholar";
 import CreatePayroll from "./Auth/Payroll/CreatePayroll/CreatePayroll";
+import Users from "./Users/Users";
 
 function App() {
     return (
@@ -27,6 +28,7 @@ function App() {
                         />,
                         <Route path="/payrolls" element={<Payroll />} />,
                         <Route path="/payrolls/create" element={<CreatePayroll />} />,
+                        <Route path="/users" element={<Users />}/>
                     ]}
                 />
             </Routes>
