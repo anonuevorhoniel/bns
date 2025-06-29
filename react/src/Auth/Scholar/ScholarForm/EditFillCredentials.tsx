@@ -3,7 +3,7 @@ import { useEffect } from "react";
 
 export default function EditFrillCredentials({scholarData}: any) {
 
-const { setFormData, form } = useCreateScholarForm();
+const { setFormData } = useCreateScholarForm();
        useEffect(() => {
         setFormData({
             name: "first_name",

@@ -12,6 +12,11 @@ export const UsePayroll = create<any>((set: any, get: any) => ({
     payrolls: null,
     indexPage: 1,
     totalPage: 0,
+    totalPayroll: 0,
+    offset: 0,
+    limit: 0,
+//current payroll count cpc
+    cpc: 0,
 
     setIndexPage: (page: number) => {
         set({ indexPage: page });
@@ -24,6 +29,10 @@ export const UsePayroll = create<any>((set: any, get: any) => ({
             const r = await ax.post("/payrolls", { page });
             set({ payrolls: r.data.payrolls });
             set({ totalPage: r.data.total_page });
+            set({totalPayroll: r.data.total_payroll});
+            set({offset: r.data.offset});
+            set({limit: r.data.limit})
+            set({cpc: r.data.current_payroll_count});
         } catch (err) {
             console.log(err);
         } finally {
@@ -75,7 +84,7 @@ export const UsePayroll = create<any>((set: any, get: any) => ({
         set({ form: null });
     },
 
-    submitPayroll: ({ checked, form, nav }: any) => {
+    submitPayroll: ({ checked, form, nav, setSubmitPLoad }: any) => {
         if (checked.length == 0) {
             toast.error("None selected", {
                 description: "Please select atleast one scholar",
@@ -85,6 +94,7 @@ export const UsePayroll = create<any>((set: any, get: any) => ({
         }
 
         async function storeScholarPayroll(checked: any, form: any) {
+            setSubmitPLoad(true);
             try {
                 await ax.post("/payrolls/store", {
                     scholars: checked,
@@ -97,12 +107,14 @@ export const UsePayroll = create<any>((set: any, get: any) => ({
                 }, 100);
             } catch (err) {
                 console.log(err);
+            } finally {
+                setSubmitPLoad(false)
             }
         }
     },
 }));
 
-export const UseViewPayroll = create<any>((set: any, get: any) => ({
+export const UseViewPayroll = create<any>((set: any) => ({
     page: 1,
     viewPayroll: false,
     viewPayrollScholar: null,
@@ -112,7 +124,7 @@ export const UseViewPayroll = create<any>((set: any, get: any) => ({
     payroll: null,
 
     setPage: (page: number) => set({ page: page }),
-    setViewPayroll: async (open: boolean, id: number, page: number) => {
+    setViewPayroll: async (open: boolean, id: number, page: number, search: string) => {
         // set({ payroll: null });
         set({ loading: true });
         set({ id: id });
@@ -121,6 +133,7 @@ export const UseViewPayroll = create<any>((set: any, get: any) => ({
             try {
                 const r = await ax.post(`/payrolls/show/${id}`, {
                     page: page,
+                    search: search
                 });
                 set({ viewPayrollScholar: r.data.volunteers });
                 set({ totalPage: r.data.total_page });

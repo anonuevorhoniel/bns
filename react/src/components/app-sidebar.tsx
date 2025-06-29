@@ -1,5 +1,5 @@
 import * as React from "react";
-import { CircleDollarSign, GraduationCap, Hourglass, LayoutDashboard, PencilLine, Printer, ScanEye, UsersRound } from "lucide-react";
+import { CircleDollarSign, GraduationCap, Hourglass, LayoutDashboard, PencilLine, ScanEye, UsersRound } from "lucide-react";
 
 import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
@@ -55,7 +55,7 @@ const data = {
         },
         {
             title: "Service Periods",
-            url: "#",
+            url: "/service_periods",
             icon: Hourglass,
             isActive: window.location.pathname == "/service-periods"
                 ? true

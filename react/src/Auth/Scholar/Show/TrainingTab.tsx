@@ -2,7 +2,6 @@ import { UseScholarShow } from "@/Actions/ScholarAction";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import LabelLoad from "@/Reusable/LabelLoad";
 

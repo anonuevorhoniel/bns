@@ -62,8 +62,9 @@ class PayrollController extends Controller
             $p->period_cover = date('F Y', strtotime($from)) . " - " . date('F Y', strtotime($to));
             $p->created_at = date('F j, Y | h:i:s', strtotime($p->created_at));
         });
+        $current_payroll_count = $payrolls->count();
         // dd($payrolls);
-        return response()->json(compact('payrolls', 'total_page', ));
+        return response()->json(compact('payrolls', 'total_page', 'total_payroll', 'offset', 'limit', 'current_payroll_count'));
     }
 
     /**
@@ -353,21 +354,32 @@ class PayrollController extends Controller
     public function show(Payroll $payroll, Request $request)
     {
         $page = $request->page;
+        $search = $request->search;
         $limit = 5;
         $total_scholar = DB::table('tbl_payroll_details as pd')
             ->leftJoin('tbl_scholars as v', 'pd.volunteer_id', 'v.id')
             ->leftjoin('tbl_barangays as b', 'b.code', 'v.barangay_id')
             ->join('tbl_municipalities as m', 'm.code', 'v.citymuni_id')
             ->where('pd.payroll_id', $payroll->id)
+            ->when($search, function ($q) use ($search) {
+                $q->where('v.first_name', 'LIKE', "$search%")
+                    ->orWhere('v.last_name', 'LIKE', "$search%");
+            })
             ->count();
         $total_page = ceil($total_scholar / $limit);
         $offset = ($page - 1) * $limit;
-
         $volunteers = DB::table('tbl_payroll_details as pd')
             ->leftJoin('tbl_scholars as v', 'pd.volunteer_id', 'v.id')
             ->leftjoin('tbl_barangays as b', 'b.code', 'v.barangay_id')
             ->join('tbl_municipalities as m', 'm.code', 'v.citymuni_id')
             ->where('pd.payroll_id', $payroll->id)
+            ->when($search, function ($q) use ($search) {
+                $q->where(function ($qv) use ($search) {
+                    $qv->where('v.first_name', 'LIKE', "$search%")
+                        ->orWhere('v.last_name', 'LIKE', "$search%")
+                        ->orWhere('v.middle_name', 'LIKE', "$search%");
+                });
+            })
             ->orderBy('v.last_name')
             ->select('v.*', 'b.name as barangay_name', 'm.name as municity_name',)
             ->limit($limit)
@@ -405,6 +417,11 @@ class PayrollController extends Controller
         $payroll->year = $year;
         $payroll->signatories = $signatories;
         $payroll->grand_total = number_format($payroll->grand_total, 2);
+        $payroll->total_scholar = $total_scholar;
+        $payroll->offset = $offset;
+        $payroll->limit = $limit;
+        $payroll->current = $volunteers->count();
+        $payroll->total_scholar = $total_scholar;
 
         return response()->json(compact(
             'volunteers',
@@ -417,6 +434,7 @@ class PayrollController extends Controller
             'governors',
             'accountants',
             'total_page',
+            'total_scholar', 'offset', 'limit'
         ));
     }
 

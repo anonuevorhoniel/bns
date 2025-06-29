@@ -10,8 +10,6 @@ import {
 } from "@/components/ui/dialog";
 import {
     AdditionalInfo,
-    UseGetScholar,
-    UseScholarShow,
 } from "@/Actions/ScholarAction";
 import "ldrs/react/Ring2.css";
 import { useMediaQuery } from "usehooks-ts";
@@ -32,9 +30,8 @@ import SelectCode from "../SelectCode";
 export function ShowTable() {
     const isDesktop = useMediaQuery("(min-width: 768px)");
     const { show, setShow } = AdditionalInfo();
-    // const { setCode } = UseGetScholar();
     const [open, setOpen] = useState();
-    const {code, setCode} = AdditionalInfo();
+    const { setCode} = AdditionalInfo();
 
     useEffect(() => {
         setCode();

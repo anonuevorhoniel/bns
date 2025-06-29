@@ -22,18 +22,12 @@ class UserController extends Controller
      */
     public function index()
     {
-        $page = [
-            'name'      =>  'Users',
-            'title'     =>  'User Management',
-            'crumb'     =>  array('Users' => '/users')
-        ];
-
         $users = User::all();
 
         if (Auth::user()->classification == "Field Officer") {
             return back()->withErrors('Permission Denied!');
         } else {
-            return view('users.index', compact('page', 'users'));
+            return response()->json( compact( 'users'));
         }
     }
 

@@ -15,7 +15,7 @@ import {
     SidebarProvider,
     SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { Fragment, useEffect } from "react";
+import {  useEffect } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 export default function Layout() {
     const { authenticate, user } = UseAuth();

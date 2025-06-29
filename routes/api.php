@@ -4,6 +4,7 @@ use App\Http\Controllers\APIController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PayrollController;
 use App\Http\Controllers\RateController;
+use App\Http\Controllers\ServicePeriodController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VolunteerController;
 use Illuminate\Http\Request;
@@ -53,5 +54,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/show/{payroll}', 'show');
         Route::get('/{payroll}/download', 'download');
         Route::get('/masterlists/{id}/download', 'masterlist_payroll_download');
+    });
+
+    Route::prefix('/users')->controller(UserController::class)->group(function () {
+        Route::post('/', 'index');
+    });
+
+    Route::prefix('/service_periods')->controller(ServicePeriodController::class)->group(function () {
+        Route::post('/', 'index');
     });
 });

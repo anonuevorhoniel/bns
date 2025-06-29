@@ -33,6 +33,8 @@ import { Link, useNavigate } from "react-router-dom";
 import CreatePayrollTable from "./CreatePayrollTable";
 import AutoPagination from "@/Reusable/AutoPagination";
 import { Toaster } from "sonner";
+import { Ring2 } from "ldrs/react";
+import "ldrs/react/Ring2.css";
 
 export default function CreatePayroll() {
     const { setItem, setBItem } = UseLayout();
@@ -51,7 +53,18 @@ export default function CreatePayroll() {
     const [loading, setLoading] = useState<boolean>(false);
     const [checked, setChecked] = useState([]);
     const [page, setPage] = useState<number>(1);
+    const [submitPLoad, setSubmitPLoad] = useState(false);
     const nav = useNavigate();
+    const ring = (
+        <Ring2
+            size="20"
+            stroke="5"
+            strokeLength="0.25"
+            bgOpacity="0.1"
+            speed="0.8"
+            color="white"
+        />
+    );
 
     useEffect(() => {
         setItem("Payrolls");
@@ -85,7 +98,7 @@ export default function CreatePayroll() {
     };
 
     const handleSubmitPayroll = () => {
-        submitPayroll({ checked, form, nav });
+        submitPayroll({ checked, form, nav, setSubmitPLoad });
     };
 
     return (
@@ -323,10 +336,19 @@ export default function CreatePayroll() {
                         </Label>
                         <Button
                             variant={"success"}
-                            onClick={() => handleSubmitPayroll()}
+                            onClick={() => {
+                                handleSubmitPayroll();
+                            }}
+                            disabled={submitPLoad}
                         >
                             {" "}
-                            <CirclePlus /> Payroll
+                            {submitPLoad ? (
+                                ring
+                            ) : (
+                                <>
+                                    <CirclePlus /> Payroll
+                                </>
+                            )}
                         </Button>
                     </div>
                     <div className="pt-0 max-h-150 overflow-auto relative">

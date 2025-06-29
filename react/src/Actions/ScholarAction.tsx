@@ -119,7 +119,7 @@ export const ScholarStore = create<any>(() => ({
     },
 }));
 
-export const ScholarEdit = create<any>((set: any, get: any) => ({
+export const ScholarEdit = create<any>((set: any) => ({
     scholarData: null,
     clearScholarData: () => set({ scholarData: null }),
     getScholarData: async ({id, setEligibilities, setTrainings}: any) => {
@@ -186,7 +186,7 @@ export const AdditionalInfo = create<any>((set: any, get: any) => ({
 
     getScholars: async () => {
         try {
-            const r = await ax.post("/scholars/get", {
+             await ax.post("/scholars/get", {
             code: get().code,
             page: get().page,
             search: get().search,

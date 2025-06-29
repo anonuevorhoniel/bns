@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-export const useCreateScholarForm = create<any>((set: any, get: any) => ({
+export const useCreateScholarForm = create<any>((set: any) => ({
     form: {
         first_name: "",
         middle_name: "",

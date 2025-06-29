@@ -2,10 +2,9 @@ import { UseLayout } from "@/Actions/LayoutAction";
 import { UsePayroll } from "@/Actions/PayrollAction";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import LoadingScreen from "@/LoadingScreen";
 import AutoPagination from "@/Reusable/AutoPagination";
-import { CirclePlus, ScrollText, Search } from "lucide-react";
+import { CirclePlus, ScrollText } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Toaster } from "sonner";
@@ -14,6 +13,7 @@ import PayrollTable from "./PayrollTable";
 import {
     Select,
     SelectContent,
+    SelectGroup,
     SelectItem,
     SelectTrigger,
     SelectValue,
@@ -21,8 +21,16 @@ import {
 import { Label } from "@/components/ui/label";
 export default function Payroll() {
     const { setItem, setBItem } = UseLayout();
-    const { payrolls, getPayroll, indexPage, setIndexPage, totalPage } =
-        UsePayroll();
+    const {
+        payrolls,
+        getPayroll,
+        indexPage,
+        setIndexPage,
+        totalPage,
+        totalPayroll,
+        offset,
+        cpc,
+    } = UsePayroll();
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
@@ -55,28 +63,18 @@ export default function Payroll() {
                                 <ScrollText />
                                 Summary
                             </Button>
-                            {/* <Select>
-                                <SelectTrigger className="bg-gradient-to-r from-emerald-400 to-emerald-600 text-white">
-                                    <SelectValue
-                                        className="placeholder-black::placeholder"
-                                        placeholder="-- Fund --"
-                                    >
-                                        asdasd
-                                    </SelectValue>
+                            <Select>
+                                <SelectTrigger className="w-[180px] text-white bg-gradient-to-r from-emerald-500 to-emerald-700 hover:-translate-y-1 transition-all">
+                                    <SelectValue placeholder="-- FUND --" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="NNC">NNC</SelectItem>
+                                    <SelectGroup>
+                                        <SelectItem value="NNC">NNC</SelectItem>
+                                        <SelectItem value="LOCAL">LOCAL</SelectItem>
+                                        <SelectItem value="BOTH">BOTH</SelectItem>
+                                    </SelectGroup>
                                 </SelectContent>
-                            </Select> */}
-                        </div>
-                        <div className="">
-                            <div className="flex justify-center items-center bg-white rounded-lg  max-w-70 float-right px-3 py-1 space-x-2 ">
-                                <Search className="text-gray-500 w-5 h-5" />
-                                <Input
-                                    className="bg-transparent border-none hover:bg-gray-100"
-                                    placeholder="Search"
-                                />
-                            </div>
+                            </Select>
                         </div>
                     </div>
                 </CardHeader>
@@ -87,7 +85,10 @@ export default function Payroll() {
                     </div>
                     <div className="grid grid-cols-1 xl:grid-cols-2 lg:grid-cols-2 mt-3">
                         <div className="flex items-center">
-                            <Label>Showing 1 to 1 of 1 Payrolls</Label>
+                            <Label>
+                                Showing {cpc == 0 ? 0 : offset + 1} to{" "}
+                                {offset + cpc} of {totalPayroll} Payrolls
+                            </Label>
                         </div>
                         <div className="flex justify-end">
                             <div>
