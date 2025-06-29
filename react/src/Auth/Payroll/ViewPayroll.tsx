@@ -1,46 +1,21 @@
 import { UseViewPayroll } from "@/Actions/PayrollAction";
 import { Button } from "@/components/ui/button";
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog";
-import {
-    Drawer,
-    DrawerClose,
-    DrawerContent,
-    DrawerDescription,
-    DrawerFooter,
-    DrawerHeader,
-    DrawerTitle,
-} from "@/components/ui/drawer";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table";
 import LoadingScreen from "@/LoadingScreen";
 import AutoPagination from "@/Reusable/AutoPagination";
 import { Pencil, Search } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useMediaQuery } from "usehooks-ts";
 import { Ring } from "ldrs/react";
 import "ldrs/react/Ring.css";
 import { Input } from "@/components/ui/input";
+import DialogDrawer from "@/Reusable/DialogDrawer";
+import ViewPayrollTable from "./CreatePayroll/ViewPayrollTable";
 
 export default function ViewPayroll() {
     const {
         viewPayroll,
         setViewPayroll,
-        viewPayrollScholar,
         page,
         setPage,
         totalPage,
@@ -52,7 +27,6 @@ export default function ViewPayroll() {
     const ring = (
         <Ring size="20" stroke="5" bgOpacity="0" speed="2" color="blue" />
     );
-    const isDesktop = useMediaQuery("(min-width: 768px)");
 
     useEffect(() => {
         if (id != undefined) {
@@ -127,54 +101,7 @@ export default function ViewPayroll() {
             </div>
             <div className="relative">
                 {loading && <LoadingScreen />}
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead className="text-center border-1 bg-black text-white">
-                                First Name
-                            </TableHead>
-                            <TableHead className="text-center border-1 bg-black text-white">
-                                MI
-                            </TableHead>
-                            <TableHead className="text-center border-1 bg-black text-white">
-                                Last Name
-                            </TableHead>
-                            <TableHead className="text-center border-1 bg-black text-white">
-                                Service Period
-                            </TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {viewPayrollScholar &&
-                            viewPayrollScholar?.map((m: any) => {
-                                return (
-                                    <TableRow key={m.id}>
-                                        <TableCell className="text-center">
-                                            {m.first_name}
-                                        </TableCell>
-                                        <TableCell className="text-center">
-                                            {m.middle_name}
-                                        </TableCell>
-                                        <TableCell className="text-center">
-                                            {m.last_name}
-                                        </TableCell>
-                                        <TableCell className="text-center">
-                                            {m.service_period}
-                                        </TableCell>
-                                    </TableRow>
-                                );
-                            })}
-                        {viewPayrollScholar?.length == 0 || viewPayrollScholar?.length == undefined ? (
-                            <TableRow>
-                                <TableCell className="text-center" colSpan={4}>
-                                    No Scholars 
-                                </TableCell>
-                            </TableRow>
-                        ) : (
-                            ""
-                        )}
-                    </TableBody>
-                </Table>
+                <ViewPayrollTable />
             </div>
 
             <div className="grid grid-cols-1 xl:grid-cols-2 lg:grid-cols-2  mt-3 pl-3 pr-3 ">
@@ -197,38 +124,12 @@ export default function ViewPayroll() {
         </>
     );
 
-    if (isDesktop) {
-        return (
-            <>
-                <Dialog open={viewPayroll} onOpenChange={setViewPayroll}>
-                    <DialogTitle />
-                    <DialogContent className="max-w-[805px] md:max-w-[800px] lg:max-w-[1000px] xl:max-w-[1205px]">
-                        <DialogHeader />
-                        {content}
-                        <DialogDescription />
-                        <DialogFooter />
-                    </DialogContent>
-                </Dialog>
-            </>
-        );
-    } else {
-        return (
-            <>
-                <Drawer open={viewPayroll} onOpenChange={setViewPayroll}>
-                    <DrawerTitle />
-                    <DrawerContent className="">
-                        <div className="overflow-auto p-3">{content}</div>
-
-                        <DrawerDescription />
-                        <DrawerHeader />
-                        <DrawerFooter>
-                            <DrawerClose className="border-1 shadow-lg rounded-lg p-2">
-                                Close
-                            </DrawerClose>
-                        </DrawerFooter>
-                    </DrawerContent>
-                </Drawer>
-            </>
-        );
-    }
+    return (
+        <DialogDrawer
+            size="max-w-[805px] md:max-w-[800px] lg:max-w-[1000px] xl:max-w-[1205px]"
+            content={content}
+            open={viewPayroll}
+            setOpen={setViewPayroll}
+        />
+    );
 }

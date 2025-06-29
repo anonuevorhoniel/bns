@@ -49,8 +49,8 @@ export default function Payroll() {
             <title>BNS | Payroll</title>
             <Card className="p-0 pb-5">
                 <CardHeader className="bg-muted rounded-tl-lg rounded-tr-lg">
-                    <div className="grid  grid-cols-1 xl:grid-cols-2 lg:grid-cols-2 mb-3 mt-3 ">
-                        <div className="flex gap-3 ">
+                    <div className="grid grid-cols-1 xl:grid-cols-2 lg:grid-cols-2 mb-3 mt-3 ">
+                        <div className="flex gap-3">
                             <Link to={"/payrolls/create"}>
                                 <Button variant={"primary"}>
                                     <CirclePlus /> Payroll
@@ -63,15 +63,21 @@ export default function Payroll() {
                                 <ScrollText />
                                 Summary
                             </Button>
+                        </div>
+                        <div className="flex justify-end mt-3 sm:mt-0">
                             <Select>
-                                <SelectTrigger className="w-[180px] text-white bg-gradient-to-r from-emerald-500 to-emerald-700 hover:-translate-y-1 transition-all">
-                                    <SelectValue placeholder="-- FUND --" />
+                                <SelectTrigger className="w-[180px] bg-white hover:-translate-y-1 transition-all">
+                                    <SelectValue placeholder="-- Select Fund --" />
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectGroup>
                                         <SelectItem value="NNC">NNC</SelectItem>
-                                        <SelectItem value="LOCAL">LOCAL</SelectItem>
-                                        <SelectItem value="BOTH">BOTH</SelectItem>
+                                        <SelectItem value="LOCAL">
+                                            LOCAL
+                                        </SelectItem>
+                                        <SelectItem value="BOTH">
+                                            BOTH
+                                        </SelectItem>
                                     </SelectGroup>
                                 </SelectContent>
                             </Select>

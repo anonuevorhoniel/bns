@@ -1,12 +1,7 @@
 import { Button } from "@/components/ui/button";
 import {
     Dialog,
-    DialogClose,
     DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
 } from "@/components/ui/dialog";
 import { ViewScholar } from "../ScholarState";
 import user from "../../../../public/user.png";
@@ -15,18 +10,15 @@ import { UseScholarShow } from "@/Actions/ScholarAction";
 import "ldrs/react/Ring2.css";
 import LabelLoad from "@/Reusable/LabelLoad";
 import PersonalInformationTab from "./PersonalInformationTab";
-import EmploymentStatusTab from "./EmploymentSstatusTab";
-import ServicePeriodTab from "./ServicePeriodTab";
 import {
-    BriefcaseBusiness,
-    CheckCheck,
-    FileClock,
-    School,
-    UserCircle,
+    Briefcase,
+    CheckCircle,
+    Clock,
+    GraduationCap,
+    Phone,
+    User,
 } from "lucide-react";
 import { Label } from "@/components/ui/label";
-import EligibilityTab from "./EligibilityTab";
-import TrainingTab from "./TrainingTab";
 import { useMediaQuery } from "usehooks-ts";
 import {
     Drawer,
@@ -37,6 +29,9 @@ import {
     DrawerHeader,
     DrawerTitle,
 } from "@/components/ui/drawer";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Card, CardContent } from "@/components/ui/card";
+
 
 export function ScholarShow() {
     const isDesktop = useMediaQuery("(min-width: 768px)");
@@ -46,83 +41,167 @@ export function ScholarShow() {
 
     const content = (
         <>
-            <div className="h-[60vh] overflow-auto">
-                <Tabs
-                    defaultValue="personal_info"
-                    className="flex justify-center items-center"
-                >
-                    <TabsList className="h-30 sm:h-20 md:h-20 lg:h-20 xl:h-20 m-2 gap-2  w-full">
-                        <div className="grid xl:grid-cols-3 lg:grid-cols-3 sm:grid-cols-3 xs:grid-cols-3 md:grid-cols-3 grid-cols-2 p-3 w-full ">
-                            <TabsTrigger value="personal_info">
-                                <UserCircle /> Personal Info
-                            </TabsTrigger>
-                            <TabsTrigger value="employment_status">
-                                <BriefcaseBusiness /> Employment
-                            </TabsTrigger>
-                            <TabsTrigger value="service_periods">
-                                <FileClock /> Service Periods
-                            </TabsTrigger>
-                            <TabsTrigger value="trainings">
-                                <School /> Trainings
-                            </TabsTrigger>
-                            <TabsTrigger value="eligibilities">
-                                <CheckCheck /> Eligibilities
-                            </TabsTrigger>
+                   <div className="relative bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-8 text-white">
+                        <div className="flex items-center gap-4">
+                            <Avatar className="h-16 w-16 border-4 border-white/20">
+                                <AvatarImage src="/placeholder.svg?height=64&width=64" />
+                                <AvatarFallback className="bg-blue-500 text-white text-xl font-semibold">
+                                   J
+                                </AvatarFallback>
+                            </Avatar>
+                            <div>
+                                <h2 className="text-2xl font-bold">
+                                    {fullName}
+                                </h2>
+                                <p className="text-blue-100 flex items-center gap-2 mt-1">
+                                    <Phone className="h-4 w-4" />
+                                    cnum
+                                </p>
+                            </div>
                         </div>
-                    </TabsList>
-                    <TabsContent value="personal_info">
-                        <PersonalInformationTab />
-                    </TabsContent>
-                    <TabsContent value="employment_status">
-                        <EmploymentStatusTab />
-                    </TabsContent>
-                    <TabsContent value="service_periods">
-                        <ServicePeriodTab />
-                    </TabsContent>
-                    <TabsContent value="trainings">
-                        <TrainingTab />
-                    </TabsContent>
-                    <TabsContent value="eligibilities">
-                        <EligibilityTab />
-                    </TabsContent>
-                </Tabs>
-            </div>
+                    </div>
+                    <div className="flex-1 overflow-y-auto">
+                        <Tabs defaultValue="personal" className="w-full">
+                            <TabsList className="grid w-full grid-cols-5 rounded-none border-b bg-gray-50/50">
+                                <TabsTrigger
+                                    value="personal"
+                                    className="flex items-center gap-2"
+                                >
+                                    <User className="h-4 w-4" />
+                                    <span className="hidden sm:inline">
+                                        Personal Info
+                                    </span>
+                                </TabsTrigger>
+                                <TabsTrigger
+                                    value="employment"
+                                    className="flex items-center gap-2"
+                                >
+                                    <Briefcase className="h-4 w-4" />
+                                    <span className="hidden sm:inline">
+                                        Employment
+                                    </span>
+                                </TabsTrigger>
+                                <TabsTrigger
+                                    value="service"
+                                    className="flex items-center gap-2"
+                                >
+                                    <Clock className="h-4 w-4" />
+                                    <span className="hidden sm:inline">
+                                        Service Periods
+                                    </span>
+                                </TabsTrigger>
+                                <TabsTrigger
+                                    value="trainings"
+                                    className="flex items-center gap-2"
+                                >
+                                    <GraduationCap className="h-4 w-4" />
+                                    <span className="hidden sm:inline">
+                                        Trainings
+                                    </span>
+                                </TabsTrigger>
+                                <TabsTrigger
+                                    value="eligibilities"
+                                    className="flex items-center gap-2"
+                                >
+                                    <CheckCircle className="h-4 w-4" />
+                                    <span className="hidden sm:inline">
+                                        Eligibilities
+                                    </span>
+                                </TabsTrigger>
+                            </TabsList>
+
+                            <TabsContent
+                                value="personal"
+                                className="pt-3 space-y-6 px-6"
+                            >
+                                <PersonalInformationTab />
+                            </TabsContent>
+
+                            <TabsContent value="employment" className="p-6">
+                                <Card className="border-0 shadow-sm">
+                                    <CardContent className="p-6">
+                                        <div className="text-center py-12">
+                                            <Briefcase className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                                            <h3 className="text-lg font-medium text-gray-900 mb-2">
+                                                Employment History
+                                            </h3>
+                                            <p className="text-gray-600">
+                                                Employment information will be
+                                                displayed here.
+                                            </p>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </TabsContent>
+
+                            <TabsContent value="service" className="p-6">
+                                <Card className="border-0 shadow-sm">
+                                    <CardContent className="p-6">
+                                        <div className="text-center py-12">
+                                            <Clock className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                                            <h3 className="text-lg font-medium text-gray-900 mb-2">
+                                                Service Periods
+                                            </h3>
+                                            <p className="text-gray-600">
+                                                Service period information will
+                                                be displayed here.
+                                            </p>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </TabsContent>
+
+                            <TabsContent value="trainings" className="p-6">
+                                <Card className="border-0 shadow-sm">
+                                    <CardContent className="p-6">
+                                        <div className="text-center py-12">
+                                            <GraduationCap className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                                            <h3 className="text-lg font-medium text-gray-900 mb-2">
+                                                Training Records
+                                            </h3>
+                                            <p className="text-gray-600">
+                                                Training information will be
+                                                displayed here.
+                                            </p>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </TabsContent>
+
+                            <TabsContent value="eligibilities" className="p-6">
+                                <Card className="border-0 shadow-sm">
+                                    <CardContent className="p-6">
+                                        <div className="text-center py-12">
+                                            <CheckCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                                            <h3 className="text-lg font-medium text-gray-900 mb-2">
+                                                Eligibilities
+                                            </h3>
+                                            <p className="text-gray-600">
+                                                Eligibility information will be
+                                                displayed here.
+                                            </p>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </TabsContent>
+                        </Tabs>
+                    </div>
         </>
     );
-
+    // max-w-[805px] md:max-w-[800px] lg:max-w-[1000px] xl:max-w-[1205px]
     if (isDesktop)
         return (
             <Dialog open={show} onOpenChange={setShow}>
-                <DialogContent className="min-w-50 xs:min-w-10 max-h-170 overflow-auto">
-                    <DialogDescription />
-                    <DialogHeader>
-                        <div className="flex border-b-1 justify-center items-center pb-2">
-                            <div className="flex gap-3 border-1 rounded-lg p-3 shadow-lg -translate-y-0.5 justify-center items-center ">
-                                <div>
-                                    <img
-                                        src={user}
-                                        className="h-10 rounded-full shadow-lg"
-                                        alt=""
-                                    />
-                                </div>
-                                <div>
-                                    <Label className="font-bold text-shadow-md">
-                                        <LabelLoad
-                                            value={fullName && fullName}
-                                        />
-                                    </Label>
-                                </div>
-                            </div>
-                        </div>
-                    </DialogHeader>
-                    <DialogTitle />
-                    {/* <Card className="relative flex items-center"> */}
+                <DialogContent className="sm:max-w-[900px] max-h-[90vh] p-0 overflow-hidden">
                     {content}
-                    <DialogFooter>
-                        <DialogClose asChild>
-                            <Button variant="outline">Close</Button>
-                        </DialogClose>
-                    </DialogFooter>
+                    <div className="border-t bg-gray-50/50 px-6 py-4 flex justify-end">
+                        <Button
+                            variant="outline"
+                            onClick={() => setShow(false)}
+                        >
+                            Close
+                        </Button>
+                    </div>
                 </DialogContent>
             </Dialog>
         );
@@ -131,27 +210,6 @@ export function ScholarShow() {
         return (
             <Drawer open={show} onOpenChange={setShow}>
                 <DrawerContent className="p-3">
-                    <DrawerHeader>
-                        <DrawerTitle>
-                            <div className="flex gap-3 border-1 rounded-lg p-3 shadow-lg -translate-y-0.5 justify-center items-center ">
-                                <div>
-                                    <img
-                                        src={user}
-                                        className="h-10 rounded-full shadow-lg"
-                                        alt=""
-                                    />
-                                </div>
-                                <div>
-                                    <Label className="font-bold text-shadow-md">
-                                        <LabelLoad
-                                            value={fullName && fullName}
-                                        />
-                                    </Label>
-                                </div>
-                            </div>
-                        </DrawerTitle>
-                        <DrawerDescription />
-                    </DrawerHeader>
                     {content}
                     <DrawerFooter>
                         <DrawerClose className="border-1 shadow-lg rounded-lg p-2">

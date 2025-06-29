@@ -166,7 +166,7 @@ export default function Dashboard() {
                         </Card>
                     </TabsContent>
                     <TabsContent value="table">
-                        <div className="p-0  relative mb-3 mt-3 border-1 rounded-lg">
+                        <div className="p-0  relative mb-3 mt-3 rounded-lg">
                             {loading && <LoadingScreen />}
                             <Table className="">
                                 <TableHeader className="border-b border-black">

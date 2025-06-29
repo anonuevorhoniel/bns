@@ -2,24 +2,31 @@ import ax from "@/Axios";
 import { create } from "zustand";
 
 export const UseServicePeriod = create<any>((set: any, get: any) => ({
-    servicePeriodData: null,
-    servicePeriodDataLoad: false,
-    servicePeriodDataPage: 1,
-    setServicePeriodDataPage: (page: number) => set({servicePeriodDataPage: page}),
+    data: null,
+    loading: false,
+    page: 1,
+    setPage: (page: number) => set({page: page}),
     pages: null,
+    search: "",
 
-
-    getServicePeriodData: async () => {
-        set({ servicePeriodDataLoad: true });
+    getData: async (search: string) => {
+        set({ loading: true });
         try {
-            let page = get().servicePeriodDataPage;
-            const r = await ax.post('/service_periods', {page: page})
+            let page = get().page;
+            const r = await ax.post('/service_periods', {page: page, search: search})
             set({pages: r.data.pages});
-            set({servicePeriodData: r.data.volunteers});
+            set({data: r.data.volunteers});
+            console.log(r.data);
+            
         } catch (err) {
             console.log(err);
         } finally {
-            set({ servicePeriodDataLoad: false });
+            set({ loading: false });
         }
     },
 }));
+
+export const UseViewServicePeriod = create<any>((set: any, get: any) => ({
+    viewOpen: false,
+    setViewOpen: (state: boolean) => set({viewOpen: state}),
+ }));

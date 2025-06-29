@@ -3,18 +3,15 @@
 namespace App\Http\Controllers;
 
 use File;
-use DateTime;
 use Exception;
 use Carbon\Carbon;
 use App\Models\Fund;
 use App\Models\User;
-use App\Models\Payroll;
 use App\Models\Quarter;
 use App\Models\Scholar;
 use App\Models\Barangay;
 use App\Models\District;
 use App\Models\Position;
-use App\Models\Training;
 use App\Models\Volunteer;
 use App\Models\Assignment;
 use App\Models\AuditTrail;
@@ -33,10 +30,7 @@ use App\Models\EducationalAttainment;
 use App\Models\MunicipalRepresentative;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Reader\Xlsx;
-use PhpOffice\PhpSpreadsheet\Shared\Date;
-use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Border;
-use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Worksheet\PageSetup;
 
 class VolunteerController extends Controller
@@ -61,28 +55,19 @@ class VolunteerController extends Controller
         $search = $request->search;
         $page = $request->page;
         $limit = 8;
-        $total_count = DB::table('tbl_scholars')
+        $scholars = DB::table('tbl_scholars')
             ->where('citymuni_id', $request->code)
-            ->leftjoin('tbl_barangays as b', 'b.code', 'tbl_scholars.barangay_id')
             ->when($request->filled('search'), function ($q) use ($search) {
                 return $q->where('tbl_scholars.first_name', 'LIKE', "$search%")
                     ->orWhere('tbl_scholars.middle_name', 'LIKE', "$search%")
                     ->orWhere('tbl_scholars.last_name', 'LIKE', "$search%")
                     ->orWhere('b.name', 'LIKE', "$search%");
-            })
-            ->count();
+            });
+        $total_count = (clone $scholars)->count();
         $offset = $limit * ($page - 1);
         $total_page = ceil($total_count / $limit);
-        $get_scholars = DB::table('tbl_scholars')
-            ->where('citymuni_id', $request->code)
-            ->when($request->filled('search'), function ($q) use ($search) {
-                $q->where(function ($query) use ($search) {
-                    $query->where('tbl_scholars.first_name', 'LIKE', "$search%")
-                        ->orWhere('tbl_scholars.middle_name', 'LIKE', "$search%")
-                        ->orWhere('tbl_scholars.last_name', 'LIKE', "$search%")
-                        ->orWhere('b.name', 'LIKE', "$search%");
-                });
-            })
+        $get_scholars =
+            $scholars
             ->limit($limit)
             ->offset($offset)
             ->join('tbl_municipalities as m', 'm.code', 'tbl_scholars.citymuni_id')
@@ -97,7 +82,6 @@ class VolunteerController extends Controller
             ->orderBy('tbl_scholars.last_name', 'asc')
             ->get();
         $current_scholar_count = $get_scholars->count();
-
         $get_scholars->map(function ($q) {
             $exists = DB::table('tbl_scholars')
                 ->where('replaced_scholar_id', $q->id)

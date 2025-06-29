@@ -60,7 +60,8 @@ class PayrollController extends Controller
             $from = "$p->year_from-$p->month_from";
             $to = "$p->year_to-$p->month_to";
             $p->period_cover = date('F Y', strtotime($from)) . " - " . date('F Y', strtotime($to));
-            $p->created_at = date('F j, Y | h:i:s', strtotime($p->created_at));
+            $p->diff_time = Carbon::parse($p->created_at)->diffForHumans();
+            $p->created_at = date('F j, Y | h:i A', strtotime($p->created_at));
         });
         $current_payroll_count = $payrolls->count();
         // dd($payrolls);

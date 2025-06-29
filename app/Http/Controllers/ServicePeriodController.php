@@ -17,6 +17,7 @@ class ServicePeriodController extends Controller
     public function index(Request $request)
     {
         $page = $request->page;
+        $search = $request->search;
         $municipalities = Assignment::getMunicipalities()->toArray();
         $municipality_codes = array_column($municipalities, 'code');
 
@@ -24,21 +25,40 @@ class ServicePeriodController extends Controller
             ->join('tbl_service_periods as sp', 'sp.volunteer_id', 'v.id')
             ->leftJoin('tbl_municipalities as m', 'v.citymuni_id', 'm.code')
             ->whereIn('v.citymuni_id', $municipality_codes)
+            ->when($search, function ($q) use ($search) {
+                $q->where('v.first_name', 'like', "$search%")
+                    ->orWhere('v.middle_name', 'like', "$search%")
+                    ->orWhere('v.last_name', 'like', "$search%")
+                    ->orWhere('m.name', 'like', "$search%");
+            })
             ->groupBy(['v.id', 'v.first_name', 'v.middle_name', 'v.last_name', 'v.name_extension', 'm.name'])
-            ->select('v.id as volunteer_id', DB::raw('CONCAT(v.last_name, " ", COALESCE(v.middle_name, " "), " ", v.last_name, " ", COALESCE(v.name_extension, " ")) as full_name '), 'm.name');
+            ->select('v.id as id', DB::raw('CONCAT(v.last_name, " ", COALESCE(v.middle_name, " "), " ", v.last_name, " ", COALESCE(v.name_extension, " ")) as full_name '), 'm.name');
 
-        $total_scholars = (clone $volunteers)->count();
+        $total_scholars = (clone $volunteers->get())->count();
         $limit = 8;
         $total_page = ceil($total_scholars / $limit);
         $offset = ($page - 1) * $limit;
+        $volunteers = $volunteers->offset($offset)->limit($limit)->get();
+        $current_scholar_count = $volunteers->count();
+
+        $volunteers->map(function($s) {
+            $recent_period = DB::table('tbl_service_periods')
+            ->where('volunteer_id', $s->id)
+            ->orderBy('created_at', 'desc')
+            ->first();
+
+            $from = date('F Y', strtotime("$recent_period->year_from-$recent_period->month_from"));
+            $to = $recent_period->status == "present" ? "Present" : date('F Y', strtotime("$recent_period->year_to-$recent_period->month_to"));
+            $s->recent_period = "$from - $to";
+        });
 
         $pages = [
             'total_scholars' => $total_scholars,
             'limit' => $limit,
             'total_page' => $total_page,
-            'offset' => $offset
+            'offset' => $offset,
+            'current_scholar_count' => $current_scholar_count,
         ];
-        $volunteers = $volunteers->offset($offset)->limit($limit)->get();
 
         return response()->json(compact('volunteers', 'pages'));
     }

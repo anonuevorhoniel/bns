@@ -1,4 +1,8 @@
-import { UseDownloadMasterlist, UseDownloadPayroll, UseViewPayroll } from "@/Actions/PayrollAction";
+import {
+    UseDownloadMasterlist,
+    UseDownloadPayroll,
+    UseViewPayroll,
+} from "@/Actions/PayrollAction";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -9,14 +13,24 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-import { ChevronsUpDown, Download, Eye, ListChecks } from "lucide-react";
+import {
+    Building2,
+    Calendar,
+    CalendarRange,
+    CircleDollarSign,
+    Download,
+    Eye,
+    ListChecks,
+} from "lucide-react";
 import { Ring2 } from "ldrs/react";
 import "ldrs/react/Ring2.css";
+import { BadgeFund } from "@/Reusable/BadgeFund";
 
 export default function PayrollTable({ payrolls }: any) {
     const { setViewPayroll } = UseViewPayroll();
     const { download, loadingId } = UseDownloadPayroll();
-    const {downloadMasterlist, loadingIdMasterlist} = UseDownloadMasterlist();
+    const { downloadMasterlist, loadingIdMasterlist } = UseDownloadMasterlist();
+
     const ring = (
         <Ring2
             size="20"
@@ -32,32 +46,32 @@ export default function PayrollTable({ payrolls }: any) {
             <Table>
                 <TableHeader>
                     <TableRow>
-                        <TableHead className="rounded-tl-lg text-black/50">
+                        <TableHead className="rounded-tl-lg opacity-60">
                             <Label className="flex justify-center">
-                                Fund <ChevronsUpDown size={15} />
+                                <CircleDollarSign size={15} /> Fund
                             </Label>
                         </TableHead>
-                        <TableHead className=" text-black/50">
+                        <TableHead className=" opacity-60">
                             <Label className="flex justify-center">
+                                <Calendar size={15} />
                                 Date Created
-                                <ChevronsUpDown size={15} />
                             </Label>
                         </TableHead>
-                        <TableHead className=" text-black/50">
+                        <TableHead className=" opacity-60">
                             <Label className="flex justify-center">
+                                <Building2 size={15} />
                                 Municipality
-                                <ChevronsUpDown size={15} />
                             </Label>
                         </TableHead>
-                        <TableHead className=" text-black/50">
+                        <TableHead className=" opacity-60">
                             <Label className="flex justify-center">
+                                <CalendarRange size={15} />
                                 Period Covered
-                                <ChevronsUpDown size={15} />
                             </Label>
                         </TableHead>
-                        <TableHead className=" text-black/50 rounded-tr-lg">
+                        <TableHead className=" opacity-60 rounded-tr-lg">
                             <Label className="flex justify-center">
-                                Action <ChevronsUpDown size={15} />
+                                Action
                             </Label>
                         </TableHead>
                     </TableRow>
@@ -68,10 +82,13 @@ export default function PayrollTable({ payrolls }: any) {
                             return (
                                 <TableRow key={p.id}>
                                     <TableCell className="text-center">
-                                        {p.fund}
+                                        {BadgeFund(p.fund)}
                                     </TableCell>
-                                    <TableCell className="text-center">
-                                        {p.created_at}
+                                    <TableCell className="flex flex-col items-center">
+                                        <Label>{p.created_at}</Label>
+                                        <Label className="mt-1 text-xs opacity-60">
+                                            {p.diff_time}
+                                        </Label>
                                     </TableCell>
                                     <TableCell className="text-center">
                                         {p.name}
@@ -104,12 +121,16 @@ export default function PayrollTable({ payrolls }: any) {
                                         <Button
                                             className="ml-2"
                                             variant={"warning"}
-                                                  onClick={() => downloadMasterlist(p.id)}
+                                            onClick={() =>
+                                                downloadMasterlist(p.id)
+                                            }
                                         >
                                             {loadingIdMasterlist == p.id ? (
                                                 ring
                                             ) : (
-                                                <><ListChecks /> Masterlist</>
+                                                <>
+                                                    <ListChecks /> Masterlist
+                                                </>
                                             )}
                                         </Button>
                                     </TableCell>

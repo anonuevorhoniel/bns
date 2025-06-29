@@ -8,10 +8,11 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-import { ChevronsUpDown, Edit, Search, Trash } from "lucide-react";
+import { ChevronsUpDown, CircleDollarSign, Edit, House, Search, Trash, User } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ViewScholar } from "./ScholarState";
 import { Label } from "@/components/ui/label";
+import { BadgeFund } from "@/Reusable/BadgeFund";
 
 export default function ScholarTable() {
     const { scholars } = UseGetScholar();
@@ -23,16 +24,16 @@ export default function ScholarTable() {
                 <TableHeader className="">
                     <TableRow className="">
                         <TableHead  className="hover:bg-gray-200">
-                            <Label className="text-black/75 flex items-center justify-center">Full Name <ChevronsUpDown size={15} /></Label>
+                            <Label className="text-black/75 flex items-center justify-center opacity-60"><User size={15} /> Full Name </Label>
                         </TableHead>
                       <TableHead className="hover:bg-gray-200">
-                            <Label className="text-black/75 flex items-center justify-center">Barangay <ChevronsUpDown size={15} /></Label>
+                            <Label className="text-black/75 flex items-center justify-center opacity-60"><House size={15} /> Barangay </Label>
                         </TableHead>
                            <TableHead className="hover:bg-gray-200">
-                            <Label className="text-black/75 flex items-center justify-center">Fund <ChevronsUpDown size={15} /></Label>
+                            <Label className="text-black/75 flex items-center justify-center opacity-60"><CircleDollarSign size={15} /> Fund </Label>
                         </TableHead>
                         <TableHead >
-                            <Label className="text-black/75 flex items-center justify-center">Action </Label>
+                            <Label className="text-black/75 flex items-center justify-center opacity-60">Action </Label>
                         </TableHead>
                     </TableRow>
                 </TableHeader>
@@ -48,7 +49,7 @@ export default function ScholarTable() {
                                         {s.barangay_name}
                                     </TableCell>
                                     <TableCell className="text-center">
-                                        {s.fund}
+                                        {BadgeFund(s.fund)}
                                     </TableCell>
                                     <TableCell className="text-center">
                                         <Button
