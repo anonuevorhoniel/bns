@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { CirclePlus, Search } from "lucide-react";
 import ServicePeriodTable from "./ServicePeriodTable";
 import AutoPagination from "@/Reusable/AutoPagination";
-import { UseServicePeriod } from "./Actions/ServicePeriodAction";
+import { deleteServicePeriod, UseServicePeriod } from "./Actions/ServicePeriodAction";
 import { Label } from "@/components/ui/label";
 import LoadingScreen from "@/LoadingScreen";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ import ViewServicePeriod from "./View/ViewServicePeriod";
 
 export default function ServicePeriods() {
     const { pages, page, setPage, loading, getData } = UseServicePeriod();
+    const {refresh} = deleteServicePeriod();
     let totalPage = pages?.total_page;
     let offset = pages?.offset;
     let totalScholars = pages?.total_scholars;
@@ -27,7 +28,8 @@ export default function ServicePeriods() {
             }, 1000);
             return () => clearTimeout(timeout);
         }
-    }, [page, search]);
+    }, [page, search, refresh]);
+
 
     return (
         <>

@@ -62,5 +62,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::prefix('/service_periods')->controller(ServicePeriodController::class)->group(function () {
         Route::post('/', 'index');
+        Route::post('/{scholar}/show', 'show');
+        Route::get('/{service_period}/destroy', 'destroy');
+        Route::post('/single_store', 'single_store');
     });
 });

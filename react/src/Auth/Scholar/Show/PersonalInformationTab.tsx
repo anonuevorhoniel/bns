@@ -2,18 +2,16 @@ import { UseScholarShow } from "@/Actions/ScholarAction";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { NAValues } from "@/Reusable/NAValues";
 import { GraduationCap, MapPin, Phone, User } from "lucide-react";
 
 export default function PersonalInformationTab() {
     const { scholarData } = UseScholarShow();
-    function NAValues(value: any) {
-        return (value = value ? value : "N/A");
-    }
     return (
-        <div className="pb-2">
+        <div className="pb-2 max-h-[350px] overflow-auto">
             <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
                 <div>
-                    <Card className="border-0 p-0 shadow-sm">
+                    <Card className=" p-0 shadow-none border-0">
                         <CardContent className="p-6">
                             <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
                                 <User className="h-5 w-5 text-blue-600" />
@@ -81,39 +79,55 @@ export default function PersonalInformationTab() {
                 </div>
 
                 <div>
-                      <Card className="border-0 shadow-sm">
-                    <CardContent className="">
-                        <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
-                            <MapPin className="h-5 w-5 text-green-600" />
-                            Contact Details
-                        </h3>
-                        <div className="">
-                            <div className="mb-2">
-                                <label className="text-sm font-medium text-gray-600 flex">
-                                    Contact Number:
-                                    <div className="flex ml-2 items-center">
-                                        <Phone className="h-4 w-4 text-gray-400 items-center" />
-                                       <label htmlFor="" className="ml-2"> {NAValues(scholarData?.contact_number)}</label>
-                                    </div>
-                                </label>
-                                <p className="text-gray-900 font-medium mt-1 flex items-center gap-2"></p>
+                    <Card className="border-0 shadow-none">
+                        <CardContent className="">
+                            <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
+                                <MapPin className="h-5 w-5 text-green-600" />
+                                Contact Details
+                            </h3>
+                            <div className="">
+                                <div className="mb-2">
+                                    <label className="text-sm font-medium text-gray-600 flex">
+                                        Contact Number:
+                                        <div className="flex ml-2 items-center">
+                                            <Phone className="h-4 w-4 text-gray-400 items-center" />
+                                            <label htmlFor="" className="ml-2">
+                                                {" "}
+                                                {NAValues(
+                                                    scholarData?.contact_number
+                                                )}
+                                            </label>
+                                        </div>
+                                    </label>
+                                    <p className="text-gray-900 font-medium mt-1 flex items-center gap-2"></p>
+                                </div>
+
+                                <div className="flex mb-3">
+                                    <label className="text-sm font-medium text-gray-600">
+                                        Address:
+                                    </label>
+                                    <label className="text-sm font-semibold ml-1">
+                                        {NAValues(scholarData?.full_address)}
+                                    </label>
+                                </div>
+
+                                <div className="flex">
+                                    <label className="text-sm font-medium text-gray-600">
+                                        Complete Address:
+                                    </label>
+                                    <label className="text-sm font-semibold ml-1">
+                                        {NAValues(
+                                            scholarData?.complete_address
+                                        )}
+                                    </label>
+                                </div>
                             </div>
-                            <div className="flex">
-                                <label className="text-sm font-medium text-gray-600">
-                                  Complete Address: 
-                                </label>
-                                <label className="text-sm font-semibold ml-1">
-                                    {NAValues(scholarData?.complete_address)}
-                                </label>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
+                        </CardContent>
+                    </Card>
                 </div>
-              
             </div>
 
-            <Card className="border-0 shadow-sm mt-5 sm:mt-3">
+            <Card className="border-0 shadow-none mt-5 sm:mt-3">
                 <CardContent className="">
                     <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
                         <GraduationCap className="h-5 w-5 text-purple-600" />
@@ -124,7 +138,7 @@ export default function PersonalInformationTab() {
                             Educational Attainment:
                         </label>
                         <Badge className="mt-2 bg-purple-100 text-purple-800 hover:bg-purple-200 ml-4">
-                           {NAValues(scholarData?.educational_attainment)}
+                            {NAValues(scholarData?.educational_attainment)}
                         </Badge>
                     </div>
                 </CardContent>

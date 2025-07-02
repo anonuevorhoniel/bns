@@ -6,10 +6,12 @@ use App\Models\ServicePeriod;
 use App\Models\Municipality;
 use App\Models\Assignment;
 use App\Models\AuditTrail;
+use App\Models\Scholar;
 use App\Models\Volunteer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use DateTime;
+use Exception;
 
 class ServicePeriodController extends Controller
 {
@@ -23,6 +25,7 @@ class ServicePeriodController extends Controller
 
         $volunteers = DB::table('tbl_scholars as v')
             ->join('tbl_service_periods as sp', 'sp.volunteer_id', 'v.id')
+            ->where('sp.deleted_at', null)
             ->leftJoin('tbl_municipalities as m', 'v.citymuni_id', 'm.code')
             ->whereIn('v.citymuni_id', $municipality_codes)
             ->when($search, function ($q) use ($search) {
@@ -31,8 +34,8 @@ class ServicePeriodController extends Controller
                     ->orWhere('v.last_name', 'like', "$search%")
                     ->orWhere('m.name', 'like', "$search%");
             })
-            ->groupBy(['v.id', 'v.first_name', 'v.middle_name', 'v.last_name', 'v.name_extension', 'm.name'])
-            ->select('v.id as id', DB::raw('CONCAT(v.last_name, " ", COALESCE(v.middle_name, " "), " ", v.last_name, " ", COALESCE(v.name_extension, " ")) as full_name '), 'm.name');
+            ->groupBy(['v.id', 'v.first_name', 'v.middle_name', 'v.last_name', 'v.name_extension', 'm.name', 'v.fund'])
+            ->select('v.id as id', DB::raw('CONCAT(v.last_name, " ", COALESCE(v.middle_name, " "), " ", v.last_name, " ", COALESCE(v.name_extension, " ")) as full_name '), 'm.name', 'v.fund');
 
         $total_scholars = (clone $volunteers->get())->count();
         $limit = 8;
@@ -41,11 +44,11 @@ class ServicePeriodController extends Controller
         $volunteers = $volunteers->offset($offset)->limit($limit)->get();
         $current_scholar_count = $volunteers->count();
 
-        $volunteers->map(function($s) {
+        $volunteers->map(function ($s) {
             $recent_period = DB::table('tbl_service_periods')
-            ->where('volunteer_id', $s->id)
-            ->orderBy('created_at', 'desc')
-            ->first();
+                ->where('volunteer_id', $s->id)
+                ->orderBy('created_at', 'desc')
+                ->first();
 
             $from = date('F Y', strtotime("$recent_period->year_from-$recent_period->month_from"));
             $to = $recent_period->status == "present" ? "Present" : date('F Y', strtotime("$recent_period->year_to-$recent_period->month_to"));
@@ -164,18 +167,6 @@ class ServicePeriodController extends Controller
 
     public function store(Request $request)
     {
-        // dd($request->all());
-        $page = [
-            'name'      =>  'Settings',
-            'title'     =>  'Service Period',
-            'crumb' =>  array(
-                'Settings' => '',
-                'Service Period Management' => '/settings/service_periods',
-                'Add' => '/service_periods/create',
-                'Verify' => ''
-            )
-        ];
-
         DB::beginTransaction();
         try {
             $members = array();
@@ -258,16 +249,15 @@ class ServicePeriodController extends Controller
             }
 
             DB::commit();
-            return view('service_periods.verify', compact('page', 'request', 'from', 'to', 'members'));
+            return response()->json(compact('page', 'request', 'from', 'to', 'members'));
         } catch (\Exception $e) {
-
             DB::rollBack();
-            return back()->withErrors($e->getMessage());
+            return response()->json($e->getMessage(), 422);
         }
     }
 
 
-    public function singleStore(Request $request)
+    public function single_store(Request $request)
     {
 
         DB::beginTransaction();
@@ -324,40 +314,41 @@ class ServicePeriodController extends Controller
                 AuditTrail::createTrail("Add service period", $period);
 
                 DB::commit();
-                return back()->withSuccess('Service Period has been added.');
+                return response()->json('Service Period has been added.');
             } else {
 
                 $conflict = $existing_period[0]->month_from . '-' . $existing_period[0]->year_from
                     . ' | ' . $existing_period[0]->month_to . '-' . $existing_period[0]->year_to;
 
-                return back()->withErrors('Conflict with Schedule - ' . $conflict);
+                return response()->json('Conflict with Schedule - ' . $conflict, 422);
             }
         } catch (\Exception $e) {
 
             DB::rollBack();
-            return back()->withErrors($e->getMessage());
+            return response()->json($e->getMessage());
         }
     }
 
-    public function show($volunteer_id)
+    public function show(Scholar $scholar, Request $request)
     {
+        $service_period_query = ServicePeriod::where('volunteer_id', $scholar->id)
+            ->join('tbl_scholars as s', 'tbl_service_periods.volunteer_id', 's.id')
+            ->select(
+                'tbl_service_periods.*',
+                DB::raw('CONCAT ( s.last_name, " ",  s.first_name , " ", COALESCE(s.middle_name, ""), " " , COALESCE(s.name_extension, "" )) as full_name')
+            );
 
-        $page = [
-            'name'      =>  'Settings',
-            'title'     =>  'Service Period',
-            'crumb' =>  array(
-                'Settings' => '',
-                'Service Period Management' => '/settings/service_periods',
-                'Show' => ''
-            )
-        ];
-        $volunteer = DB::table('tbl_scholars')->where('id', $volunteer_id)->get();
-        $volunteer = $volunteer[0];
-        $service_periods = ServicePeriod::where('volunteer_id', $volunteer_id)
-            ->get();
-
-
-        return view('service_periods.show', compact('page', 'service_periods', 'volunteer'));
+        $total = (clone $service_period_query)->count();
+        $page = $request->page ?? 1;
+        $limit = 5;
+        $total_page = ceil($total / $limit);
+        $offset = ($page - 1) * $limit;
+        $service_periods = (clone $service_period_query)
+        ->offset($offset)
+        ->limit($limit)
+        ->get();
+        $page_info = compact('offset', 'limit', 'total_page', 'total');
+        return response()->json(compact('service_periods', 'page_info'));
     }
 
 
@@ -448,8 +439,13 @@ class ServicePeriodController extends Controller
      * @param  \App\ServicePeriod  $servicePeriod
      * @return \Illuminate\Http\Response
      */
-    public function destroy(ServicePeriod $servicePeriod)
+    public function destroy(ServicePeriod $service_period)
     {
-        //
+        try {
+            $service_period->delete();
+            return response()->json(['message' => 'Service Period Deleted']);
+        } catch (Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
     }
 }

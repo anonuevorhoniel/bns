@@ -137,7 +137,7 @@ export default function Scholars() {
                         {loading && <LoadingScreen />}
                         <ScholarTable />
                     </div>
-                    <div className="grid grid-cols-1 lg:grid-cols-2 xs:grid-cols-1 sm:grid-cols-1">
+                    <div className="grid grid-cols-1  lg:grid-cols-2 xs:grid-cols-1 sm:grid-cols-1">
                         <div
                             className={`flex justify-between mt-2 ${
                                 loading ? "pointer-events-none" : ""
@@ -154,14 +154,16 @@ export default function Scholars() {
                             </div>
                             <div className=""></div>
                         </div>
-                        <div>
+                        <div className="flex items-center justify-end" >
                             {" "}
-                            <AutoPagination
+                          <div>
+                              <AutoPagination
                                 totalPage={totalPage}
                                 page={page}
                                 setPage={setPage}
                                 loading={loading}
                             />
+                          </div>
                         </div>
                     </div>
                 </CardContent>

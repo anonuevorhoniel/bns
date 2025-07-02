@@ -46,8 +46,8 @@ export default function ViewPayroll() {
     }, [viewPayroll]);
 
     const content = (
-        <>
-            <div className="">
+        <div  className="overflow-auto">
+            <div>
                 <Label className="flex justify-center text-blue-900 text-xl text-center">
                     Barangay Nutrition Scholar Directory (
                     {payroll?.fund ? payroll?.fund : ring}) for{" "}
@@ -121,7 +121,7 @@ export default function ViewPayroll() {
                     />
                 </div>
             </div>
-        </>
+        </div>
     );
 
     return (

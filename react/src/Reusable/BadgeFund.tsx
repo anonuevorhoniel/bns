@@ -1,8 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 
 export function BadgeFund(fund: any) {
-    console.log(`fund is ${fund}`);
-
     switch (fund) {
         case "NNC":
             return <Badge variant={"success"}>{fund}</Badge>;
