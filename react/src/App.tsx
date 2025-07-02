@@ -9,6 +9,7 @@ import EditScholar from "./Auth/Scholar/EditScholar/EditScholar";
 import CreatePayroll from "./Auth/Payroll/CreatePayroll/CreatePayroll";
 import Users from "./Users/Users";
 import ServicePeriods from "./Service_Periods/ServicePeriods";
+import Signatories from "./Auth/Signatories/Signatories";
 
 function App() {
     return (
@@ -30,7 +31,8 @@ function App() {
                         <Route path="/payrolls" element={<Payroll />} />,
                         <Route path="/payrolls/create" element={<CreatePayroll />} />,
                         <Route path="/users" element={<Users />}/>,
-                        <Route path="/service_periods" element={<ServicePeriods />}/>
+                        <Route path="/service_periods" element={<ServicePeriods />}/>,
+                        <Route path="/signatories" element={<Signatories />} />,
                     ]}
                 />
             </Routes>

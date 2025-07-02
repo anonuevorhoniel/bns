@@ -11,26 +11,13 @@ import {
 } from "@/components/ui/sidebar";
 import { NavLink, useLocation } from "react-router-dom";
 
-export function NavMain({
-    items,
-}: {
-    items: {
-        title: string;
-        url: string;
-        icon: LucideIcon;
-        isActive?: boolean;
-        items?: {
-            title: string;
-            url: string;
-        }[];
-    }[];
-}) {
-const location = useLocation();
+export function NavMain({ items }: any) {
+    const location = useLocation();
     return (
         <SidebarGroup>
             <SidebarGroupLabel>Platform</SidebarGroupLabel>
             <SidebarMenu>
-                {items.map((item) => (
+                {items?.map((item: any) => (
                     <SidebarMenuItem key={item.title}>
                         <NavLink to={item.url} className={"active"}>
                             <SidebarMenuButton

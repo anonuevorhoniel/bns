@@ -9,8 +9,9 @@ import {
 import {
     deleteServicePeriod,
     UseServicePeriod,
+    UseStoreServicePeriod,
     UseViewServicePeriod,
-} from "./Actions/ServicePeriodAction";
+} from "../Actions/ServicePeriodAction";
 import {
     Building2,
     CalendarRange,
@@ -20,7 +21,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useEffect  } from "react";
+import { useEffect } from "react";
 import { BadgeFund } from "@/Reusable/BadgeFund";
 
 export default function ServicePeriodTable() {
@@ -33,14 +34,15 @@ export default function ServicePeriodTable() {
         setScholarId,
         scholarId,
     } = UseViewServicePeriod();
+    const { storeSingleRefresh } = UseStoreServicePeriod();
 
-    const {dataView } = UseViewServicePeriod();
-    const {refresh} = deleteServicePeriod();
+    const { dataView } = UseViewServicePeriod();
+    const { refresh } = deleteServicePeriod();
     let totalScholars = pages?.total_scholars;
 
     useEffect(() => {
         scholarId && setDataView();
-    }, [viewPage, viewOpen, refresh]);
+    }, [viewPage, viewOpen, refresh, storeSingleRefresh]);
 
     useEffect(() => {
         dataView?.[0] ? "" : setViewOpen(false);
@@ -108,9 +110,9 @@ export default function ServicePeriodTable() {
                         </TableRow>
                     );
                 })}
-                {totalScholars == 0 ? (
+                {totalScholars == 0 || totalScholars == undefined ? (
                     <TableRow>
-                        <TableCell className="text-center" colSpan={3}>
+                        <TableCell className="text-center" colSpan={5}>
                             No Scholars with Service Periods
                         </TableCell>
                     </TableRow>

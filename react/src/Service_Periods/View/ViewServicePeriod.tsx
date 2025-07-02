@@ -1,5 +1,5 @@
 import DialogDrawer from "@/Reusable/DialogDrawer";
-import { UseViewServicePeriod } from "../Actions/ServicePeriodAction";
+import { UseViewServicePeriod } from "../../Actions/ServicePeriodAction";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Label } from "@/components/ui/label";
 import { CirclePlus, Clock, Eye } from "lucide-react";

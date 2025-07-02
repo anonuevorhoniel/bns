@@ -16,7 +16,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { UseStoreServicePeriod, UseViewServicePeriod } from "@/Service_Periods/Actions/ServicePeriodAction";
+import { UseStoreServicePeriod, UseViewServicePeriod } from "@/Actions/ServicePeriodAction";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CalendarArrowDown, CalendarArrowUp } from "lucide-react";
 import { useState } from "react";
@@ -58,7 +58,7 @@ export default function ServicePeriodCreateTab() {
                                             </FormLabel>
                                             <FormControl>
                                                 <Input
-                                                    type="date"
+                                                    type="month"
                                                     {...field}
                                                     value={field.value}
                                                     onInput={(e) => {
@@ -91,7 +91,7 @@ export default function ServicePeriodCreateTab() {
                                                     To
                                                 </FormLabel>
                                                 <FormControl>
-                                                    {/* <Input type="date" {...field}/> */}
+                                                    {/* <Input type="month" {...field}/> */}
                                                     <Select
                                                         onValueChange={(e) => {
                                                             field.onChange(e);
@@ -134,7 +134,7 @@ export default function ServicePeriodCreateTab() {
                                             <FormItem>
                                                 <FormControl>
                                                     <Input
-                                                        type="date"
+                                                        type="month"
                                                         {...field}
                                                         value={field.value}
                                                         onInput={(e) => {

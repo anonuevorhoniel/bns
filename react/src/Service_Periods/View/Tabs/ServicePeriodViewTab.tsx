@@ -12,7 +12,7 @@ import AutoPagination from "@/Reusable/AutoPagination";
 import {
     deleteServicePeriod,
     UseViewServicePeriod,
-} from "@/Service_Periods/Actions/ServicePeriodAction";
+} from "@/Actions/ServicePeriodAction";
 import { CalendarArrowUp, X } from "lucide-react";
 import { useState } from "react";
 import AlertReusable from "@/Reusable/AlertReusable";

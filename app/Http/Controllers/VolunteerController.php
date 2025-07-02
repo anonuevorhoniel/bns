@@ -400,6 +400,7 @@ class VolunteerController extends Controller
 
         $service_periods = DB::table('tbl_service_periods as sp')
             ->where('sp.volunteer_id', $scholar->id)
+            ->where('sp.deleted_at', null)
             ->orderBy('sp.month_from', 'desc')
             ->orderBy('sp.month_to', 'desc')
             ->get();

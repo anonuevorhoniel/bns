@@ -253,6 +253,7 @@ export default function CreatePayroll() {
                                                             open={open}
                                                             setOpen={setOpen}
                                                             field={field}
+                                                            setForm={setForm}
                                                         />
                                                     </FormControl>
                                                     <FormMessage />

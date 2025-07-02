@@ -30,6 +30,7 @@ export const UseGetMunicipality = create<UseGetMunicipalityType>(
                     district: district_id,
                 });
                 set({ Municipalities: r.data });
+                console.log(r.data);
             } catch (err) {
                 console.log(err);
             }

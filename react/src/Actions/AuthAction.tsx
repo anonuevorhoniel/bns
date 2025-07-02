@@ -5,6 +5,7 @@ import { create } from "zustand";
 export const UseAuth = create<UseAuthType>((set: any) => ({
     user: null,
     authenticate: async (nav: any) => {
+        set({user: null});
         try {
             const r = await ax.get("/users/check-auth");
             set({ user: r.data });

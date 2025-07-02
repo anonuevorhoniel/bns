@@ -11,11 +11,18 @@ import {
 import AutoPagination from "@/Reusable/AutoPagination";
 import { CirclePlus, LockKeyholeOpen, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { UseUser } from "./Actions/UserAction";
+import { UseUser } from "../Actions/UserAction";
+import { UseLayout } from "@/Actions/LayoutAction";
 
 export default function Users() {
     const [page, setPage] = useState(1);
     const { userData, getUserData } = UseUser();
+    const { setItem, setBItem } = UseLayout();
+
+    useEffect(() => {
+        setItem("Users");
+        setBItem("");
+    }, []);
 
     useEffect(() => {
         getUserData(page);
@@ -55,34 +62,48 @@ export default function Users() {
                         </TableHeader>
                         <TableBody>
                             {userData?.map((u: any) => {
-                              return  <TableRow>
-                                    <TableCell className="text-center">
-                                        {u.name}
-                                    </TableCell>
-                                    <TableCell className="text-center">
-                                        {u.email}
-                                    </TableCell>
-                                    <TableCell className="text-center">
-                                        {u.classification}
-                                    </TableCell>
-                                     <TableCell className="text-center">
-                                        {u.mobile   }
-                                    </TableCell>
-                                    <TableCell className="text-center">
-                                        <Button variant={"info"}>
-                                            <LockKeyholeOpen />
-                                        </Button>
-                                        <Button
-                                            variant={"destructive"}
-                                            className="ml-1"
-                                        >
-                                            {" "}
-                                            <Trash2 />
-                                        </Button>
-                                    </TableCell>
-                                </TableRow>;
+                                return (
+                                    <TableRow>
+                                        <TableCell className="text-center">
+                                            {u.name}
+                                        </TableCell>
+                                        <TableCell className="text-center">
+                                            {u.email}
+                                        </TableCell>
+                                        <TableCell className="text-center">
+                                            {u.classification}
+                                        </TableCell>
+                                        <TableCell className="text-center">
+                                            {u.mobile}
+                                        </TableCell>
+                                        <TableCell className="text-center">
+                                            <Button variant={"info"}>
+                                                <LockKeyholeOpen />
+                                            </Button>
+                                            <Button
+                                                variant={"destructive"}
+                                                className="ml-1"
+                                            >
+                                                {" "}
+                                                <Trash2 />
+                                            </Button>
+                                        </TableCell>
+                                    </TableRow>
+                                );
                             })}
-                            {userData?.length == 0 || userData?.length == undefined ? <TableRow><TableCell className="text-center" colSpan={5}>No Users</TableCell></TableRow> : ""}
+                            {userData?.length == 0 ||
+                            userData?.length == undefined ? (
+                                <TableRow>
+                                    <TableCell
+                                        className="text-center"
+                                        colSpan={5}
+                                    >
+                                        No Users
+                                    </TableCell>
+                                </TableRow>
+                            ) : (
+                                ""
+                            )}
                         </TableBody>
                     </Table>
                     <AutoPagination

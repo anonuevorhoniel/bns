@@ -33,8 +33,10 @@ import { useDirectory, useMasterlist } from "@/Actions/DownloadAction";
 import DirectoryDialog from "./Download/DirectoryDialog";
 import MasterlistDialog from "./Download/MasterlistDialog";
 import SelectCode from "./ScholarForm/SelectCode";
+import { UseAuth } from "@/Actions/AuthAction";
 
 export default function Scholars() {
+    const { user } = UseAuth();
     const { getAllMuni } = UseMuni();
     const {
         GetScholars,
@@ -46,7 +48,16 @@ export default function Scholars() {
         totalScholar,
         offset,
         cs_count,
+        setCode,
     } = UseGetScholar();
+
+    useEffect(() => {
+        if (user?.assigned_muni_code != null) {
+            setCode(user?.assigned_muni_code);
+        } else {
+            setCode(null);
+        }
+    }, [user]);
 
     const [open, setOpen] = useState(false);
     const [search, setSearch] = useState("");
@@ -116,19 +127,20 @@ export default function Scholars() {
                                 </Button>
                             </Link>
 
-                            <SelectCode open={open} setOpen={setOpen} />
-
+                           {user?.assigned_muni_code == null &&  <SelectCode open={open} setOpen={setOpen} />}
                         </div>
-                      <div >
-                          <div className="flex justify-center items-center bg-white rounded-lg  max-w-70 float-right px-3 py-1 space-x-2">
-                            <Search className="text-gray-500 w-5 h-5" />
-                            <Input
-                                className="bg-transparent border-none hover:bg-gray-100"
-                                placeholder="Search"
-                                onInput={(e: any) => setSearch(e.target.value)}
-                            />
+                        <div>
+                            <div className="flex justify-center items-center bg-white rounded-lg  max-w-70 float-right px-3 py-1 space-x-2">
+                                <Search className="text-gray-500 w-5 h-5" />
+                                <Input
+                                    className="bg-transparent border-none hover:bg-gray-100"
+                                    placeholder="Search"
+                                    onInput={(e: any) =>
+                                        setSearch(e.target.value)
+                                    }
+                                />
+                            </div>
                         </div>
-                      </div>
                     </div>
                 </CardHeader>
 
@@ -154,16 +166,16 @@ export default function Scholars() {
                             </div>
                             <div className=""></div>
                         </div>
-                        <div className="flex items-center justify-end" >
+                        <div className="flex items-center justify-end">
                             {" "}
-                          <div>
-                              <AutoPagination
-                                totalPage={totalPage}
-                                page={page}
-                                setPage={setPage}
-                                loading={loading}
-                            />
-                          </div>
+                            <div>
+                                <AutoPagination
+                                    totalPage={totalPage}
+                                    page={page}
+                                    setPage={setPage}
+                                    loading={loading}
+                                />
+                            </div>
                         </div>
                     </div>
                 </CardContent>

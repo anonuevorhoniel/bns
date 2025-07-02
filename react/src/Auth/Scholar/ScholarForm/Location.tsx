@@ -1,3 +1,4 @@
+import { UseAuth } from "@/Actions/AuthAction";
 import {
     UseBarangay,
     UseCreateScholar,
@@ -25,6 +26,7 @@ export default function Location({ scholarForm, scholarData }: any) {
     const { setFormData } = useCreateScholarForm();
     const { Barangays, GetBarangays } = UseBarangay();
     const { Municipalities, GetMunicipalities } = UseGetMunicipality();
+    const { user } = UseAuth();
 
     useEffect(() => {
         GetCreateScholarData();
@@ -45,37 +47,41 @@ export default function Location({ scholarForm, scholarData }: any) {
                 </CardTitle>
                 <CardContent>
                     <div className="grid xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:grid-cols-2">
-                        <div>
-                            <FormFieldSelect
-                                scholarForm={scholarForm}
-                                name="district_id"
-                                formLabel="District"
-                                placeholder="--District--"
-                                onChange={(e: any) => {
-                                    if (e != "" && e != null) {
-                                        GetMunicipalities(e);
+                        {!user?.assigned_district_id && (
+                            <div>
+                                <FormFieldSelect
+                                    scholarForm={scholarForm}
+                                    name="district_id"
+                                    formLabel="District"
+                                    placeholder="--District--"
+                                    onChange={(e: any) => {
+                                        if (e != "" && e != null) {
+                                            GetMunicipalities(e);
+                                        }
+                                    }}
+                                    selectItem={
+                                        <>
+                                            {CreateScholarData?.districts &&
+                                                Object.values(
+                                                    CreateScholarData?.districts
+                                                ).map((d: any) => {
+                                                    return (
+                                                        <SelectItem
+                                                            value={`${d.id}`}
+                                                            key={d.id}
+                                                        >
+                                                            {d.description}
+                                                        </SelectItem>
+                                                    );
+                                                })}
+                                        </>
                                     }
-                                }}
-                                selectItem={
-                                    <>
-                                        {CreateScholarData?.districts &&
-                                            Object.values(
-                                                CreateScholarData?.districts
-                                            ).map((d: any) => {
-                                                return (
-                                                    <SelectItem
-                                                        value={`${d.id}`}
-                                                        key={d.id}
-                                                    >
-                                                        {d.description}
-                                                    </SelectItem>
-                                                );
-                                            })}
-                                    </>
-                                }
-                            />
-                        </div>
-                        <div>
+                                />
+                            </div>
+                        )}
+
+                         {!user?.assigned_muni_code && ( 
+                               <div>
                             <FormFieldSelect
                                 scholarForm={scholarForm}
                                 name="citymuni_id"
@@ -106,6 +112,8 @@ export default function Location({ scholarForm, scholarData }: any) {
                                 }
                             />
                         </div>
+                         )}
+                     
                         <div>
                             <FormFieldSelect
                                 scholarForm={scholarForm}
@@ -152,11 +160,15 @@ export default function Location({ scholarForm, scholarData }: any) {
                                 render={({ field }) => (
                                     <>
                                         <FormItem>
-                                            <FormLabel>Complete Address</FormLabel>
+                                            <FormLabel>
+                                                Complete Address
+                                            </FormLabel>
                                             <FormControl>
                                                 <Textarea
                                                     className="resize-none"
-                                                    placeholder={"--Complete Address--"}
+                                                    placeholder={
+                                                        "--Complete Address--"
+                                                    }
                                                     {...field}
                                                     onInput={(e: any) => {
                                                         setFormData({

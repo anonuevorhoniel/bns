@@ -15,6 +15,7 @@ import {
     SidebarProvider,
     SidebarTrigger,
 } from "@/components/ui/sidebar";
+import LoginLoadingScreen from "@/LoginLoadingScreen";
 import {  useEffect } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 export default function Layout() {
@@ -26,7 +27,7 @@ export default function Layout() {
     useEffect(() => {
         authenticate(nav);
     }, []);
-    if (!user) return null;
+    if (!user) return <LoginLoadingScreen />;
 
     return (
         <SidebarProvider>

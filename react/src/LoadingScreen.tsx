@@ -3,7 +3,7 @@ import "ldrs/react/Ring2.css";
 
 export default function LoadingScreen() {
     return (
-        <div className="absolute bottom-0 right-0 w-full h-full bg-gray-400/50 rounded-lg mt-10 z-500 flex justify-center items-center">
+        <div className="absolute bottom-0 right-0 w-full h-full bg-gray-400/50 rounded-lg mt-10 z-5 flex justify-center items-center">
             <div className="mr-3">
                 <Ring2
                     size="25"

@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use App\Models\AuditTrail;
+use App\Models\User;
+use Illuminate\Support\Facades\Cookie;
 
 class AuthController extends Controller
 {
@@ -20,17 +22,17 @@ class AuthController extends Controller
 
     public function store(Request $request)
     {
-        $this->validate($request,[
+        $this->validate($request, [
             'username' => 'required',
             'password' => 'required'
         ]);
 
         $credentials = $request->only('username', 'password');
 
-        if(! Auth::attempt( $credentials ) ) {
+        if (! Auth::attempt($credentials)) {
             return back()->withErrors('Invalid credentials')->withInput($request->all);
         }
-        
+
         return redirect('/');
     }
 
@@ -38,7 +40,7 @@ class AuthController extends Controller
 
     public function account()
     {
-        
+
         $page = [
             'name'  =>  'Accont',
             'title' =>  'Account Management',
@@ -49,13 +51,14 @@ class AuthController extends Controller
         return view('auth.account', compact('page', 'user'));
     }
 
-    public function updatePassword(Request $request){
-    
+    public function updatePassword(Request $request)
+    {
+
         DB::beginTransaction();
 
         try {
 
-            if($request->password == $request->confirm_password){
+            if ($request->password == $request->confirm_password) {
 
                 $user = Auth::user();
                 $user->password = Hash::make($request->password);
@@ -65,23 +68,20 @@ class AuthController extends Controller
 
                 DB::commit();
                 return back()->withSuccess('A new password has been set.');
-            }else{
+            } else {
                 return back()->withErrors('Password did not match.');
             }
-
-
         } catch (\Exception $e) {
 
             DB::rollBack();
             return back()->withErrors($e->getMessage());
-
         }
     }
 
-    public function destroy()
+    public function destroy(Request $request)
     {
-        Auth::logout();
-        return redirect('/');
+        Cookie::queue(Cookie::forget('user_c'));
+        return response()->json(['message' => 'logged out'])->withCookie(Cookie::forget('user_c'));
     }
 
     public function forbidden()

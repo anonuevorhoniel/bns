@@ -170,10 +170,7 @@ class UserController extends Controller
 
     public function reset(User $user)
     {
-
-
         if (Auth::user()->classification == "System Administrator") {
-
             $user->password = Hash::make('12345');
             $user->save();
             AuditTrail::createTrail("Reset Password", $user);

@@ -85,11 +85,13 @@ export const deleteServicePeriod = create<any>((set: any, get: any) => ({
             setting(false);
             alertShow(false);
             set({ refresh: get().refresh + 1 });
+            toast.warning("Deleted", { description: "Sevice Period Deleted" });
         }
     },
 }));
 
 export const UseStoreServicePeriod = create<any>((set: any, get: any) => ({
+    storeSingleRefresh: 1,
     spFormData: {
         from: "",
         to: "",
@@ -104,10 +106,80 @@ export const UseStoreServicePeriod = create<any>((set: any, get: any) => ({
     storeSP: async (scholarId: any) => {
         let form = get().spFormData;
         try {
-            const r = await ax.post("/service_periods/single_store", { from: form.from, to: form.to_date, specific: form.to, volunteer_id: scholarId });
-            console.log(r);
+            await ax.post("/service_periods/single_store", {
+                from: form.from,
+                to: form.to_date,
+                specific: form.to,
+                volunteer_id: scholarId,
+            });
+            toast.success('Sucess!', {description: 'Service Period has been added'});
         } catch (err: any) {
-            toast.error('Error', {description: err.response.data})
+            toast.error("Error", { description: err.response.data });
+        } finally {
+            set({storeSingleRefresh: get().storeSingleRefresh + 1});
+        }
+    },
+}));
+
+export const UseCreateServicePeriod = create<any>((set: any, get: any) => ({
+    loading: false,
+
+    storeRefresh: 1,
+    spCreateOpen: false,
+    setspCreateOpen: (state: boolean) => set({ spCreateOpen: state }),
+
+    pageData: null,
+
+    form: {
+        from: "",
+        to: "",
+        specific_date: "",
+        municipality_code: "",
+    },
+
+    setForm: ({ name, value }: any) =>
+        set((state: any) => ({
+            form: { ...state.form, [name]: value },
+        })),
+    clearForm: () => set({form: null}),
+
+    scholars: null,
+    getScholars: async (page: any) => {
+        let municipality_code = get()?.form?.municipality_code;
+        if (!municipality_code || municipality_code == "") {
+            return;
+        }
+        set({loading: true});
+        try {
+            const r = await ax.post(`/gmv/${municipality_code}`, {
+                page: page,
+            });
+            set({ pageData: r.data.page_data });
+            set({ scholars: r.data.data });
+        } catch (err) {
+            console.log(err);
+        } finally {
+            set({loading: false});
+        }
+    },
+
+    batchStoreSP: async ({ selectedIds, setspCreateOpen }: any) => {
+        let form = get().form;
+        let data = {
+            from: form.from,
+            to: form.to,
+            specific_date: form.specific_date,
+            municipality_code: form.municipality_code,
+            members: selectedIds,
+        };
+        try {
+            await ax.post("/service_periods/store", data);
+            toast.success("Added!", { description: "Service Periods Created" });
+        } catch (err) {
+            console.log(err);
+        } finally {
+            setspCreateOpen(false);
+            set((state: any) => ({ storeRefresh: state.storeRefresh + 1 }));
         }
     },
 }));

@@ -22,13 +22,28 @@ export const UseLogin = create<UseLoginType>((set: any, get: any) => ({
                 email: get().loginForm.email,
                 password: get().loginForm.password,
             });
-            toast.success("Success", { description: r.data.message });
-            nav("/dashboard");
+            r.data.user.assigned_muni_code == null
+                ? nav("/dashboard")
+                : nav("/scholars");
+            setTimeout(() => {
+                toast.success("Success", { description: r.data.message });
+            }, 200);
         } catch (e: any) {
             console.log(e);
             toast.error("Error", { description: e.response.data.message });
         } finally {
             set({ loading: false });
+        }
+    },
+}));
+
+export const UseLogout = create<any>((set: any) => ({
+    logout: async (user_id: any, nav: any) => {
+        try {
+            await ax.post("/logout", { id: user_id });
+            nav("/");
+        } catch (err) {
+            console.log(err);
         }
     },
 }));

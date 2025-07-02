@@ -25,7 +25,6 @@ class APIController extends Controller
 {
     public function getMunicipalities(Request $request)
     {
-        return response()->json($request->all());
         $district = $request->district;
         if (Auth::user()->classification == "Field Officer") {
             $data = DB::table('tbl_assignments as a')
@@ -47,13 +46,30 @@ class APIController extends Controller
         return $data;
     }
 
-    public function getMunicipalityVolunteers($municipality)
+    public function getMunicipalityVolunteers(Request $request, $municipality)
     {
-        $data = Scholar::where('citymuni_id', $municipality)
-            ->where('deleted_at', null)
+        $page = $request->page;
+        $scholars = Scholar::where('citymuni_id', $municipality)
+            ->where('deleted_at', null);
+        $limit = 7;
+        $total_scholar = (clone $scholars)->count();
+        $total_page = ceil($total_scholar / $limit);
+        $offset = ($page - 1) * $limit;
+
+        $data = (clone $scholars)
+            ->offset($offset)
+            ->limit($limit)
+            ->select('tbl_scholars.id as id', DB::raw('CONCAT(tbl_scholars.last_name, " ", tbl_scholars.first_name, " ", COALESCE(tbl_scholars.middle_name, ""), " ", COALESCE(tbl_scholars.name_extension, ""))  as full_name'))
             ->get();
 
-        return $data;
+        $page_data = [
+            'limit' => $limit,
+            'total_scholar' => $total_scholar,
+            'total_page' => $total_page,
+            'offset' => $offset
+        ];
+
+        return response()->json(compact('data', 'page_data'));
     }
 
     public function getVolunteerInfo($volunteer)

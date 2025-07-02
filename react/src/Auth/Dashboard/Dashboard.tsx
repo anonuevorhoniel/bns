@@ -28,7 +28,7 @@ import {
     type ChartConfig,
 } from "@/components/ui/chart";
 import { Bar, BarChart, CartesianGrid, XAxis } from "recharts";
-import { ChartArea, GraduationCap, Sheet } from "lucide-react";
+import { Building2, ChartArea, GraduationCap, Sheet, Users, UsersRound } from "lucide-react";
 
 export default function Dashboard() {
     const {
@@ -40,7 +40,7 @@ export default function Dashboard() {
         total_scholars,
         loading,
         allMuni,
-        getAllMuni
+        getAllMuni,
     } = UseMuni();
 
     const { setItem, setBItem } = UseLayout();
@@ -61,16 +61,16 @@ export default function Dashboard() {
             color: "green",
         },
     } satisfies ChartConfig;
-    const chartData = 
+    const chartData =
         allMuni &&
-            Object.values(allMuni).map((m: any) => ({
-                "Municipality": m.name,
-                Scholars: m.sc_total,
-            }));
+        Object.values(allMuni).map((m: any) => ({
+            Municipality: m.name,
+            Scholars: m.sc_total,
+        }));
 
     useEffect(() => {
         console.log(allMuni);
-    }, [])
+    }, []);
 
     return (
         <>
@@ -107,7 +107,8 @@ export default function Dashboard() {
                                         />
                                     </div>
                                     <div className="font-bold">
-                                        {total_scholars || total_scholars == 0 ? (
+                                        {total_scholars ||
+                                        total_scholars == 0 ? (
                                             total_scholars
                                         ) : (
                                             <div className="ml-3">
@@ -174,11 +175,18 @@ export default function Dashboard() {
                                         <TableHead className="text-center rounded-tl-lg text-black/50">
                                             #
                                         </TableHead>
-                                        <TableHead className="text-center text-black/50">
-                                            Municipality
+                                        <TableHead>
+                                            <div className="flex justify-center opacity-70">
+                                                {" "}
+                                                <Label>
+                                                    {" "}
+                                                    <Building2 size={15} />{" "}
+                                                    Municipality
+                                                </Label>
+                                            </div>
                                         </TableHead>
-                                        <TableHead className="text-center text-black/50 rounded-tr-lg">
-                                            Total Scholars
+                                        <TableHead className="flex justify-center">
+                                            <Label><UsersRound />  Total Scholars</Label>
                                         </TableHead>
                                     </TableRow>
                                 </TableHeader>
@@ -205,12 +213,12 @@ export default function Dashboard() {
                             </Table>
                         </div>
 
-                            <AutoPagination
-                                totalPage={total_page}
-                                page={page}
-                                setPage={setPage}
-                                loading={loading}
-                            />
+                        <AutoPagination
+                            totalPage={total_page}
+                            page={page}
+                            setPage={setPage}
+                            loading={loading}
+                        />
                     </TabsContent>
                 </Tabs>
             </div>

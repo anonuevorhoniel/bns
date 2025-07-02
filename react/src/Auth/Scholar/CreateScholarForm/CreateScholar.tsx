@@ -10,7 +10,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ScholarformSchema } from "../../../Validation/CreateScholarValidation";
 import { useCreateScholarForm } from "@/forms/CreateScholarForm";
-import { ScholarStore } from "@/Actions/ScholarAction";
+import { ScholarStore, UseBarangay, UseGetMunicipality } from "@/Actions/ScholarAction";
 import { Toaster } from "sonner";
 import Elegibility from "../ScholarForm/Eligibility";
 import Incentive from "../ScholarForm/Incentive";
@@ -20,14 +20,25 @@ import AdditionalInformation from "../ScholarForm/AddtionalInfo/AdditionalInform
 import Location from "../ScholarForm/Location";
 import PersonalInformation from "../ScholarForm/PersonalInformation";
 import { ScholarShow } from "../Show/ScholarShow";
+import { UseAuth } from "@/Actions/AuthAction";
 
 export default function CreateScholars() {
     const { setItem, setBItem } = UseLayout();
     const [loading, setLoading] = useState(false);
-    const { form, clearForm } = useCreateScholarForm();
-    const { store } = ScholarStore();
+    const { form, clearForm, setFormData } = useCreateScholarForm();
+    const { GetBarangays } = UseBarangay()
     const [eligibilities, setEligibilities] = useState([]);
     const [trainings, setTrainings] = useState<any>([]);
+    const { user } = UseAuth();
+
+    let muni_code = "";
+    let district_id = "";
+
+    if (user?.assigned_muni_code && user?.assigned_district_id) {
+        muni_code = user?.assigned_muni_code;
+        district_id = user?.assigned_district_id;
+        console.log(muni_code, district_id);
+    }
 
     const defaultValues = {
         first_name: "",
@@ -44,8 +55,8 @@ export default function CreateScholars() {
         last_name: "",
         sex: "",
         contact_number: "",
-        district_id: "",
-        citymuni_id: "",
+        district_id: district_id,
+        citymuni_id: muni_code,
         barangay_id: "",
         status: "",
         bns_type: "",
@@ -65,13 +76,20 @@ export default function CreateScholars() {
     const nav = useNavigate();
 
     const handleSubmit = () => {
-        store(form, setLoading, nav, eligibilities, trainings);
+        console.log(form);
+        // store(form, setLoading, nav, eligibilities, trainings);
     };
 
     useEffect(() => {
         setItem("Scholars");
         setBItem("Create");
         clearForm();
+        setFormData({ name: "district_id", value: district_id });
+        setFormData({ name: "citymuni_id", value: muni_code });
+        if (muni_code != "") {
+            GetBarangays(muni_code);
+            console.log('asd');
+        }
     }, []);
 
     return (
@@ -92,8 +110,14 @@ export default function CreateScholars() {
                     <Beneficiary scholarForm={scholarForm} />
                     <Incentive scholarForm={scholarForm} />
                     <div className="grid grid-cols-1 xl:grid-cols-2 lg:grid-cols-2 gap-5">
-                        <Training trainings={trainings} setTrainings={setTrainings} />
-                        <Elegibility eligibilities={eligibilities} setEligibilities={setEligibilities} />
+                        <Training
+                            trainings={trainings}
+                            setTrainings={setTrainings}
+                        />
+                        <Elegibility
+                            eligibilities={eligibilities}
+                            setEligibilities={setEligibilities}
+                        />
                     </div>
                     <center>
                         <Button

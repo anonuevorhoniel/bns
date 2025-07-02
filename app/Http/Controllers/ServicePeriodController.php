@@ -35,7 +35,7 @@ class ServicePeriodController extends Controller
                     ->orWhere('m.name', 'like', "$search%");
             })
             ->groupBy(['v.id', 'v.first_name', 'v.middle_name', 'v.last_name', 'v.name_extension', 'm.name', 'v.fund'])
-            ->select('v.id as id', DB::raw('CONCAT(v.last_name, " ", COALESCE(v.middle_name, " "), " ", v.last_name, " ", COALESCE(v.name_extension, " ")) as full_name '), 'm.name', 'v.fund');
+            ->select('v.id as id', DB::raw('CONCAT(v.last_name, " ", COALESCE(v.middle_name, " "), " ", v.first_name, " ", COALESCE(v.name_extension, " ")) as full_name '), 'm.name', 'v.fund');
 
         $total_scholars = (clone $volunteers->get())->count();
         $limit = 8;
@@ -48,6 +48,7 @@ class ServicePeriodController extends Controller
             $recent_period = DB::table('tbl_service_periods')
                 ->where('volunteer_id', $s->id)
                 ->orderBy('created_at', 'desc')
+                ->where('deleted_at', null)
                 ->first();
 
             $from = date('F Y', strtotime("$recent_period->year_from-$recent_period->month_from"));
@@ -249,7 +250,7 @@ class ServicePeriodController extends Controller
             }
 
             DB::commit();
-            return response()->json(compact('page', 'request', 'from', 'to', 'members'));
+            return response()->json(compact('request', 'from', 'to', 'members'));
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json($e->getMessage(), 422);

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\APIController;
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PayrollController;
 use App\Http\Controllers\RateController;
@@ -17,14 +18,6 @@ Route::get('/user', function (Request $request) {
 Route::post('/users/authenticate', [UserController::class, 'authenticate']);
 
 Route::middleware('auth:sanctum')->group(function () {
-    Route::prefix('/users')->controller(UserController::class)->group(function () {
-        Route::get('/check-auth', 'check_auth');
-    });
-
-    Route::prefix('/dashboard')->controller(DashboardController::class)->group(function () {
-        Route::post('/get-muni', 'index');
-    });
-
     Route::prefix('/scholars')->controller(VolunteerController::class)->group(function () {
         Route::post('/get', 'municipality_index');
         Route::get('/create', 'create');
@@ -36,34 +29,48 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/directory/download', 'directory_download');
         Route::post('/masterlist/download', 'masterlist_download');
     });
-    // /get_completed_volunteers
+
+    Route::prefix('/users')->controller(UserController::class)->group(function () {
+        Route::get('/check-auth', 'check_auth');
+    });
+
+    Route::middleware('admin')->group(function () {
+        Route::prefix('/dashboard')->controller(DashboardController::class)->group(function () {
+            Route::post('/get-muni', 'index');
+        });
+
+        Route::prefix('/rates')->controller(RateController::class)->group(function () {
+            Route::get('/', 'index');
+        });
+
+        Route::prefix('/payrolls')->controller(PayrollController::class)->group(function () {
+            Route::post('/store', 'store');
+            Route::post('/', 'index');
+            Route::post('/show/{payroll}', 'show');
+            Route::get('/{payroll}/download', 'download');
+            Route::get('/masterlists/{id}/download', 'masterlist_payroll_download');
+        });
+
+        Route::prefix('/users')->controller(UserController::class)->group(function () {
+            Route::post('/', 'index');
+        });
+
+        Route::prefix('/service_periods')->controller(ServicePeriodController::class)->group(function () {
+            Route::post('/', 'index');
+            Route::post('/{scholar}/show', 'show');
+            Route::post('/store', 'store');
+            Route::get('/{service_period}/destroy', 'destroy');
+            Route::post('/single_store', 'single_store');
+        });
+    });
+
+    Route::post('/logout', [AuthController::class, 'destroy']);
 
     Route::controller(APIController::class)->group(function () {
         Route::post('/getMunicipalities', 'getMunicipalities');
         Route::post('/getBarangays', 'getBarangays');
     });
 
-    Route::prefix('/rates')->controller(RateController::class)->group(function () {
-        Route::get('/', 'index');
-    });
-
     Route::post('/getScholars', [APIController::class, 'getCompletedVolunteers']);
-    Route::prefix('/payrolls')->controller(PayrollController::class)->group(function () {
-        Route::post('/store', 'store');
-        Route::post('/', 'index');
-        Route::post('/show/{payroll}', 'show');
-        Route::get('/{payroll}/download', 'download');
-        Route::get('/masterlists/{id}/download', 'masterlist_payroll_download');
-    });
-
-    Route::prefix('/users')->controller(UserController::class)->group(function () {
-        Route::post('/', 'index');
-    });
-
-    Route::prefix('/service_periods')->controller(ServicePeriodController::class)->group(function () {
-        Route::post('/', 'index');
-        Route::post('/{scholar}/show', 'show');
-        Route::get('/{service_period}/destroy', 'destroy');
-        Route::post('/single_store', 'single_store');
-    });
+    Route::post('/gmv/{municipality}',  [APIController::class, 'getMunicipalityVolunteers']);
 });
