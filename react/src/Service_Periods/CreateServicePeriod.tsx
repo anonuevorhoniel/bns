@@ -56,7 +56,7 @@ export function CreateServicePeriod() {
         scholars,
         batchStoreSP,
         clearForm,
-        loading
+        loading,
     } = UseCreateServicePeriod();
     const [muniOpen, setMuniOpen] = useState(false);
     const [page, setPage] = useState(1);
@@ -96,8 +96,12 @@ export function CreateServicePeriod() {
         getScholars(page);
     }, [form?.municipality_code, page]);
 
+    useEffect(() => {
+        setSelectedIds([]);
+    }, [form?.municipality_code]);
+
     const content = (
-        <div className="max-h-[70vh] overflow-auto space-y-5">
+        <div className="max-h-[70vh] overflow-auto p-6">
             <Label className="text-lg">
                 <div className="text-yellow-600">
                     <CalendarPlus2 />
@@ -323,7 +327,7 @@ export function CreateServicePeriod() {
                 open={spCreateOpen}
                 setOpen={setspCreateOpen}
                 content={content}
-                size={"sm:max-w-[900px]"}
+                size={"sm:max-w-[900px] p-0"}
             />
         </>
     );

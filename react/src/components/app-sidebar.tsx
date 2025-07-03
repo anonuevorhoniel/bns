@@ -80,10 +80,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 },
                 {
                     title: "Audit Trail",
-                    url: "#",
+                    url: "/audit_trails",
                     icon: ScanEye,
                     isActive:
-                        window.location.pathname == "/audit-trail"
+                        window.location.pathname == "/audit_trail"
                             ? true
                             : false,
                 },

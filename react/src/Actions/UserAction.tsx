@@ -10,7 +10,6 @@ export const UseUser = create<any>((set: any) => ({
             set({ userDataLoad: true });
             const r = await ax.post('/users', {page: page})
             set({userData: r.data.users})
-            console.log(r.data);
         } catch (err) {
             console.log(err);
         } finally {

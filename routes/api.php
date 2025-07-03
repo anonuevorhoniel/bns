@@ -1,13 +1,16 @@
 <?php
 
 use App\Http\Controllers\APIController;
+use App\Http\Controllers\AuditTrailController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PayrollController;
 use App\Http\Controllers\RateController;
 use App\Http\Controllers\ServicePeriodController;
+use App\Http\Controllers\SignatoryController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VolunteerController;
+use App\Models\AuditTrail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -26,8 +29,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/getAllMuni', "getAllMuni");
         Route::post('/store', 'store');
         Route::get('/{id}/show', 'show');
-        Route::post('/directory/download', 'directory_download');
-        Route::post('/masterlist/download', 'masterlist_download');
     });
 
     Route::prefix('/users')->controller(UserController::class)->group(function () {
@@ -35,6 +36,11 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::middleware('admin')->group(function () {
+        Route::prefix('/scholars')->controller(VolunteerController::class)->group(function () {
+            Route::post('/directory/download', 'directory_download');
+            Route::post('/masterlist/download', 'masterlist_download');
+        });
+
         Route::prefix('/dashboard')->controller(DashboardController::class)->group(function () {
             Route::post('/get-muni', 'index');
         });
@@ -62,6 +68,15 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/{service_period}/destroy', 'destroy');
             Route::post('/single_store', 'single_store');
         });
+
+        Route::prefix('/signatories')->controller(SignatoryController::class)->group(function () {
+            Route::post('/store', 'store');
+            Route::post('/', 'index');
+            Route::get('/{signatory}/edit', 'edit');
+            Route::post('/{signatory}/update', 'update');
+        });
+
+        Route::post('/audit_trails', [AuditTrailController::class, 'index']);
     });
 
     Route::post('/logout', [AuthController::class, 'destroy']);

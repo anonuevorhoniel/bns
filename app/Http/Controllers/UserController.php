@@ -22,7 +22,7 @@ class UserController extends Controller
      */
     public function index()
     {
-        $users = User::all();
+        $users = User::whereNot('id', Auth::id())->get();
 
         if (Auth::user()->classification == "Field Officer") {
             return back()->withErrors('Permission Denied!');

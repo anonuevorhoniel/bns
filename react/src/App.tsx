@@ -10,6 +10,7 @@ import CreatePayroll from "./Auth/Payroll/CreatePayroll/CreatePayroll";
 import Users from "./Users/Users";
 import ServicePeriods from "./Service_Periods/ServicePeriods";
 import Signatories from "./Auth/Signatories/Signatories";
+import AuditTrail from "./Audit_Trail/AuditTrail";
 
 function App() {
     return (
@@ -33,6 +34,7 @@ function App() {
                         <Route path="/users" element={<Users />}/>,
                         <Route path="/service_periods" element={<ServicePeriods />}/>,
                         <Route path="/signatories" element={<Signatories />} />,
+                        <Route path="/audit_trails" element={<AuditTrail />} />,
                     ]}
                 />
             </Routes>

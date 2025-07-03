@@ -57,6 +57,8 @@ class VolunteerController extends Controller
         $limit = 8;
         $scholars = DB::table('tbl_scholars')
             ->where('citymuni_id', $request->code)
+            ->join('tbl_municipalities as m', 'm.code', 'tbl_scholars.citymuni_id')
+            ->leftjoin('tbl_barangays as b', 'b.code', 'tbl_scholars.barangay_id')
             ->when($request->filled('search'), function ($q) use ($search) {
                 return $q->where('tbl_scholars.first_name', 'LIKE', "$search%")
                     ->orWhere('tbl_scholars.middle_name', 'LIKE', "$search%")
@@ -70,8 +72,6 @@ class VolunteerController extends Controller
             $scholars
             ->limit($limit)
             ->offset($offset)
-            ->join('tbl_municipalities as m', 'm.code', 'tbl_scholars.citymuni_id')
-            ->leftjoin('tbl_barangays as b', 'b.code', 'tbl_scholars.barangay_id')
             ->select(
                 'tbl_scholars.*',
                 'm.name as municity_name',
@@ -93,8 +93,6 @@ class VolunteerController extends Controller
         });
         return response()->json(compact('get_scholars', 'total_count', 'total_page', 'offset', 'current_scholar_count'));
     }
-
-
 
     public function datatable_old(Request $request)
     {

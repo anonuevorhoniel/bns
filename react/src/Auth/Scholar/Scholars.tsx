@@ -71,6 +71,10 @@ export default function Scholars() {
     }, []);
 
     useEffect(() => {
+        GetScholars(code, page, search);
+    }, [code, page]);
+
+    useEffect(() => {
         if (search) {
             const timeout = setTimeout(() => {
                 GetScholars(code, page, search);
@@ -79,7 +83,7 @@ export default function Scholars() {
         } else {
             GetScholars(code, page, search);
         }
-    }, [code, page, search]);
+    }, [search]);
 
     return (
         <>
@@ -88,34 +92,37 @@ export default function Scholars() {
             <DirectoryDialog />
             <MasterlistDialog />
             <Toaster position="top-right" />
-            <div className="flex justify-end gap-2 mb-3">
-                <Button variant={"link"}>
-                    <Upload /> Upload Data
-                </Button>
-                <DropdownMenu>
-                    <DropdownMenuTrigger
-                        className="bg-gradient-to-r from-emerald-400 to-emerald-600 text-white flex rounded-sm p-3 shadow-emerald-500/25 hover:-translate-y-0.5 hover:shadow-xl h-9 
+            {user?.assigned_muni_code == null && (
+                <div className="flex justify-end gap-2 mb-3">
+                    <Button variant={"link"}>
+                        <Upload /> Upload Data
+                    </Button>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger
+                            className="bg-gradient-to-r from-emerald-400 to-emerald-600 text-white flex rounded-sm p-3 shadow-emerald-500/25 hover:-translate-y-0.5 hover:shadow-xl h-9 
                             text-sm items-center"
-                    >
-                        Download <ChevronsUpDown size={18} className="ml-1" />
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                        <DropdownMenuItem
-                            onClick={() => setOpenDirectoryDialog(true)}
                         >
-                            <Database /> Directory
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                            onClick={() => setOpenMasterlistDialog(true)}
-                        >
-                            <BookMarked /> Masterlist
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                            <Medal /> Top BNS
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            </div>
+                            Download{" "}
+                            <ChevronsUpDown size={18} className="ml-1" />
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                            <DropdownMenuItem
+                                onClick={() => setOpenDirectoryDialog(true)}
+                            >
+                                <Database /> Directory
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                                onClick={() => setOpenMasterlistDialog(true)}
+                            >
+                                <BookMarked /> Masterlist
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                                <Medal /> Top BNS
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
+            )}
 
             <Card className="p-0 pb-5">
                 <CardHeader className="bg-muted rounded-tl-lg rounded-tr-lg pt-2">
@@ -127,7 +134,9 @@ export default function Scholars() {
                                 </Button>
                             </Link>
 
-                           {user?.assigned_muni_code == null &&  <SelectCode open={open} setOpen={setOpen} />}
+                            {user?.assigned_muni_code == null && (
+                                <SelectCode open={open} setOpen={setOpen} />
+                            )}
                         </div>
                         <div>
                             <div className="flex justify-center items-center bg-white rounded-lg  max-w-70 float-right px-3 py-1 space-x-2">

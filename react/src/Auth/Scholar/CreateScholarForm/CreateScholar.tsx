@@ -10,7 +10,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ScholarformSchema } from "../../../Validation/CreateScholarValidation";
 import { useCreateScholarForm } from "@/forms/CreateScholarForm";
-import { ScholarStore, UseBarangay, UseGetMunicipality } from "@/Actions/ScholarAction";
+import { ScholarStore, UseBarangay } from "@/Actions/ScholarAction";
 import { Toaster } from "sonner";
 import Elegibility from "../ScholarForm/Eligibility";
 import Incentive from "../ScholarForm/Incentive";
@@ -25,6 +25,7 @@ import { UseAuth } from "@/Actions/AuthAction";
 export default function CreateScholars() {
     const { setItem, setBItem } = UseLayout();
     const [loading, setLoading] = useState(false);
+    const {store} = ScholarStore();
     const { form, clearForm, setFormData } = useCreateScholarForm();
     const { GetBarangays } = UseBarangay()
     const [eligibilities, setEligibilities] = useState([]);
@@ -37,7 +38,6 @@ export default function CreateScholars() {
     if (user?.assigned_muni_code && user?.assigned_district_id) {
         muni_code = user?.assigned_muni_code;
         district_id = user?.assigned_district_id;
-        console.log(muni_code, district_id);
     }
 
     const defaultValues = {
@@ -76,8 +76,7 @@ export default function CreateScholars() {
     const nav = useNavigate();
 
     const handleSubmit = () => {
-        console.log(form);
-        // store(form, setLoading, nav, eligibilities, trainings);
+        store(form, setLoading, nav, eligibilities, trainings);
     };
 
     useEffect(() => {
@@ -88,7 +87,6 @@ export default function CreateScholars() {
         setFormData({ name: "citymuni_id", value: muni_code });
         if (muni_code != "") {
             GetBarangays(muni_code);
-            console.log('asd');
         }
     }, []);
 

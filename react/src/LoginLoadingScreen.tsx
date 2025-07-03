@@ -7,7 +7,7 @@ export default function LoginLoadingScreen() {
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
         <div className="text-center space-y-2">
           <h2 className="text-lg font-semibold">Loading...</h2>
-          <p className="text-sm text-muted-foreground">Setting up your system. Please wait...</p>
+          <p className="text-sm text-muted-foreground">BNS System is loading. Please wait...</p>
         </div>
       </div>
     </div>

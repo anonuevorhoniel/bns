@@ -63,7 +63,7 @@ export default function Users() {
                         <TableBody>
                             {userData?.map((u: any) => {
                                 return (
-                                    <TableRow>
+                                    <TableRow key={u.id}>
                                         <TableCell className="text-center">
                                             {u.name}
                                         </TableCell>

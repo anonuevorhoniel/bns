@@ -28,7 +28,14 @@ import {
     type ChartConfig,
 } from "@/components/ui/chart";
 import { Bar, BarChart, CartesianGrid, XAxis } from "recharts";
-import { Building2, ChartArea, GraduationCap, Sheet, Users, UsersRound } from "lucide-react";
+import {
+    Building2,
+    ChartArea,
+    GraduationCap,
+    Sheet,
+    Users,
+    UsersRound,
+} from "lucide-react";
 
 export default function Dashboard() {
     const {
@@ -167,58 +174,71 @@ export default function Dashboard() {
                         </Card>
                     </TabsContent>
                     <TabsContent value="table">
-                        <div className="p-0  relative mb-3 mt-3 rounded-lg">
-                            {loading && <LoadingScreen />}
-                            <Table className="">
-                                <TableHeader className="border-b border-black">
-                                    <TableRow className="">
-                                        <TableHead className="text-center rounded-tl-lg text-black/50">
-                                            #
-                                        </TableHead>
-                                        <TableHead>
-                                            <div className="flex justify-center opacity-70">
-                                                {" "}
-                                                <Label>
+                        <Card>
+                            <div className="p-0  relative mb-3 mt-3 rounded-lg">
+                                {loading && <LoadingScreen />}
+                                <Table className="">
+                                    <TableHeader className="border-b border-black">
+                                        <TableRow className="">
+                                            <TableHead className="text-center rounded-tl-lg text-black/50">
+                                                #
+                                            </TableHead>
+                                            <TableHead>
+                                                <div className="flex justify-center opacity-70">
                                                     {" "}
-                                                    <Building2 size={15} />{" "}
-                                                    Municipality
+                                                    <Label>
+                                                        {" "}
+                                                        <Building2
+                                                            size={15}
+                                                        />{" "}
+                                                        Municipality
+                                                    </Label>
+                                                </div>
+                                            </TableHead>
+                                            <TableHead className="flex justify-center opacity-70">
+                                                <Label>
+                                                    <UsersRound size={15} />{" "}
+                                                    Total Scholars
                                                 </Label>
-                                            </div>
-                                        </TableHead>
-                                        <TableHead className="flex justify-center">
-                                            <Label><UsersRound />  Total Scholars</Label>
-                                        </TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {municipalities &&
-                                        Object.values(municipalities).map(
-                                            (m: any) => {
-                                                return (
-                                                    <TableRow key={m.id}>
-                                                        <TableCell className="text-center ">
-                                                            {m.id}
-                                                        </TableCell>
-                                                        <TableCell className="text-center ">
-                                                            {m.name}
-                                                        </TableCell>
-                                                        <TableCell className="text-center ">
-                                                            {m.sc_total}
-                                                        </TableCell>
-                                                    </TableRow>
-                                                );
-                                            }
-                                        )}
-                                </TableBody>
-                            </Table>
-                        </div>
-
-                        <AutoPagination
-                            totalPage={total_page}
-                            page={page}
-                            setPage={setPage}
-                            loading={loading}
-                        />
+                                            </TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {municipalities &&
+                                            Object.values(municipalities).map(
+                                                (m: any) => {
+                                                    return (
+                                                        <TableRow key={m.id}>
+                                                            <TableCell className="text-center ">
+                                                                {m.id}
+                                                            </TableCell>
+                                                            <TableCell className="text-center ">
+                                                                {m.name}
+                                                            </TableCell>
+                                                            <TableCell className="text-center ">
+                                                                {m.sc_total}
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    );
+                                                }
+                                            )}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                            <div className="grid grid-cols-2 pr-6">
+                                <div></div>
+                                <div>
+                                    <div className="float-right">
+                                        <AutoPagination
+                                            totalPage={total_page}
+                                            page={page}
+                                            setPage={setPage}
+                                            loading={loading}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </Card>
                     </TabsContent>
                 </Tabs>
             </div>

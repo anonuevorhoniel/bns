@@ -16,24 +16,37 @@ class AuditTrailController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
-        $page = [
-            'name'      =>  'Audit',
-            'title'     =>  'Audit Trail',
-            'crumb'     =>  array('Audit' => '/audit-trails')
-        ];
-
-        $trails = DB::table('tbl_audit_trails as t')
+        $search = $request->search;
+        $data = DB::table('tbl_audit_trails as t')
             ->select(
-                'u.name', 't.id', 't.created_at', 't.action', 't.description'
+                'u.name',
+                't.id',
+                't.created_at',
+                't.action',
+                't.description'
 
             )
             ->leftJoin('tbl_users as u', 't.user_id', 'u.id')
-            ->get();
+            ->when($search, function ($q) use ($search) {
+                $q->where(function ($r) use ($search) {
+                    $r->where('u.name', 'like', "$search%")
+                        ->orWhere('t.action', 'like', "$search%");
+                });
+            });
 
-        return view('audit.index', compact('page', 'trails'));
+        $page = $request->page;
+        $limit = 8;
+        $total_data = (clone $data)->get()->count();
+        $total_page = ceil($total_data / $limit);
+        $offset = ($page - 1) * $limit;
+
+        $trails = (clone $data)
+            ->limit($limit)->offset($offset)->get();
+        $pages = compact('page', 'limit', 'total_data', 'total_page', 'offset');
+
+        return response()->json(compact('trails', 'pages'));
     }
 
     /**
