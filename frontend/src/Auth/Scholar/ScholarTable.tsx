@@ -1,0 +1,95 @@
+import { UseScholarShow } from "@/Actions/ScholarAction";
+import { Button } from "@/components/ui/button";
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table";
+import { CircleDollarSign, Edit, House, Search, User } from "lucide-react";
+import { Link } from "react-router-dom";
+import { ViewScholar } from "./ScholarState";
+import { Label } from "@/components/ui/label";
+import { BadgeFund } from "@/Reusable/BadgeFund";
+
+export default function ScholarTable({data} : any) {
+    const { setShow } = ViewScholar();
+    const {getScholarShowData} = UseScholarShow();
+    return (
+        <>
+            <Table>
+                <TableHeader className="">
+                    <TableRow className="">
+                        <TableHead  className="hover:bg-gray-200">
+                            <Label className="text-black/75 flex items-center justify-center opacity-60"><User size={15} /> Full Name </Label>
+                        </TableHead>
+                      <TableHead className="hover:bg-gray-200">
+                            <Label className="text-black/75 flex items-center justify-center opacity-60"><House size={15} /> Barangay </Label>
+                        </TableHead>
+                           <TableHead className="hover:bg-gray-200">
+                            <Label className="text-black/75 flex items-center justify-center opacity-60"><CircleDollarSign size={15} /> Fund </Label>
+                        </TableHead>
+                        <TableHead >
+                            <Label className="text-black/75 flex items-center justify-center opacity-60">Action </Label>
+                        </TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {data?.length > 0 ? (
+                        Object.values(data).map((s: any) => {
+                            return (
+                                <TableRow key={s.id}>
+                                    <TableCell className="text-center">
+                                        {s.full_name}
+                                    </TableCell>
+                                    <TableCell className="text-center">
+                                        {s.barangay_name}
+                                    </TableCell>
+                                    <TableCell className="text-center">
+                                        {BadgeFund(s.fund)}
+                                    </TableCell>
+                                    <TableCell className="text-center">
+                                        <Button
+                                            variant={"info"}
+                                            size={"icon"}
+                                            className="mr-2"
+                                            onClick={() => {
+                                                setShow(true);
+                                                getScholarShowData(s.id);
+                                            }}
+                                        >
+                                            <Search />
+                                        </Button>
+                                        <Link to={`/scholars/${s.id}/edit`}>
+                                            <Button
+                                                variant={"warning"}
+                                                size={"icon"}
+                                                className="mr-2"
+                                            >
+                                                <Edit />
+                                            </Button>
+                                        </Link>
+                                        {/* <Button
+                                            variant={"destructive"}
+                                            size={"icon"}
+                                        >
+                                            <Trash />
+                                        </Button> */}
+                                    </TableCell>
+                                </TableRow>
+                            );
+                        })
+                    ) : (
+                        <TableRow>
+                            <TableCell className="text-center h-20" colSpan={4}>
+                                No Scholars
+                            </TableCell>
+                        </TableRow>
+                    )}
+                </TableBody>
+            </Table>
+        </>
+    );
+}

@@ -49,14 +49,22 @@ class VolunteerController extends Controller
         return view('volunteers.index', compact('page', 'municipalities'));
     }
 
-    // public function municipality_index(Municipality $municipality)
     public function municipality_index(Request $request)
     {
         $search = $request->search;
         $page = $request->page;
         $limit = 8;
+        $except_scholar_id = $request->except_scholar_id;
         $scholars = DB::table('tbl_scholars')
-            ->where('citymuni_id', $request->code)
+            ->when($except_scholar_id, function ($q) use ($except_scholar_id) {
+                $q->whereNot('tbl_scholars.id', $except_scholar_id);
+            })
+            ->when($request->code, function ($q) use ($request) {
+                $q->where('citymuni_id', $request->code);
+            })
+            ->when(!$request->code, function ($q) {
+                $q->where('citymuni_id', Auth::user()->assigned_muni_code);
+            })
             ->join('tbl_municipalities as m', 'm.code', 'tbl_scholars.citymuni_id')
             ->leftjoin('tbl_barangays as b', 'b.code', 'tbl_scholars.barangay_id')
             ->when($request->filled('search'), function ($q) use ($search) {
@@ -91,7 +99,7 @@ class VolunteerController extends Controller
                 $q->status = 'REPLACED';
             }
         });
-        return response()->json(compact('get_scholars', 'total_count', 'total_page', 'offset', 'current_scholar_count'));
+        return response()->json(compact('get_scholars', 'total_count', 'total_page', 'offset', 'current_scholar_count', 'except_scholar_id'));
     }
 
     public function datatable_old(Request $request)
@@ -209,7 +217,6 @@ class VolunteerController extends Controller
 
     public function store(Request $request)
     {
-        // return response($request->trainings);
         $request->validate([
             'form.first_name' => 'required',
             // 'last_name' => 'required',
@@ -237,7 +244,7 @@ class VolunteerController extends Controller
 
         if ($request->form['status'] == 'REPLACEMENT') {
             $request->validate([
-                'form.replacing' => 'required',
+                'form.replaced_scholar_id' => 'required',
                 'form.replacement_date' => 'required'
             ]);
         }
@@ -265,10 +272,13 @@ class VolunteerController extends Controller
             $scholar->classification = $request->form['classification'] ?? null;
             $scholar->philhealth_no = $request->form['philhealth_no'] ?? null;
             $scholar->status = $request->form['status'] ?? null;
+            $scholar->replaced_scholar_id = $request->form['replaced_scholar_id'] ?? null;
+            $scholar->replacement_date = $request->form['replacement_date'] ?? null;
 
-            if ($request->place_of_assignment == 'Same as Barangay') {
+            if ($request->form['place_of_assignment'] == 'Same as Barangay') {
+
                 $barangay = DB::table('tbl_barangays')
-                    ->where('code', $request->barangay_id)
+                    ->where('code', $request->form['barangay_id'])
                     ->first();
 
                 if (!$barangay) {
@@ -280,21 +290,21 @@ class VolunteerController extends Controller
                 $scholar->place_of_assignment = 'BNS Coordinator';
             }
 
-            $scholar->first_employment_date = $request->first_employment_date;
-            $scholar->end_employment_date = $request->end_employment_date;
-            $scholar->incentive_prov  = $request->incentive_prov;
-            $scholar->incentive_mun = $request->incentive_mun;
-            $scholar->incentive_brgy = $request->incentive_brgy;
+            $scholar->first_employment_date = $request->form['first_employment_date'] ?? null;
+            // $scholar->end_employment_date = $request->form['end_employment_date'];
+            $scholar->incentive_prov  = $request->form['incentive_prov'] ?? null;
+            $scholar->incentive_mun = $request->form['incentive_mun'] ?? null;
+            $scholar->incentive_brgy = $request->form['incentive_brgy'] ?? null;
 
             $scholar->save();
         } catch (\Exception $e) {
             return response()->json($e->getMessage());
         }
-        if ($request->first_employment_date != null) {
+        if ($request->form['first_employment_date'] != null) {
             $sp = new ServicePeriod();
             $sp->volunteer_id = $scholar->id;
-            $sp->month_from = date('m', strtotime($request->first_employment_date));
-            $sp->year_from = date('Y', strtotime($request->first_employment_date));
+            $sp->month_from = date('m', strtotime($request->form['first_employment_date']));
+            $sp->year_from = date('Y', strtotime($request->form['first_employment_date']));
             $sp->month_to = 0;
             $sp->year_to = 0;
             $sp->status = 'present';
@@ -392,8 +402,12 @@ class VolunteerController extends Controller
             $replaced = DB::table('tbl_scholars')
                 ->where('id', $scholar->replaced_scholar_id)
                 ->select(DB::raw('CONCAT(first_name, " " , COALESCE(middle_name, ""), " ", last_name) as full_name'))
-                ->first()
-                ->full_name;
+                ->first();
+            if ($replaced) {
+                $replaced = $replaced->full_name;
+            } else {
+                $replaced = "No Scholar was set";
+            }
         }
 
         $service_periods = DB::table('tbl_service_periods as sp')
@@ -438,7 +452,6 @@ class VolunteerController extends Controller
             ->where('code', $scholar->citymuni_id)
             ->first()
             ->id;
-        $replaced = null;
 
         $replaced = DB::table('tbl_scholars as s')
             ->where('id', $scholar->replaced_scholar_id)
@@ -494,27 +507,46 @@ class VolunteerController extends Controller
             'form.citymuni_id' => 'required',
             'form.barangay_id' => 'required'
         ]);
+        if ($request->form['status'] === 'REP') {
 
-        if ($request->status == 'REPLACEMENT') {
             $request->validate([
-                'form.replacing' => 'required|exists:tbl_scholars,id',
+                'form.replaced_scholar_id' => 'required|exists:tbl_scholars,id',
                 'form.replacement_date' => 'required|date',
                 'form.first_employment_date' => 'required|date',
             ]);
-
-            try {
+            if ($request->form['replacement_date'] != null && $request->form['replacement_date'] != "" &&  $request->form['replaced_scholar_id'] != null && $request->form['replaced_scholar_id'] != "") {
                 DB::table('tbl_scholars')
                     ->where('id', $id)
                     ->update([
                         'replacement_date' => $request->form['replacement_date'],
-                        'replaced_scholar_id' => $request->form['replacing']
+                        'replaced_scholar_id' => $request->form['replaced_scholar_id'],
                     ]);
+            }
+        } else {
+            try {
+                DB::table('tbl_scholars')
+                    ->where('id', $id)
+                    ->update([
+                        'replacement_date' => null,
+                        'replaced_scholar_id' => null
+                    ]);
+            } catch (Exception $e) {
+                return response()->json($e->getMessage(), 422);
+            }
+        }
 
+        if (array_key_exists("service_period_status", $request->form) && $request->form['service_period_status'] !== "null") {
+
+            $end_employment_exists = array_key_exists('end_employment_date', $request->form);
+            if (!$end_employment_exists) {
+                return response()->json(['message' => "End Employment is required"], 422);
+            }
+
+            try {
                 $month_from =  date('m', strtotime($request->form['first_employment_date']));
                 $year_from =  date('Y', strtotime($request->form['first_employment_date']));
 
-                if ($request->service_period_status == "new_service_period") {
-
+                if ($request->form["service_period_status"] == "new_service_period") {
                     $sp = new ServicePeriod();
                     $sp->volunteer_id = $id;
                     $sp->month_from = $month_from;
@@ -523,9 +555,9 @@ class VolunteerController extends Controller
                     $sp->year_to =  $request->form['end_employment_date'] ?  date('Y', strtotime($request->form['end_employment_date'])) : 0;
                     $sp->status =  $request->form['end_employment_date'] ? 'specific' : 'present';
                     $sp->save();
-                } elseif ($request->service_period_status == "update_service_period") {
+                } elseif ($request->form["service_period_status"] == "update_service_period") {
                     $max_id =  DB::table('tbl_service_periods')
-                        ->where('volunteer_id', $id)
+                        ->where('volunteer_id', $request->form['replaced_scholar_id'])
                         ->max('id');
 
                     if ($max_id) {
@@ -542,28 +574,20 @@ class VolunteerController extends Controller
                     }
                 }
             } catch (Exception $e) {
-                return redirect()->back()->withErrors($e->getMessage());
-            }
-        } else {
-            try {
-                DB::table('tbl_scholars')
-                    ->where('id', $id)
-                    ->update([
-                        'replacement_date' => null,
-                        'replaced_scholar_id' => null
-                    ]);
-            } catch (Exception $e) {
-                return redirect()->back()->withErrors($e->getMessage());
+                return response()->json($e->getMessage(), 422);
             }
         }
 
-        $place_of_assignment = "";
-        if ($request->place_of_assignment == 'same_barangay') {
-            $barangay_name = DB::table('tbl_barangays')
-                ->where('code', $request->barangay_id)
-                ->first()
-                ->name;
-            $place_of_assignment = $barangay_name;
+
+        if ($request->form['place_of_assignment'] == 'Same as Barangay') {
+            $barangay = DB::table('tbl_barangays')
+                ->where('code', $request->form['barangay_id'])
+                ->first();
+            if (!$barangay) {
+                return response()->json(['message' => 'Error in barangay_name'], 422);
+            }
+
+            $place_of_assignment = $barangay->name;
         } else {
             $place_of_assignment = 'BNS Coordinator';
         }
@@ -577,34 +601,34 @@ class VolunteerController extends Controller
             DB::table('tbl_scholars')
                 ->where('id', $id)
                 ->update([
-                    'first_name' => $request->form['first_name'],
-                    'middle_name' => $request->form['middle_name'],
-                    'last_name' => $request->form['last_name'],
-                    'name_extension' => $request->form['name_extension'],
-                    'name_on_id' => $request->form['name_on_id'],
-                    'id_no' => $request->form['id_no'],
-                    'citymuni_id' => $request->form['citymuni_id'],
-                    'bns_type' => $request->form['bns_type'],
-                    'barangay_id' => $request->form['barangay_id'],
-                    'complete_address' => $request->form['complete_address'],
-                    'sex' => $request->form['sex'],
-                    'birth_date' => $request->form['birth_date'],
-                    'civil_status' => $request->form['civil_status'],
-                    'educational_attainment' => $request->form['educational_attainment'],
-                    'benificiary_name' => $request->form['benificiary_name'],
-                    'relationship' => $request->form['relationship'],
-                    'district_id' => $request->form['district_id'],
-                    'classification' => $request->form['classification'],
-                    'philhealth_no' => $request->form['philhealth_no'],
-                    'first_employment_date' => $request->form['first_employment_date'],
+                    'first_name' => $request->form['first_name'] ?? null,
+                    'middle_name' => $request->form['middle_name'] ?? null,
+                    'last_name' => $request->form['last_name'] ?? null,
+                    'name_extension' => $request->form['name_extension'] ?? null,
+                    'name_on_id' => $request->form['name_on_id'] ?? null,
+                    'id_no' => $request->form['id_no'] ?? null,
+                    'citymuni_id' => $request->form['citymuni_id'] ?? null,
+                    'bns_type' => $request->form['bns_type'] ?? null,
+                    'barangay_id' => $request->form['barangay_id'] ?? null,
+                    'complete_address' => $request->form['complete_address'] ?? null,
+                    'sex' => $request->form['sex'] ?? null,
+                    'birth_date' => $request->form['birth_date'] ?? null,
+                    'civil_status' => $request->form['civil_status'] ?? null,
+                    'educational_attainment' => $request->form['educational_attainment'] ?? null,
+                    'benificiary_name' => $request->form['benificiary_name'] ?? null,
+                    'relationship' => $request->form['relationship'] ?? null,
+                    'district_id' => $request->form['district_id'] ?? null,
+                    'classification' => $request->form['classification'] ?? null,
+                    'philhealth_no' => $request->form['philhealth_no'] ?? null,
+                    'first_employment_date' => $request->form['first_employment_date'] ?? null,
                     'end_employment_date' => $end_employment,
-                    'contact_number' => $request->form['contact_number'],
-                    'status' => $request->form['status'],
+                    'contact_number' => $request->form['contact_number'] ?? null,
+                    'status' => $request->form['status'] ?? null,
                     'place_of_assignment' => $place_of_assignment,
-                    'fund' => $request->form['fund'],
-                    'incentive_prov' => $request->form['incentive_prov'],
-                    'incentive_mun' => $request->form['incentive_mun'],
-                    'incentive_brgy' => $request->form['incentive_brgy'],
+                    'fund' => $request->form['fund'] ?? null,
+                    'incentive_prov' => $request->form['incentive_prov'] ?? null,
+                    'incentive_mun' => $request->form['incentive_mun'] ?? null,
+                    'incentive_brgy' => $request->form['incentive_brgy'] ?? null,
                 ]);
 
             DB::table('tbl_eligibilities')
@@ -637,13 +661,12 @@ class VolunteerController extends Controller
                         $training->save();
                     }
                 } catch (Exception $e) {
-                    return response()->json($e->getMessage());
+                    return response()->json($request->all(), 422);
                 }
             }
-
-            return response()->json(['message' => 'Scholar updated successfully']);
+            return response()->json(['message' => 'Scholar updated successfully', 'request' => $request->all()]);
         } catch (Exception $e) {
-            return response()->json($e->getMessage());
+            return response()->json($request->all(), 422);
         }
     }
 

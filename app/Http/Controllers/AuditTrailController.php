@@ -43,7 +43,8 @@ class AuditTrailController extends Controller
         $offset = ($page - 1) * $limit;
 
         $trails = (clone $data)
-            ->limit($limit)->offset($offset)->get();
+            ->limit($limit)->offset($offset)
+            ->orderBy('t.created_at', 'desc')->get();
         $pages = compact('page', 'limit', 'total_data', 'total_page', 'offset');
 
         return response()->json(compact('trails', 'pages'));

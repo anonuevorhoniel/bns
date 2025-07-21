@@ -348,7 +348,8 @@ class ServicePeriodController extends Controller
         ->offset($offset)
         ->limit($limit)
         ->get();
-        $page_info = compact('offset', 'limit', 'total_page', 'total');
+        $current_total = $service_periods->count();
+        $page_info = compact('offset', 'limit', 'total_page', 'total', 'current_total');
         return response()->json(compact('service_periods', 'page_info'));
     }
 

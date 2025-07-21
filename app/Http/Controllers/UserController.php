@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Models\AuditTrail;
 use App\Models\Municipality;
 use App\Models\Assignment;
+use Exception;
 use Illuminate\Support\Facades\Cookie;
 
 class UserController extends Controller
@@ -20,14 +21,20 @@ class UserController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::whereNot('id', Auth::id())->get();
 
         if (Auth::user()->classification == "Field Officer") {
             return back()->withErrors('Permission Denied!');
         } else {
-            return response()->json( compact( 'users'));
+            $users_data = User::whereNot('id', Auth::id());
+            $page = $request->page;
+            $limit = 8;
+            $total = (clone $users_data)->get()->count();
+            $total_page = ceil($total / $limit);
+            $offset = ($page - 1) * $limit;
+            $users = (clone $users_data)->offset($offset)->limit($limit)->get();
+            return response()->json(compact('users', 'total_page'));
         }
     }
 
@@ -233,7 +240,31 @@ class UserController extends Controller
         return response()->json($data)->withCookie($cookie);
     }
 
-    public function check_auth(Request $request) {
+    public function check_auth(Request $request)
+    {
         return response()->json($request->user());
+    }
+
+    public function change_email(Request $request)
+    {
+        $user_id = Auth::user()->id;
+        $request->validate([
+            'newEmail' => 'required|unique:tbl_users,email,' . $user_id,
+            'confirmNewEmail' => 'required|unique:tbl_users,email,' . $user_id,
+            'password' => 'required'
+        ]);
+
+        if (!Hash::check($request->password, Auth::user()->password)) {
+            return response()->json(['message' => 'Incorrect Password!'], 422);
+        }
+
+        try {
+            User::find($user_id)->update([
+                'email' => $request->newEmail,
+            ]);
+            return response()->noContent();
+        } catch (Exception $e) {
+            return response()->json($e->getMessage(), 422);
+        }
     }
 }

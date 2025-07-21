@@ -22,7 +22,7 @@ class SignatorySeeder extends Seeder
                 'status' => '1'
             ),
             array(
-            	'name' => 'HON. RAMIL L. HERNANDEZ',
+            	'name' => 'Marisol "Sol" Castillo Aragones-Sampelo',
                 'description' => 'Governor',
                 'designation_id' => '3',
                 'status' => '1'
@@ -34,7 +34,7 @@ class SignatorySeeder extends Seeder
                 'status' => '1'
             ),
             array(
-            	'name' => 'HON. RAMIL L. HERNANDEZ',
+            	'name' => 'Marisol "Sol" Castillo Aragones-Sampelo',
                 'description' => 'Chairman-Provincial Nutrition Comittee',
                 'designation_id' => '5',
                 'status' => '1'

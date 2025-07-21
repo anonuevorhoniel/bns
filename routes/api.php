@@ -33,6 +33,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::prefix('/users')->controller(UserController::class)->group(function () {
         Route::get('/check-auth', 'check_auth');
+        Route::post('/change_email', 'change_email');
     });
 
     Route::middleware('admin')->group(function () {
