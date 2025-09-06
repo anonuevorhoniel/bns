@@ -17,7 +17,7 @@ export default function TrainingTab() {
               <GraduationCap className="h-5 w-5 text-violet-600" />
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-gray-900">Training Records</h2>
+              <h2 className="text-xl text-gray-900">Training Records</h2>
             </div>
           </div>
           <Badge
@@ -80,7 +80,7 @@ export default function TrainingTab() {
             </div>
           </>
         ) : (
-          <div className="px-6 py-12 text-center">
+          <div className="p-6 text-center">
             <div className="mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-4">
               <GraduationCap className="h-6 w-6 text-gray-400" />
             </div>

@@ -28,6 +28,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Models\EducationalAttainment;
 use App\Models\MunicipalRepresentative;
+use App\Services\Scholars\ScholarIndexService;
+use Illuminate\Support\Facades\Log;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Reader\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Border;
@@ -36,6 +38,11 @@ use PhpOffice\PhpSpreadsheet\Worksheet\PageSetup;
 class VolunteerController extends Controller
 {
 
+    protected $indexService;
+    public function __construct(ScholarIndexService $indexService)
+    {
+        $this->indexService = $indexService;
+    }
     public function index()
     {
         $page = [
@@ -51,55 +58,8 @@ class VolunteerController extends Controller
 
     public function municipality_index(Request $request)
     {
-        $search = $request->search;
-        $page = $request->page;
-        $limit = 8;
-        $except_scholar_id = $request->except_scholar_id;
-        $scholars = DB::table('tbl_scholars')
-            ->when($except_scholar_id, function ($q) use ($except_scholar_id) {
-                $q->whereNot('tbl_scholars.id', $except_scholar_id);
-            })
-            ->when($request->code, function ($q) use ($request) {
-                $q->where('citymuni_id', $request->code);
-            })
-            ->when(!$request->code, function ($q) {
-                $q->where('citymuni_id', Auth::user()->assigned_muni_code);
-            })
-            ->join('tbl_municipalities as m', 'm.code', 'tbl_scholars.citymuni_id')
-            ->leftjoin('tbl_barangays as b', 'b.code', 'tbl_scholars.barangay_id')
-            ->when($request->filled('search'), function ($q) use ($search) {
-                return $q->where('tbl_scholars.first_name', 'LIKE', "$search%")
-                    ->orWhere('tbl_scholars.middle_name', 'LIKE', "$search%")
-                    ->orWhere('tbl_scholars.last_name', 'LIKE', "$search%")
-                    ->orWhere('b.name', 'LIKE', "$search%");
-            });
-        $total_count = (clone $scholars)->count();
-        $offset = $limit * ($page - 1);
-        $total_page = ceil($total_count / $limit);
-        $get_scholars =
-            $scholars
-            ->limit($limit)
-            ->offset($offset)
-            ->select(
-                'tbl_scholars.*',
-                'm.name as municity_name',
-                DB::raw('CONCAT(tbl_scholars.last_name, ", " , tbl_scholars.first_name, " ", COALESCE(tbl_scholars.middle_name, "")) as full_name'),
-                'b.name as barangay_name',
-            )
-
-            ->orderBy('tbl_scholars.last_name', 'asc')
-            ->get();
-        $current_scholar_count = $get_scholars->count();
-        $get_scholars->map(function ($q) {
-            $exists = DB::table('tbl_scholars')
-                ->where('replaced_scholar_id', $q->id)
-                ->exists();
-
-            if ($exists) {
-                $q->status = 'REPLACED';
-            }
-        });
-        return response()->json(compact('get_scholars', 'total_count', 'total_page', 'offset', 'current_scholar_count', 'except_scholar_id'));
+        $data = $this->indexService->main($request);
+        return response()->json($data);
     }
 
     public function datatable_old(Request $request)
@@ -219,27 +179,9 @@ class VolunteerController extends Controller
     {
         $request->validate([
             'form.first_name' => 'required',
-            // 'last_name' => 'required',
-            // 'name_on_id' => 'required',
-            // 'sex' => 'required',
-            // 'birth_date' => 'required',
-            // 'civil_status' => 'required',
-            // 'fund_id' => 'required',
-            // 'educational_attainment_id' => 'required',
-            // 'benificiary_name' => 'required',
-            // 'relationship' => 'required',
             'form.citymuni_id' => 'required',
-            // 'birth_date' => 'required',
             'form.district_id' => 'required',
             'form.barangay_id' => 'required',
-            // 'complete_address' => 'required',
-            // 'first_employment_date' => 'required|date',
-            // 'classification_id'  => 'required',
-            // 'place_of_assignment' => 'required',
-            // 'status' => 'required',
-            // 'incentive_prov' => 'required',
-            // 'incentive_mun' => 'required',
-            // 'incentive_brgy' => 'required',
         ]);
 
         if ($request->form['status'] == 'REPLACEMENT') {
@@ -248,6 +190,7 @@ class VolunteerController extends Controller
                 'form.replacement_date' => 'required'
             ]);
         }
+
         try {
             $scholar = new Scholar();
             $scholar->first_name = $request->form['first_name'] ?? null;
@@ -272,11 +215,24 @@ class VolunteerController extends Controller
             $scholar->classification = $request->form['classification'] ?? null;
             $scholar->philhealth_no = $request->form['philhealth_no'] ?? null;
             $scholar->status = $request->form['status'] ?? null;
-            $scholar->replaced_scholar_id = $request->form['replaced_scholar_id'] ?? null;
+
+            $replaced_scholar_id = $request->form['replaced_scholar_id'];
+            $scholar->replaced_scholar_id = $replaced_scholar_id ?? null;
+
+            if ($replaced_scholar_id) {
+                try {
+                    DB::table('tbl_scholars')
+                        ->where('id', $replaced_scholar_id)
+                        ->update([
+                            'tbl_scholars.replaced' => 1,
+                        ]);
+                } catch (Exception $e) {
+                    return response()->json($e->getMessage());
+                }
+            }
             $scholar->replacement_date = $request->form['replacement_date'] ?? null;
 
             if ($request->form['place_of_assignment'] == 'Same as Barangay') {
-
                 $barangay = DB::table('tbl_barangays')
                     ->where('code', $request->form['barangay_id'])
                     ->first();
@@ -284,21 +240,18 @@ class VolunteerController extends Controller
                 if (!$barangay) {
                     return response()->json(['message' => 'Error in barangay_name'], 422);
                 }
-
                 $scholar->place_of_assignment = $barangay->name;
             } else {
                 $scholar->place_of_assignment = 'BNS Coordinator';
             }
 
             $scholar->first_employment_date = $request->form['first_employment_date'] ?? null;
-            // $scholar->end_employment_date = $request->form['end_employment_date'];
             $scholar->incentive_prov  = $request->form['incentive_prov'] ?? null;
             $scholar->incentive_mun = $request->form['incentive_mun'] ?? null;
             $scholar->incentive_brgy = $request->form['incentive_brgy'] ?? null;
-
             $scholar->save();
         } catch (\Exception $e) {
-            return response()->json($e->getMessage());
+            return response()->json($e->getMessage(), 422);
         }
         if ($request->form['first_employment_date'] != null) {
             $sp = new ServicePeriod();
@@ -315,7 +268,6 @@ class VolunteerController extends Controller
         $trainings = $request->trainings;
         $date_tr = $request->date_training;
         $trainor = $request->trainor;
-        // dd($eligibilities);
         if ($eligibilities && count($eligibilities) > 0) {
             foreach ($eligibilities as $el) {
                 $eligibility = new Eligibility();
@@ -336,33 +288,13 @@ class VolunteerController extends Controller
                     $training->save();
                 }
             } catch (Exception $e) {
-                return response()->json($e->getMessage());
+                return response()->json($e->getMessage(), 422);
             }
         }
-        // Log the volunteer creation in audit trail
         AuditTrail::createTrail("Encode scholar.", $scholar);
-
-        // If the position is Municipal Representative, create a user and related record
-        // if ($request->position_id == 2) {
-        //     $user = new User;
-        //     $user->name = $scholar->first_name . ' ' . $scholar->middle_name . ' ' . $scholar->last_name;
-        //     $user->username = $scholar->mobile;
-        //     $user->password = Hash::make('12345');
-        //     $user->classification = "Municipal Representative";
-        //     $user->mobile = $scholar->mobile;
-        //     $user->save();
-
-        //     $mr = new MunicipalRepresentative;
-        //     $mr->volunteer_id = $scholar->id;
-        //     $mr->user_id = $user->id;
-        //     $mr->status = '1';
-        //     $mr->save();
-
-        //     AuditTrail::createTrail("New Municipal Representative", $mr);
-        // }
-
-        // Commit the transaction
         $scholars = Scholar::all();
+        //gawa ako ng variable error message kapag merong ganong magreturn ng error dapat to
+
         return response()->json(['message' => 'Scholar Created Successfully']);
     }
 
@@ -508,13 +440,26 @@ class VolunteerController extends Controller
             'form.barangay_id' => 'required'
         ]);
         if ($request->form['status'] === 'REP') {
-
             $request->validate([
                 'form.replaced_scholar_id' => 'required|exists:tbl_scholars,id',
                 'form.replacement_date' => 'required|date',
                 'form.first_employment_date' => 'required|date',
             ]);
             if ($request->form['replacement_date'] != null && $request->form['replacement_date'] != "" &&  $request->form['replaced_scholar_id'] != null && $request->form['replaced_scholar_id'] != "") {
+
+                DB::table('tbl_scholars as s')
+                    ->where('s.id', $request->form['replaced_scholar_id'])
+                    ->update([
+                        's.replaced' => 1
+                    ]);
+
+                if ($scholar->replaced_scholar_id != $request->form['replaced_scholar_id']) {
+                    DB::table('tbl_scholars')
+                        ->where('id', $scholar->replaced_scholar_id)
+                        ->update([
+                            'replaced' => 0
+                        ]);
+                }
                 DB::table('tbl_scholars')
                     ->where('id', $id)
                     ->update([
@@ -528,7 +473,13 @@ class VolunteerController extends Controller
                     ->where('id', $id)
                     ->update([
                         'replacement_date' => null,
-                        'replaced_scholar_id' => null
+                        'replaced_scholar_id' => null,
+                    ]);
+
+                DB::table('tbl_scholars as s')
+                    ->where('s.id', $scholar->replaced_scholar_id)
+                    ->update([
+                        's.replaced' => 0
                     ]);
             } catch (Exception $e) {
                 return response()->json($e->getMessage(), 422);

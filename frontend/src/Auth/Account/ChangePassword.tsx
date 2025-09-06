@@ -1,16 +1,41 @@
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Lock } from "lucide-react";
-import { Label } from "@/components/ui/label";
-import { useState } from "react";
+import { UseAccountAction } from "@/Actions/AccountAction";
+import { useMutation } from "@tanstack/react-query";
+import { toast } from "sonner";
+import FormHandler from "@/Reusable/FormHandler";
+import { Form } from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+    passwordDefaultValues,
+    PasswordSchema,
+} from "@/Validation/AccountSchema";
+import ButtonLoad from "@/Reusable/ButtonLoad";
 export default function ChangePassword() {
-    const [passwordForm, setPasswordForm] = useState({
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
+    const { setPasswordForm, changePassword } =
+        UseAccountAction();
+
+    const UsePasswordForm = useForm({
+        defaultValues: passwordDefaultValues,
+        resolver: zodResolver(PasswordSchema),
     });
-    const handlePasswordSubmit = () => {};
+
+    const passwordMutation = useMutation({
+        mutationFn: () => changePassword(),
+        onSuccess: () => {
+            toast.success("Success", {
+                description: "Password has been changed!",
+            });
+        },
+        onError: (error: any) => {
+            toast.error("Error", { description: error.response.data.message });
+            console.log(error);
+        },
+    });
+    const handlePasswordSubmit = () => {
+        passwordMutation.mutate();
+    };
 
     return (
         <>
@@ -22,79 +47,44 @@ export default function ChangePassword() {
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <form onSubmit={handlePasswordSubmit} className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="current-password">
-                                Current Password
-                            </Label>
-                            <Input
-                                id="current-password"
-                                type="password"
-                                placeholder="Enter current password"
-                                value={passwordForm?.currentPassword}
-                                onChange={(e) =>
-                                    setPasswordForm((prev: any) => ({
-                                        ...prev,
-                                        currentPassword: e.target.value,
-                                    }))
-                                }
-                                required
-                            />
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="new-password">New Password</Label>
-                            <Input
-                                id="new-password"
-                                type="password"
-                                placeholder="Enter new password"
-                                value={passwordForm?.newPassword}
-                                onChange={(e) =>
-                                    setPasswordForm((prev: any) => ({
-                                        ...prev,
-                                        newPassword: e.target.value,
-                                    }))
-                                }
-                                required
-                            />
-                            <p className="text-sm text-gray-500">
-                                Password must be at least 8 characters long
-                            </p>
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="confirm-password">
-                                Confirm New Password
-                            </Label>
-                            <Input
-                                id="confirm-password"
-                                type="password"
-                                placeholder="Confirm new password"
-                                value={passwordForm?.confirmPassword}
-                                onChange={(e) =>
-                                    setPasswordForm((prev: any) => ({
-                                        ...prev,
-                                        confirmPassword: e.target.value,
-                                    }))
-                                }
-                                required
-                            />
-                        </div>
-
-                        <Button
-                            type="submit"
-                            className="w-full"
-                            disabled={
-                                !passwordForm?.currentPassword ||
-                                !passwordForm?.newPassword ||
-                                passwordForm?.newPassword !==
-                                    passwordForm?.confirmPassword ||
-                                passwordForm?.newPassword.length < 8
-                            }
+                    <Form {...UsePasswordForm}>
+                        <form
+                            onSubmit={UsePasswordForm.handleSubmit(
+                                handlePasswordSubmit
+                            )}
+                            className="space-y-4"
                         >
-                            Update Password
-                        </Button>
-                    </form>
+                            <FormHandler
+                                name="password"
+                                label="Current Password"
+                                schemaForm={UsePasswordForm}
+                                type="password"
+                                setForm={setPasswordForm}
+                            />
+
+                            <FormHandler
+                                name="newPassword"
+                                label="New Password"
+                                schemaForm={UsePasswordForm}
+                                type="password"
+                                setForm={setPasswordForm}
+                            />
+
+                            <FormHandler
+                                name="confirmNewPassword"
+                                label="Confirm New Password"
+                                schemaForm={UsePasswordForm}
+                                type="password"
+                                setForm={setPasswordForm}
+                            />
+
+                            <ButtonLoad
+                                loading={passwordMutation.isPending}
+                                name="Update Password"
+                                classNames="w-full"
+                            />
+                        </form>
+                    </Form>
                 </CardContent>
             </Card>
         </>

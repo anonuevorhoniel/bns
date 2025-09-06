@@ -13,37 +13,19 @@ import {
     Building2,
     CalendarRange,
     CircleDollarSignIcon,
-    Eye,
+    Search,
     User,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BadgeFund } from "@/Reusable/BadgeFund";
-import UseServicePeriods from "./UseServicePeriod";
 
 export default function ServicePeriodTable({scholars}: any) {
-    const { totalScholars } = UseServicePeriods();
     const {
         setViewOpen,
-        // setscholarsView,
-        // viewPage,
-        // viewOpen,
         setScholarId,
-        // scholarId,
     } = UseViewServicePeriod();
-    // const { storeSingleRefresh } = UseStoreServicePeriod();
-
-    // const { scholarsView } = UseViewServicePeriod();
-    // const { refresh } = deleteServicePeriod();
-
-    // useEffect(() => {
-    //     scholarId && setscholarsView();
-    // }, [viewPage, viewOpen, refresh, storeSingleRefresh]);
-
-    // useEffect(() => {
-    //     scholarsView?.[0] ? "" : setViewOpen(false);
-    // }, [scholarsView]);
-
+ 
     return (
         <Table>
             <TableHeader>
@@ -100,13 +82,13 @@ export default function ServicePeriodTable({scholars}: any) {
                                         setScholarId(s.id);
                                     }}
                                 >
-                                    <Eye />
+                                    <Search />
                                 </Button>
                             </TableCell>
                         </TableRow>
                     );
                 })}
-                {totalScholars == 0 || totalScholars == undefined ? (
+                {scholars?.length == 0 || scholars?.length == undefined ? (
                     <TableRow>
                         <TableCell className="text-center" colSpan={5}>
                             No Scholars with Service Periods

@@ -3,7 +3,7 @@ import { Lock } from "lucide-react";
 import { Toaster } from "sonner";
 import ChangeEmail from "./ChangeEmail";
 import ChangePassword from "./ChangePassword";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { UseLayout } from "@/Actions/LayoutAction";
 
 export default function Account() {
@@ -12,7 +12,6 @@ export default function Account() {
         setItem("Account");
         setBItem(null);
     }, []);
-
 
     return (
         <div className="min-h-screen py-8">

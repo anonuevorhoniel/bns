@@ -15,19 +15,23 @@ import { toast } from "sonner";
 
 export default function ChangeEmail({}: any) {
     const { user } = UseAuth();
-      const qclient = useQueryClient();
+    const qclient = useQueryClient();
 
     const useEmailForm = useForm({
         defaultValues: emailDefaultValues,
         resolver: zodResolver(emailSchema),
     });
+
     const { emailForm, setEmailForm, changeEmail, clearEmailForm } =
         UseAccountAction();
+
     const emailMutation = useMutation({
         mutationFn: changeEmail,
         onSuccess: () => {
             qclient.invalidateQueries({ queryKey: ["auth"] });
-            toast.success("Success", { description: "Email Changed!" });
+            setTimeout(() => {
+                toast.success("Success", { description: "Email Changed!" });
+            }, 400);
             setEmailForm({ name: "currentEmail", value: emailForm?.newEmail });
             useEmailForm.reset();
             clearEmailForm();
@@ -42,6 +46,7 @@ export default function ChangeEmail({}: any) {
     const handleEmailSubmit = () => {
         emailMutation.mutate();
     };
+
     return (
         <>
             <Card>

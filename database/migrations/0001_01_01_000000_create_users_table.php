@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('mobile');
             $table->string('classification');
             $table->string('position');
-            $table->integer('assigned_muni_code')->nullable();
+            $table->string('assigned_muni_code')->nullable();
             $table->integer('assigned_district_id')->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');

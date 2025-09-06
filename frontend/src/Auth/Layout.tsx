@@ -10,6 +10,7 @@ import {
     BreadcrumbPage,
     BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import {
     SidebarInset,
@@ -89,19 +90,17 @@ export default function Layout() {
                     <Outlet />
                 </div>
                 <footer className="p-4 text-center bg-gray-100 dark:bg-gray-800">
-                    <span className="text-sm text-gray-500 dark:text-gray-400">
-                        <div className="flex font-bold">
-                            <div className="mr-1">Copyright © 2025</div>
-                            <a
-                                href="https://laguna.gov.ph"
-                                className="text-blue-900 mr-1 underline hover:font-extrabold"
-                            >
-                                Provincial Government of Laguna
-                            </a>
-                            Management Information Systems Office. All rights
+                    <Label className="break-words">
+                        Copyright © 2025{" "}
+                        <a
+                            href="https://laguna.gov.ph"
+                            className="text-blue-900 mr-1 underline hover:font-extrabold"
+                        >
+                            Provincial Government of Laguna
+                        </a>
+                           Management Information Systems Office. All rights
                             reserved
-                        </div>
-                    </span>
+                    </Label>
                 </footer>
             </SidebarInset>
         </SidebarProvider>

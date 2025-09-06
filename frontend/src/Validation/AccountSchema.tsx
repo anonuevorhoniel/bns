@@ -24,3 +24,30 @@ export const emailSchema = z
         message: "Emails do not match",
         path: ["confirmNewEmail"],
     });
+
+export const passwordDefaultValues = {
+    newPassword: "",
+    confirmNewPassword: "",
+    password: "",
+};
+
+export const PasswordSchema = z
+    .object({
+        newPassword: z
+            .string({ message: "New Password is required" })
+            .min(8, { message: "Minumum of 8 characters is required" }),
+        confirmNewPassword: z
+            .string({ message: "Confirm New Password is required" })
+            .min(8, { message: "Minumum of 8 characters is required" }),
+        password: z
+            .string({ message: "Password is required" })
+            .min(8, { message: "Minumum of 8 characters is required" }),
+    })
+    .refine(
+        ({ newPassword, confirmNewPassword }) =>
+            newPassword === confirmNewPassword,
+        {
+            message: "Passwords do not match",
+            path: ["confirmNewPassword"],
+        }
+    );

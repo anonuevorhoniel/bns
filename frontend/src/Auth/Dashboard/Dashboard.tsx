@@ -74,10 +74,6 @@ export default function Dashboard() {
             Scholars: m.sc_total,
         }));
 
-    useEffect(() => {
-        console.log(allMuni);
-    }, []);
-
     return (
         <>
             <title>BNS | Dashboard</title>

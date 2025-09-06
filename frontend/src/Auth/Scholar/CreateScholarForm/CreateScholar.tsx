@@ -88,7 +88,7 @@ export default function CreateScholars() {
         setBItem("Create");
         clearForm();
         setFormData({ name: "district_id", value: district_id });
-        setFormData({ name: "citymuni_id", value: muni_code });
+        setFormData({ name: "citymuni_id", value: `${muni_code}` });
         if (muni_code != "") {
             GetBarangays(muni_code);
         }

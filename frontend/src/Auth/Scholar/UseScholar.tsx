@@ -16,6 +16,7 @@ export default function UseScholar() {
     const [search, setSearch] = useState("");
     const [searchD] = useDebounce(search, 500);
     const searchVal = search == "" ? search : searchD;
+    const [scholarStatus, setScholarStatus] = useState('active');
     const { setItem, setBItem } = UseLayout();
     const { setOpenDirectoryDialog } = useDirectory();
     const { setOpenMasterlistDialog } = useMasterlist();
@@ -35,8 +36,8 @@ export default function UseScholar() {
     }, []);
 
     const { data, isFetching } = useQuery({
-        queryKey: ["scholars", code, page, searchVal],
-        queryFn: () => GetScholars(code, page, searchVal),
+        queryKey: ["scholars", code, page, searchVal, scholarStatus],
+        queryFn: () => GetScholars(code, page, searchVal, scholarStatus),
         placeholderData: keepPreviousData,
         refetchOnWindowFocus: false,
     });
@@ -61,6 +62,7 @@ export default function UseScholar() {
         page,
         setPage,
         setOpenMasterlistDialog,
-        open
+        open,
+        setScholarStatus,
     };
 }

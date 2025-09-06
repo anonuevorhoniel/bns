@@ -27,7 +27,9 @@ class UserController extends Controller
         if (Auth::user()->classification == "Field Officer") {
             return back()->withErrors('Permission Denied!');
         } else {
-            $users_data = User::whereNot('id', Auth::id());
+            $users_data = User::whereNot('tbl_users.id', Auth::id())
+                ->join('tbl_municipalities as m', 'm.code', 'tbl_users.assigned_muni_code')
+                ->select('tbl_users.*', 'm.name as municipality_name');
             $page = $request->page;
             $limit = 8;
             $total = (clone $users_data)->get()->count();
@@ -261,6 +263,29 @@ class UserController extends Controller
         try {
             User::find($user_id)->update([
                 'email' => $request->newEmail,
+            ]);
+            return response()->noContent();
+        } catch (Exception $e) {
+            return response()->json($e->getMessage(), 422);
+        }
+    }
+
+    public function change_password(Request $request)
+    {
+        $user_id = Auth::user()->id;
+        $request->validate([
+            'newPassword' => 'required',
+            'confirmNewPassword' => 'required',
+            'password' => 'required'
+        ]);
+
+        if (!Hash::check($request->password, Auth::user()->password)) {
+            return response()->json(['message' => 'Incorrect Password!'], 422);
+        }
+
+        try {
+            User::find($user_id)->update([
+                'password' => Hash::make($request->newPassword),
             ]);
             return response()->noContent();
         } catch (Exception $e) {

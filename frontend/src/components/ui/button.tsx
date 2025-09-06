@@ -5,7 +5,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-    "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 shadow-sm hover:shadow-xl transform hover:-translate-y-0.5 active:translate-y-0",
+    "inline-flex items-center hover:-translate-y-0.5 justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 shadow-sm hover:shadow-xl transform hover:-translate-y-0.5 active:translate-y-0",
     {
         variants: {
             variant: {
@@ -14,7 +14,7 @@ const buttonVariants = cva(
                 success:
                     "bg-gradient-to-r from-emerald-400 to-green-600 text-white hover:from-emerald-500 hover:to-green-800 shadow-emerald-500/25",
                 primary:
-                    "bg-gradient-to-r from-blue-500 to-blue-700 text-white hover:from-blue-600 hover:to-blue-900 shadow-blue-500/25",
+                    "bg-gradient-to-r from-red-500 to-red-700 text-white hover:from-red-600 hover:to-red-900 shadow-red-500/25",
                 destructive:
                     "bg-gradient-to-r from-red-500 to-rose-600 text-white hover:from-red-600 hover:to-rose-700 shadow-red-500/25",
                 warning:

@@ -48,7 +48,7 @@ export default function EligibilityTab() {
                 </div>
                 {eligibilities?.length == 0 && (
                     <CardContent className="p-5">
-                        <div className="text-center py-12">
+                        <div className="text-center">
                             <div className="flex justify-center items-center">
                                <div className="bg-muted p-3 rounded-full"> <CheckCircle className=" text-gray-400" /></div>
                             </div>

@@ -13,12 +13,6 @@ use App\Models\Accomplishment;
 use App\Models\Requirement;
 use App\Models\Scholar;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Redirect;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Http\Client\Response;
-use Carbon\Carbon;
-use Hash;
 use Illuminate\Support\Facades\Auth;
 
 class APIController extends Controller
@@ -100,20 +94,8 @@ class APIController extends Controller
             ->orderBy('v.last_name')
             ->get();
 
-        // $scholar_ids = $volunteers->pluck('id');
-        // $page = $request->page;
-        // $count = (clone $volunteers)->count();
-        // $limit = 8;
-        // $total_page = ceil($count / $limit);
-        // $offset = ($page - 1) * $limit;
         $year_from = date('Y', strtotime($request->form['from']));
         $year_to = date('Y', strtotime($request->form['to']));
-
-        // $volunteers = $volunteers
-        //     ->offset($offset)
-        //     ->limit($limit)
-        //     ->get();
-
         $results = array();
 
         $months_array = array('January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December');

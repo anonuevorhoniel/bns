@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardHeader } from "@/components/ui/card";
 import { CirclePlus, Search } from "lucide-react";
 import ServicePeriodTable from "./ServicePeriodTable";
 import AutoPagination from "@/Reusable/AutoPagination";
@@ -32,7 +32,7 @@ export default function ServicePeriods() {
             <ViewServicePeriod />
             <CreateServicePeriod />
             <Card className="p-0 pb-4">
-                <CardHeader className="pt-2 bg-muted rounded-tl-lg rounded-tr-lg">
+                <CardHeader className="pt-5 rounded-tl-lg rounded-tr-lg">
                     <div>
                         <Button
                             variant={"primary"}
@@ -40,17 +40,17 @@ export default function ServicePeriods() {
                         >
                             <CirclePlus /> Service Periods
                         </Button>
-                        <div className="flex justify-center items-center bg-white rounded-lg  max-w-70 float-right px-3 py-1 space-x-2 ">
-                            <Search className="text-gray-500 w-5 h-5" />
-                            <Input
-                                className="bg-transparent border-none hover:bg-gray-100"
-                                placeholder="Search"
-                                onInput={(e: any) => setSearch(e.target.value)}
-                            />
-                        </div>
                     </div>
                 </CardHeader>
-                <CardContent>
+                <div className="px-6">
+                    <div className="flex relative mb-3">
+                        <Search className="text-gray-500 w-4 h-4 absolute z-10 left-2 top-2" />
+                        <Input
+                            className="bg-white hover:bg-white pl-8"
+                            placeholder="Search Service Periods"
+                            onInput={(e: any) => setSearch(e.target.value)}
+                        />
+                    </div>
                     <div className="relative">
                         {isFetching && <LoadingScreen />}
                         <ServicePeriodTable scholars={scholars} />
@@ -77,7 +77,7 @@ export default function ServicePeriods() {
                             </div>
                         </div>
                     </div>
-                </CardContent>
+                </div>
             </Card>
         </>
     );

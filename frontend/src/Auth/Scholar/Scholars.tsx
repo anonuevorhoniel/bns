@@ -2,11 +2,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
     BookMarked,
+    Check,
     ChevronsUpDown,
     CirclePlus,
     Database,
     Search,
     Upload,
+    X,
 } from "lucide-react";
 
 import { Link } from "react-router-dom";
@@ -28,9 +30,9 @@ import DirectoryDialog from "./Download/DirectoryDialog";
 import MasterlistDialog from "./Download/MasterlistDialog";
 import SelectCode from "./ScholarForm/SelectCode";
 import UseScholar from "./UseScholar";
+import { Switch } from "@/components/ui/switch";
 
 export default function Scholars() {
-
     const {
         scholars,
         page,
@@ -46,6 +48,7 @@ export default function Scholars() {
         setOpen,
         setSearch,
         setOpenMasterlistDialog,
+        setScholarStatus
     } = UseScholar();
 
     return (
@@ -87,9 +90,9 @@ export default function Scholars() {
                 </div>
             )}
 
-            <Card className="p-0 pb-5">
-                <CardHeader className="bg-muted rounded-tl-lg rounded-tr-lg pt-2">
-                    <div className="grid gap-2 grid-cols-1 xl:grid-cols-2 ">
+            <Card className="p-0 pt-2  3 pb-5">
+                <CardHeader className=" rounded-tl-lg rounded-tr-lg pt-2">
+                    <div className="flex justify-between gap-3">
                         <div className="flex gap-3">
                             <Link to={"/scholars/create"}>
                                 <Button variant={"primary"}>
@@ -105,7 +108,7 @@ export default function Scholars() {
                             <div className="flex max-w-70 float-right space-x-2 relative">
                                 <Search className="text-gray-500 w-4 h-4 absolute top-2 left-2 z-10 " />
                                 <Input
-                                    className="bg-white border-none hover:bg-white pl-8 hover:-y-translate-none"
+                                    className=" pl-8 hover:-y-translate-none"
                                     placeholder="Search"
                                     onInput={(e: any) =>
                                         setSearch(e.target.value)
@@ -117,6 +120,11 @@ export default function Scholars() {
                 </CardHeader>
 
                 <CardContent>
+                    <div className="flex gap-2 items-center mb-3">
+                        <Label className="text-red-500"><X /> Replaced</Label>
+                        <Switch defaultChecked onCheckedChange={(checked) => checked ? setScholarStatus('active') : setScholarStatus('inactive')} />
+                        <Label className="text-green-500"><Check size={15} /> Active</Label>
+                    </div>
                     <div className="p-0 relative">
                         {isFetching && <LoadingScreen />}
                         <ScholarTable data={scholars} />
@@ -129,7 +137,7 @@ export default function Scholars() {
                         >
                             <div className=" flex items-center">
                                 {" "}
-                                <Label>
+                                <Label className="opacity-60">
                                     Showing{" "}
                                     {totalScholar > 0 ? offset + 1 : offset} to{" "}
                                     {offset + cs_count} of {totalScholar}{" "}

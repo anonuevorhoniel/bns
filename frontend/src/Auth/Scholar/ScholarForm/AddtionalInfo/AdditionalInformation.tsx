@@ -68,7 +68,7 @@ export default function AdditionalInformation({ scholarForm }: any) {
             <ShowTable />
             <div className="p-4 space-y-4">
                 <p className="text-xl mb-6">Additional Information</p>
-                <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:grid-cols-2">
+                <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-5 sm:grid-cols-2">
                     <div>
                         <FormFieldSelect
                             scholarForm={scholarForm}

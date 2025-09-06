@@ -1,16 +1,21 @@
 import ax from "@/Axios";
 import { create, type StateCreator } from "zustand";
 
-type AccountActionType = {
+type EmailType = {
     emailForm: any;
     setEmailForm: any;
     changeEmail: () => any;
     clearEmailForm: () => any;
 };
-export const ChangeEmail: StateCreator<AccountActionType> = (
-    set: any,
-    get: any
-) => ({
+
+type PasswordType = {
+    passwordForm: any;
+    setPasswordForm: any;
+    changePassword: () => any;
+    clearPasswordForm: () => any;
+};
+
+export const ChangeEmail: StateCreator<EmailType> = (set: any, get: any) => ({
     emailForm: null,
     setEmailForm: ({ name, value }: any) =>
         set((state: any) => ({
@@ -26,7 +31,23 @@ export const ChangeEmail: StateCreator<AccountActionType> = (
     },
 });
 
-export const UseAccountAction = create<AccountActionType>((...a) => ({
+export const ChangePassword: StateCreator<any> = (set: any, get: any) => ({
+    passwordForm: null,
+    setPasswordForm: ({ name, value }: any) =>
+        set((state: any) => ({
+            passwordForm: {
+                ...state.passwordForm,
+                [name]: value,
+            },
+        })),
+    changePassword: async () => {
+        const r = await ax.post("/users/change_password", get().passwordForm);
+        return r.data;
+    },
+});
+
+export const UseAccountAction = create<EmailType & PasswordType>((...a) => ({
     ...ChangeEmail(...a),
+    ...ChangePassword(...a),
 }));
 5;

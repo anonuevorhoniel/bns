@@ -44,7 +44,7 @@ export const UseGetScholar = create<any>((set: any) => ({
     setmuniValue: (val: any) => set({ muniValue: val }),
     setCode: (code: string) => set({ code: code }),
 
-    GetScholars: async (code: any, page: number, search: string) => {
+    GetScholars: async (code: any, page: number, search: string, scholarStatus: string) => {
         if (code == null) {
             set({ scholars: null });
             return null;
@@ -53,6 +53,7 @@ export const UseGetScholar = create<any>((set: any) => ({
             code: code,
             page: page,
             search: search,
+            scholarStatus: scholarStatus
         });
         return {
             scholars: r.data.get_scholars,
@@ -109,7 +110,6 @@ export const ScholarEdit = create<any>((set: any) => ({
     scholarData: null,
     clearScholarData: () => set({ scholarData: null }),
     getScholarData: async ({ id, setEligibilities, setTrainings }: any) => {
-        console.log('hehe');
         try {
             const r = await ax.get(`/scholars/${id}/edit`);
             set({ scholarData: r.data.scholar });

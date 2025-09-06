@@ -34,15 +34,15 @@ class DashboardController extends Controller
         $scholar_per_mun = DB::table('tbl_municipalities as m')
             ->leftJoin('tbl_scholars as sc', 'sc.citymuni_id', 'm.code')
             ->groupBy('m.id', 'm.name', 'm.code')
-            ->select(DB::raw('COUNT(sc.id) as sc_total'), 'm.id', 'm.name', 'm.code')
+            ->select(DB::raw('COUNT(sc.id) as total'), 'm.id', 'm.name as month', 'm.code')
             ->limit($limit)
             ->offset($offset)
             ->get();
 
-        $all_muni = DB::table('tbl_municipalities as m')
+        $scholarsPerMunicipality = DB::table('tbl_municipalities as m')
             ->leftJoin('tbl_scholars as sc', 'sc.citymuni_id', 'm.code')
             ->groupBy('m.id', 'm.name', 'm.code')
-            ->select(DB::raw('COUNT(sc.id) as sc_total'), 'm.id', 'm.name', 'm.code')
+            ->select(DB::raw('COUNT(sc.id) as total'), 'm.id', 'm.name as month', 'm.code')
             ->get();
         $users = User::all();
 
@@ -52,7 +52,7 @@ class DashboardController extends Controller
             'scholar_per_mun',
             'total_muni_count',
             'total_page',
-            'all_muni'
+            'scholarsPerMunicipality'
         ));
     }
 

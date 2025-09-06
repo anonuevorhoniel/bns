@@ -9,7 +9,7 @@ use App\Http\Controllers\RateController;
 use App\Http\Controllers\ServicePeriodController;
 use App\Http\Controllers\SignatoryController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\VolunteerController;
+use App\Http\Controllers\ScholarController;
 use App\Models\AuditTrail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -19,9 +19,17 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 Route::post('/users/authenticate', [UserController::class, 'authenticate']);
+Route::get('/test', function () {
+    return response()->json([
+        'message' => 'API is working!',
+        'session_id' => session()->getId(),
+        'time' => now()
+    ]);
+});
 
 Route::middleware('auth:sanctum')->group(function () {
-    Route::prefix('/scholars')->controller(VolunteerController::class)->group(function () {
+    
+    Route::prefix('/scholars')->controller(ScholarController::class)->group(function () {
         Route::post('/get', 'municipality_index');
         Route::get('/create', 'create');
         Route::get('/{id}/edit', 'edit');
@@ -34,16 +42,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('/users')->controller(UserController::class)->group(function () {
         Route::get('/check-auth', 'check_auth');
         Route::post('/change_email', 'change_email');
+        Route::post('/change_password', 'change_password');
     });
 
     Route::middleware('admin')->group(function () {
-        Route::prefix('/scholars')->controller(VolunteerController::class)->group(function () {
+        Route::prefix('/scholars')->controller(ScholarController::class)->group(function () {
             Route::post('/directory/download', 'directory_download');
             Route::post('/masterlist/download', 'masterlist_download');
         });
 
         Route::prefix('/dashboard')->controller(DashboardController::class)->group(function () {
-            Route::post('/get-muni', 'index');
+            Route::post('/', 'index');
         });
 
         Route::prefix('/rates')->controller(RateController::class)->group(function () {

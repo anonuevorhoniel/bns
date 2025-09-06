@@ -76,9 +76,6 @@ export default function CreatePayroll() {
         getScholars({ setLoading, page, pageChange: true });
     }, [page]);
 
-    useEffect(() => {
-        console.log(form);
-    }, [form]);
 
     const defaultValues = {
         from: "",

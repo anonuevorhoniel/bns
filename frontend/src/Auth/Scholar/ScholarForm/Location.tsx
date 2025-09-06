@@ -86,7 +86,7 @@ export default function Location({ scholarForm, scholarData }: any) {
                                     GetBarangays(e);
                                 }
                             }}
-                            disabled={Municipalities?.length ? false : true}
+                            // disabled={Municipalities?.length ? false : true}
                             selectItem={
                                 <>
                                     {Municipalities &&
@@ -114,7 +114,7 @@ export default function Location({ scholarForm, scholarData }: any) {
                         name="barangay_id"
                         formLabel="Barangay"
                         placeholder="--Barangay--"
-                        disabled={Barangays?.length ? false : true}
+                        // disabled={Barangays?.length ? false : true}
                         selectItem={
                             <>
                                 {Barangays &&

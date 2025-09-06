@@ -16,47 +16,58 @@ export default function ServicePeriodTab() {
                         <Label className="text-lg">Service Periods</Label>
                     </div>
                     <div>
-                    {servicePeriods && servicePeriods.length > 0 && (
-                        <div className="grid grid-cols-2 bg-muted">
-                            <Label className="text-md opacity-70">
-                              <CalendarCheck2 size={15}/>  Start Date
-                            </Label>
-                            <Label className="text-md opacity-70">
-                               <CalendarX2 size={15}/> End Date
-                            </Label>
-                        </div>
-                    )}
-
-                    <div className="space-y-3">
-                        {servicePeriods && servicePeriods.length > 0 ? (
-                            Object.values(servicePeriods).map((sp: any) => {
-                                return (
-                                    <div className="grid grid-cols-2 py-2 border-t-1">
-                                        <Label className="text-sm">
-                                            {sp.month_from} - {sp.year_from}
-                                        </Label>
-                                        <Label className="text-sm">
-                                            {sp.month_to > 0
-                                                ? sp.month_to
-                                                : <><Label className="text-md text-green-500">Present</Label></>}{" "}
-                                            {sp.year_to > 0 ? sp.year_to : ""}
-                                        </Label>
-                                    </div>
-                                );
-                            })
-                        ) : (
-                            <div className="text-center py-12">
-                                <Clock className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                                    No Service Periods
-                                </h3>
-                                <p className="text-gray-600">
-                                    Service period information will be displayed
-                                    here.
-                                </p>
+                        {servicePeriods && servicePeriods.length > 0 && (
+                            <div className="grid grid-cols-2 bg-muted">
+                                <Label className="text-md opacity-70">
+                                    <CalendarCheck2 size={15} /> Start Date
+                                </Label>
+                                <Label className="text-md opacity-70">
+                                    <CalendarX2 size={15} /> End Date
+                                </Label>
                             </div>
                         )}
-                    </div>
+
+                        <div className="space-y-3">
+                            {servicePeriods && servicePeriods.length > 0 ? (
+                                Object.values(servicePeriods).map((sp: any) => {
+                                    return (
+                                        <div className="grid grid-cols-2 py-2 border-t-1">
+                                            <Label className="text-sm">
+                                                {sp.month_from} - {sp.year_from}
+                                            </Label>
+                                            <Label className="text-sm">
+                                                {sp.month_to > 0 ? (
+                                                    sp.month_to
+                                                ) : (
+                                                    <>
+                                                        <Label className="text-md text-green-500">
+                                                            Present
+                                                        </Label>
+                                                    </>
+                                                )}{" "}
+                                                {sp.year_to > 0
+                                                    ? sp.year_to
+                                                    : ""}
+                                            </Label>
+                                        </div>
+                                    );
+                                })
+                            ) : (
+                                <div className="text-center p-6 mt-10">
+                                    {/* <Clock className="h-12 w-12 text-gray-400 mx-auto mb-4" /> */}
+                                    <div className="mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                                        <Clock className="h-6 w-6 text-gray-400" />
+                                    </div>
+                                    <h3 className="text-lg font-medium text-gray-900 mb-2">
+                                        No Service Periods
+                                    </h3>
+                                    <p className="text-gray-600">
+                                        Service period information will be
+                                        displayed here.
+                                    </p>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </CardContent>
             </Card>

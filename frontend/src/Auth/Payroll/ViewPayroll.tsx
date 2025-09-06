@@ -23,8 +23,6 @@ export default function ViewPayroll() {
         viewPayrollScholar,
     } = UseViewPayroll();
 
-    useEffect(() => console.log(viewPayrollScholar), [viewPayrollScholar]);
-
     const content = (
         <div className="overflow-auto space-y-5 h-full">
             <Card className="p-2">

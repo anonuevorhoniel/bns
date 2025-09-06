@@ -44,6 +44,7 @@ return new class extends Migration
             $table->integer('incentive_mun')->nullable();
             $table->integer('incentive_brgy')->nullable();
             $table->date('replacement_date')->nullable();
+            $table->integer('replaced');
             $table->unsignedBigInteger('replaced_scholar_id')->nullable();
 
             $table->softDeletes();
