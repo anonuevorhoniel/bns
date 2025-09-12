@@ -89,10 +89,10 @@ export default function Page() {
         {
             header: "Created At",
             cell: (data: any) => (
-                <div className="flex justify-end lg:justify-start items-end">
+                <div className="flex justify-start items-end">
                     <div className="flex gap-1 items-start">
-                        <CalendarDays className="stroke-1 hidden lg:block " />
-                        <div className="text-right lg:text-left flex flex-col items-end lg:items-start">
+                        <CalendarDays className="stroke-1 " />
+                        <div className="text-left flex flex-col items-start">
                             <Label>{data.created_at}</Label>
                             <Label className="text-xs font-normal opacity-60 text-right">
                                 {data?.diff_time}

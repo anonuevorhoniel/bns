@@ -55,7 +55,9 @@ export default function DataTable({
                                     {pagination?.total == 0
                                         ? 0
                                         : pagination?.offset + 1}{" "}
-                                    to {pagination?.offset + pagination?.total_current}{" "}
+                                    to{" "}
+                                    {pagination?.offset +
+                                        pagination?.total_current}{" "}
                                     of {pagination?.total} data
                                 </Label>
                             </div>
@@ -177,9 +179,11 @@ export default function DataTable({
                         {columns?.map((c: any, c_index: any) => (
                             <div
                                 key={c_index}
-                                className="flex justify-between items-center px-6"
+                                className="flex flex-col gap-1 px-6"
                             >
-                                <Label>{c.header}:</Label>
+                                <Label className="opacity-70">
+                                    {c.header}:
+                                </Label>
                                 <div className="text-wrap">
                                     {c.cell ? c.cell(d) : d[c.accessKey]}
                                 </div>
@@ -188,10 +192,31 @@ export default function DataTable({
                     </Card>
                 ))}
                 {(data?.length == 0 || data?.length == undefined) && (
-                    <Card className="flex justify-center items-center">
-                        No Data in Table
+                    <Card className="px-6">
+                        <div className="flex flex-col items-center gap-3">
+                            <div className="bg-primary text-primary-foreground p-3 rounded-full">
+                                <FileX size={30} />
+                            </div>
+                            <div className="flex flex-col items-center">
+                                <Label className="font-bold">
+                                    No Data Found
+                                </Label>
+                                <Label className="text-xs">
+                                    There are no items to display at the moment
+                                </Label>
+                            </div>
+                        </div>
                     </Card>
                 )}
+
+                <div>
+                    <ResponsivePagination
+                        isFetching={isFetching}
+                        totalPage={pagination?.total_page}
+                        page={page}
+                        setPage={setPage}
+                    />
+                </div>
             </div>
         );
     }

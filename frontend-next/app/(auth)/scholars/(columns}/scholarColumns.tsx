@@ -20,7 +20,7 @@ export function scholarColumns() {
             header: "Full Name",
             cell: (data: any) => {
                 return (
-                    <div className="flex flex-col gap-1 items-end text-end lg:items-start lg:text-end text-wrap break-all max-w-[150px] lg:max-w-full">
+                    <div className="flex flex-col gap-1 items-start">
                         <Label>{data.full_name}</Label>
                         <div className="flex gap-1">
                             <MapPin size={15} />

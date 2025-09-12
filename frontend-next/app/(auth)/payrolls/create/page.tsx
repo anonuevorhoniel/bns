@@ -16,8 +16,37 @@ import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import ButtonLoad from "@/components/custom/button-load";
+import { Spinner } from "@/components/ui/shadcn-io/spinner";
 
 export default function page() {
+    const scholarData = () => {
+        if (isLoading) {
+            return (
+                <div className="border border-dashed h-20 rounded-lg flex items-center justify-center">
+                    <Label>
+                        <Spinner /> Loading.. Please wait
+                    </Label>
+                </div>
+            );
+        }
+        return data?.data ? (
+            <DataTable
+                data={data?.data?.results}
+                columns={columns}
+                page={page}
+                setPage={setPage}
+                isFetching={isFetching}
+                pagination={data?.data?.pagination}
+            />
+        ) : (
+            <div className="border border-dashed h-20 rounded-lg flex items-center justify-center">
+                <Label>
+                    Please enter the filter above to generate scholars
+                </Label>
+            </div>
+        );
+    };
+
     const handleSubmit = (data: any) => {
         console.log(data);
     };
@@ -57,7 +86,7 @@ export default function page() {
         municipality_code: municipality_code,
     };
 
-    const { data, isFetching, isError, error } = useQuery({
+    const { data, isFetching, isLoading, isError, error } = useQuery({
         queryKey: ["scholars", fund, from, to, municipality_code, page],
         queryFn: async () => await ax.post("/getScholars", formData),
         enabled: !!fund && !!from && !!to && !!municipality_code,
@@ -121,59 +150,42 @@ export default function page() {
                 <PayrollForm form={form} handleSubmit={handleSubmit} />
             </Card>
             <Card className="px-6">
-                <div className="flex justify-between">
-                    <Label className="text-lg">Scholars</Label>
-                    <div className="flex gap-5 items-center cursor-pointer">
-                        <div
-                            className={`flex gap-2 border p-2 rounded-md ${
-                                selectAll && "border-primary"
-                            }`}
-                            onClick={() => {
-                                setSelectAll((prev) => !prev);
-                            }}
-                        >
-                            <Checkbox checked={selectAll} />{" "}
-                            <Label className="cursor-pointer">Select All</Label>
-                        </div>
-                        <ButtonLoad
-                            onClick={() => {
-                                if (
-                                    selected?.length == 0 ||
-                                    selected?.length == undefined
-                                ) {
-                                    toast.error("None Selected", {
-                                        description:
-                                            "Please select atleast one scholar",
-                                    });
-                                } else {
-                                    storePayroll.mutate();
-                                }
-                            }}
-                            label={
-                                <>
-                                    <Plus /> Add To Payroll
-                                </>
+                <div className="flex gap-5 items-center cursor-pointer">
+                    <ButtonLoad
+                        onClick={() => {
+                            if (
+                                selected?.length == 0 ||
+                                selected?.length == undefined
+                            ) {
+                                toast.error("None Selected", {
+                                    description:
+                                        "Please select atleast one scholar",
+                                });
+                            } else {
+                                storePayroll.mutate();
                             }
-                            isPending={storePayroll.isPending}
-                        />
+                        }}
+                        label={
+                            <>
+                                <Plus /> Add To Payroll
+                            </>
+                        }
+                        isPending={storePayroll.isPending}
+                    />
+
+                    <div
+                        className={`flex gap-2 border p-2 rounded-md ${
+                            selectAll && "border-primary"
+                        }`}
+                        onClick={() => {
+                            setSelectAll((prev) => !prev);
+                        }}
+                    >
+                        <Checkbox checked={selectAll} />{" "}
+                        <Label className="cursor-pointer">Select All</Label>
                     </div>
                 </div>
-                {data?.data ? (
-                    <DataTable
-                        data={data?.data?.results}
-                        columns={columns}
-                        page={page}
-                        setPage={setPage}
-                        isFetching={isFetching}
-                        pagination={data?.data?.pagination}
-                    />
-                ) : (
-                    <div className="border border-dashed h-20 rounded-lg flex items-center justify-center">
-                        <Label>
-                            Please enter the filter above to generate scholars
-                        </Label>
-                    </div>
-                )}
+                {scholarData()}
             </Card>
         </>
     );

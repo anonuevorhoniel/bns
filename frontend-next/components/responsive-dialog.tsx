@@ -57,12 +57,12 @@ export function ResponsiveDialog({
                     <DrawerTitle>{title}</DrawerTitle>
                     <DrawerDescription />
                 </DrawerHeader>
-                <div className=" overflow-auto">{children}</div>
-                <DrawerFooter className="pt-2">
+                <div className=" overflow-auto pb-5">{children}</div>
+                {/* <DrawerFooter className="pt-2">
                     <DrawerClose asChild>
                         <Button variant="outline">Cancel</Button>
                     </DrawerClose>
-                </DrawerFooter>
+                </DrawerFooter> */}
             </DrawerContent>
         </Drawer>
     );

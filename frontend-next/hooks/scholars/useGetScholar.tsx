@@ -6,14 +6,17 @@ export default function useGetScholar({
     search,
     code,
     exceptID,
+    changeVariable,
 }: {
     page: number;
-    search: string;
+    search?: string;
     code?: string;
     exceptID?: number;
+    changeVariable?: any[];
 }) {
     return useQuery({
-        queryKey: ["scholars", page, search],
+        //spread kung meron, kung wala edi empty
+        queryKey: ["scholars", page, search, ...(changeVariable ?? [])],
         queryFn: async () =>
             await ax.post("/scholars", {
                 page: page,

@@ -8,6 +8,7 @@ use App\Models\Assignment;
 use App\Models\AuditTrail;
 use App\Models\Scholar;
 use App\Models\Volunteer;
+use App\Services\ServicePeriods\ServicePeriodIndexService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use DateTime;
@@ -16,73 +17,16 @@ use Exception;
 class ServicePeriodController extends Controller
 {
 
+    protected $indexService;
+    public function __construct(ServicePeriodIndexService $indexService)
+    {
+        $this->indexService = $indexService;
+    }
     public function index(Request $request)
     {
-        $page = $request->page;
-        $search = $request->search;
-        $municipalities = Assignment::getMunicipalities()->toArray();
-        $municipality_codes = array_column($municipalities, 'code');
-
-        $volunteers = DB::table('tbl_scholars as v')
-            ->join('tbl_service_periods as sp', 'sp.scholar_id', 'v.id')
-            ->where('sp.deleted_at', null)
-            ->leftJoin('tbl_municipalities as m', 'v.citymuni_id', 'm.code')
-            ->whereIn('v.citymuni_id', $municipality_codes)
-            ->when($search, function ($q) use ($search) {
-                $q->where('v.first_name', 'like', "$search%")
-                    ->orWhere('v.middle_name', 'like', "$search%")
-                    ->orWhere('v.last_name', 'like', "$search%")
-                    ->orWhere('m.name', 'like', "$search%");
-            })
-            ->groupBy(['v.id', 'v.first_name', 'v.middle_name', 'v.last_name', 'v.name_extension', 'm.name', 'v.fund'])
-            ->select('v.id as id', DB::raw('CONCAT(v.last_name, " ", COALESCE(v.middle_name, " "), " ", v.first_name, " ", COALESCE(v.name_extension, " ")) as full_name '), 'm.name', 'v.fund');
-
-        $total_scholars = (clone $volunteers->get())->count();
-        $limit = 8;
-        $total_page = ceil($total_scholars / $limit);
-        $offset = ($page - 1) * $limit;
-        $volunteers = $volunteers->offset($offset)->limit($limit)->get();
-        $current_scholar_count = $volunteers->count();
-
-        $volunteers->map(function ($s) {
-            $recent_period = DB::table('tbl_service_periods')
-                ->where('scholar_id', $s->id)
-                ->orderBy('created_at', 'desc')
-                ->where('deleted_at', null)
-                ->first();
-
-            $from = date('F Y', strtotime("$recent_period->year_from-$recent_period->month_from"));
-            $to = $recent_period->status == "present" ? "Present" : date('F Y', strtotime("$recent_period->year_to-$recent_period->month_to"));
-            $s->recent_period = "$from - $to";
-        });
-
-        $pages = [
-            'total_scholars' => $total_scholars,
-            'limit' => $limit,
-            'total_page' => $total_page,
-            'offset' => $offset,
-            'current_scholar_count' => $current_scholar_count,
-        ];
-
-        return response()->json(compact('volunteers', 'pages'));
+        $data = $this->indexService->main($request);
+        return response()->json($data);
     }
-
-    public function create()
-    {
-        $page = [
-            'name'      =>  'Settings',
-            'title'     =>  'Service Period',
-            'crumb' =>  array(
-                'Settings' => '',
-                'Service Period Management' => '/settings/service_periods',
-                'Add' => ''
-            )
-        ];
-
-        $municipalities = Assignment::getMunicipalities();
-        return view('service_periods.create', compact('page', 'municipalities'));
-    }
-
 
     public function verify(Request $request)
     {
@@ -118,7 +62,7 @@ class ServicePeriodController extends Controller
 
         $members = array();
         foreach ($request->members as $member) {
-            $volunteer = DB::table('tbl_volunteers as v')
+            $volunteer = DB::table('tbl_scholars as v')
                 ->select(
                     'v.id as id',
                     'v.first_name',
@@ -343,9 +287,9 @@ class ServicePeriodController extends Controller
         $total_page = ceil($total / $limit);
         $offset = ($page - 1) * $limit;
         $service_periods = (clone $service_period_query)
-        ->offset($offset)
-        ->limit($limit)
-        ->get();
+            ->offset($offset)
+            ->limit($limit)
+            ->get();
         $current_total = $service_periods->count();
         $page_info = compact('offset', 'limit', 'total_page', 'total', 'current_total');
         return response()->json(compact('service_periods', 'page_info'));

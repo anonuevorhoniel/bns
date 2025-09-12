@@ -17,7 +17,7 @@ export default function PayrollForm({
 }) {
     const { data } = useQuery({
         queryKey: ["municipalities"],
-        queryFn: async () => await ax.get("/scholars/getAllMuni"),
+        queryFn: async () => await ax.get("/municipalities"),
         refetchOnWindowFocus: false,
     });
 
@@ -49,7 +49,7 @@ export default function PayrollForm({
                             form={form}
                             name="municipality_code"
                             type="select"
-                            selectItems={data?.data?.cities?.map(
+                            selectItems={data?.data?.map(
                                 (item: any) => (
                                     <SelectItem
                                         key={item.id}

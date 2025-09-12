@@ -91,21 +91,16 @@ export default function ViewPayroll() {
                                 {payrollInformation(payroll)}
                                 {signatoriesComponent(signatories)}
                             </div>
-                            <Card className="px-6">
-                                <div className="space-y-2">
-                                    <Label className="font-bold text-md">
-                                        Scholars
-                                    </Label>
-                                    <DataTable
-                                        page={page}
-                                        setPage={setPage}
-                                        data={scholars}
-                                        columns={columns}
-                                        isFetching={isFetching}
-                                        pagination={pagination}
-                                    />
-                                </div>
-                            </Card>
+                            <div className="space-y-2">
+                                <DataTable
+                                    page={page}
+                                    setPage={setPage}
+                                    data={scholars}
+                                    columns={columns}
+                                    isFetching={isFetching}
+                                    pagination={pagination}
+                                />
+                            </div>
                         </motion.div>
                     ) : (
                         <motion.div
@@ -170,23 +165,35 @@ const signatoriesComponent = (signatories: any) => {
                     <Label className="font-bold mb-5 text-md">
                         Signatories
                     </Label>
-                    <div className="flex justify-between">
-                        <Label className="opacity-70 font-thin"> {value(signatories?.[0]?.description)}:</Label>
+                    <div className="flex flex-col lg:flex-row lg:justify-between gap-2">
+                        <Label className="opacity-70 font-thin">
+                            {" "}
+                            {value(signatories?.[0]?.description)}:
+                        </Label>
                         <Label>{value(signatories?.[0]?.name)}</Label>
                     </div>
                     <Separator />
-                    <div className="flex justify-between">
-                        <Label className="opacity-70 font-thin"> {value(signatories?.[1]?.description)}:</Label>
+                    <div className="flex flex-col lg:flex-row lg:justify-between gap-2">
+                        <Label className="opacity-70 font-thin">
+                            {" "}
+                            {value(signatories?.[1]?.description)}:
+                        </Label>
                         <Label>{value(signatories?.[1]?.name)}</Label>
                     </div>
                     <Separator />
-                    <div className="flex justify-between">
-                        <Label className="opacity-70 font-thin"> {value(signatories?.[2]?.description)}:</Label>
+                    <div className="flex flex-col lg:flex-row lg:justify-between gap-2">
+                        <Label className="opacity-70 font-thin">
+                            {" "}
+                            {value(signatories?.[2]?.description)}:
+                        </Label>
                         <Label>{value(signatories?.[2]?.name)}</Label>
                     </div>
                     <Separator />
-                    <div className="flex justify-between">
-                        <Label className="opacity-70 font-thin"> {value(signatories?.[3]?.description)}:</Label>
+                    <div className="flex flex-col lg:flex-row lg:justify-between gap-2">
+                        <Label className="opacity-70 font-thin">
+                            {" "}
+                            {value(signatories?.[3]?.description)}:
+                        </Label>
                         <Label>{value(signatories?.[3]?.name)}</Label>
                     </div>
                 </div>

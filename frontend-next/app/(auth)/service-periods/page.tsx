@@ -10,13 +10,24 @@ import { Plus, Search } from "lucide-react";
 import { useState } from "react";
 import { useCreateServicePeriod } from "@/app/global/service-periods/useCreateServicePeriod";
 import CreateServicePeriod from "./(create)/CreateServicePeriod";
+import { Card } from "@/components/ui/card";
+import SearchBar from "@/components/custom/searchbar";
+import { useSearch } from "@/hooks/useSearch";
+import { useDebounce } from "use-debounce";
 
 export default function Page() {
     const [page, setPage] = useState<number>(1);
+    const [search, setSearch] = useState("");
+    const [searchDebounce] = useDebounce(search, 500);
+    const searchValue = search == "" ? search : searchDebounce;
     const { setOpen } = useCreateServicePeriod();
     const { data, isFetching, isError, error, isSuccess } = useQuery({
-        queryKey: ["servicePeriods", page],
-        queryFn: async () => await ax.post("/service_periods", { page: page }),
+        queryKey: ["servicePeriods", page, searchValue],
+        queryFn: async () =>
+            await ax.post("/service_periods", {
+                page: page,
+                search: searchValue,
+            }),
         placeholderData: keepPreviousData,
         refetchOnWindowFocus: false,
     });
@@ -59,17 +70,21 @@ export default function Page() {
         <>
             <title>BNS | Service Periods</title>
             <div>
-                <Button size={"sm"} onClick={() => setOpen(true)}>
+                <Button onClick={() => setOpen(true)}>
                     <Plus /> Create Service Period
                 </Button>
             </div>
-            <DataTable
-                page={page}
-                setPage={setPage}
-                data={data?.data?.volunteers}
-                columns={columns}
-                isFetching={isFetching}
-            />
+            <Card className="px-6">
+                <SearchBar onInput={(e: any) => setSearch(e.target.value)} />
+                <DataTable
+                    page={page}
+                    setPage={setPage}
+                    data={data?.data?.scholars}
+                    columns={columns}
+                    isFetching={isFetching}
+                    pagination={data?.data?.pagination}
+                />
+            </Card>
             <CreateServicePeriod />
         </>
     );
