@@ -13,6 +13,7 @@ class ScholarIndexService
         $pagination = pagination($request, $base);
         $get_scholars = $this->query($base, $pagination);
         $current_scholar_count = $get_scholars->count();
+        $pagination = pageInfo($pagination, $current_scholar_count);
         // $get_scholars = $this->map($get_scholars);
         $except_scholar_id = $request->except_scholar_id;
 
@@ -82,24 +83,9 @@ class ScholarIndexService
                 'b.name as barangay_name',
             )
 
-            ->orderBy('tbl_scholars.last_name', 'asc')  
+            ->orderBy('tbl_scholars.last_name', 'asc')
             ->get();
 
         return $data;
     }
-
-    // private function map($get_scholars)
-    // {
-    //     $data =  $get_scholars->map(function ($q) {
-    //         $exists = DB::table('tbl_scholars')
-    //             ->where('replaced_scholar_id', $q->id)
-    //             ->exists();
-
-    //         if ($exists) {
-    //             $q->status = 'REPLACED';
-    //         }
-    //     });
-
-    //     return $data;
-    // }
 }

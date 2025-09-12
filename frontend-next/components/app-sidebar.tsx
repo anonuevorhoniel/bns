@@ -23,57 +23,55 @@ import {
     SidebarHeader,
     SidebarRail,
 } from "@/components/ui/sidebar";
-
-const data = {
-    user: {
-        name: "shadcn",
-        email: "m@example.com",
-        avatar: "/avatars/shadcn.jpg",
-    },
-    team: {
-        name: "BNS",
-        plan: "Barangay Nutrition Scholar "
-    },
-    navMain: [
-        {
-            title: "Dashboard",
-            url: "/dashboard",
-            icon: ChartColumnIncreasing,
-        },
-        {
-            title: "Scholars",
-            url: "/scholars",
-            icon: GraduationCap,
-        },
-        {
-            title: "Payrolls",
-            url: "/payrolls",
-            icon: Coins,
-        },
-        {
-            title: "Users",
-            url: "/users",
-            icon: Users2,
-        },
-        {
-            title: "Service Periods",
-            url: "/service-periods",
-            icon: Hourglass,
-        },
-         {
-            title: "Signatories",
-            url: "/signatories",
-            icon: Signature,
-        },
-        {
-            title: "Audit Trails",
-            url: "/audit-trails",
-            icon: History,
-        },
-    ],
-};
+import { useUser } from "@/app/global/user/useUser";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+    const { user } = useUser();
+
+    const data = {
+        team: {
+            name: "BNS",
+            plan: "Barangay Nutrition Scholar ",
+        },
+        navMain: [
+            {
+                title: "Dashboard",
+                url: "/dashboard",
+                icon: ChartColumnIncreasing,
+            },
+            {
+                title: "Scholars",
+                url: "/scholars",
+                icon: GraduationCap,
+            },
+            {
+                title: "Payrolls",
+                url: "/payrolls",
+                icon: Coins,
+            },
+            {
+                title: "Users",
+                url: "/users",
+                icon: Users2,
+            },
+            {
+                title: "Service Periods",
+                url: "/service-periods",
+                icon: Hourglass,
+            },
+            {
+                title: "Signatories",
+                url: "/signatories",
+                icon: Signature,
+            },
+            {
+                title: "Audit Trails",
+                url: "/audit-trails",
+                icon: History,
+            },
+        ],
+    };
+
     return (
         <Sidebar collapsible="icon" {...props}>
             <SidebarHeader>
@@ -83,7 +81,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <NavMain items={data.navMain} />
             </SidebarContent>
             <SidebarFooter>
-                <NavUser user={data.user} />
+                <NavUser />
             </SidebarFooter>
             <SidebarRail />
         </Sidebar>

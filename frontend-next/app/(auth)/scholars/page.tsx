@@ -2,20 +2,40 @@
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import SearchBar from "@/components/ui/searchbar";
+import SearchBar from "@/components/custom/searchbar";
 import { Download, Plus } from "lucide-react";
 import { useState } from "react";
 import { useDebounce } from "use-debounce";
-import DataTable from "@/components/ui/datatable";
+import DataTable from "@/components/custom/datatable";
 import Link from "next/link";
 import { useScholarView } from "@/app/global/scholars/useScholarView";
 import { ResponsiveDialog } from "@/components/responsive-dialog";
 import ViewScholar from "./(view)/ViewScholar";
 import useGetScholar from "@/hooks/scholars/useGetScholar";
 import { scholarColumns } from "./(columns}/scholarColumns";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuGroup,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuPortal,
+    DropdownMenuSeparator,
+    DropdownMenuShortcut,
+    DropdownMenuSub,
+    DropdownMenuSubContent,
+    DropdownMenuSubTrigger,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import Directory from "./(downloads)/directory/Directory";
+import { useDirectory } from "@/app/global/scholars/downloads/useDirectory";
+import Masterlist from "./(downloads)/(masterlist)/Masterlist";
+import { useMasterlist } from "@/app/global/scholars/downloads/useMasterlist";
 
 export default function Page() {
     const { open, setOpen } = useScholarView();
+    const { open: directoryOpen, setOpen: setDirectoryOpen } = useDirectory();
+    const {open: materlistOpen, setOpen: setMasterlistOpen} = useMasterlist()
     const [page, setPage] = useState<number>(1);
     const [search, setSearch] = useState<string>("");
     const [searchDebounce] = useDebounce(search, 500);
@@ -25,6 +45,7 @@ export default function Page() {
         page: page,
         search: searchValue,
     });
+
     const scholars = data?.data?.get_scholars;
     const pagination = data?.data?.pagination;
 
@@ -38,9 +59,29 @@ export default function Page() {
                         <Plus /> Add Scholar
                     </Button>
                 </Link>
-                <Button>
-                    <Download /> Download
-                </Button>
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button><Download /> Download</Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-56" align="start">
+                        <DropdownMenuGroup>
+                            <DropdownMenuItem
+                                onClick={() => setDirectoryOpen(true)}
+                            >
+                                Directory
+                                <DropdownMenuShortcut>
+                                    <Download />
+                                </DropdownMenuShortcut>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setMasterlistOpen(true)}> 
+                                Masterlist
+                                <DropdownMenuShortcut>
+                                    <Download />
+                                </DropdownMenuShortcut>
+                            </DropdownMenuItem>
+                        </DropdownMenuGroup>
+                    </DropdownMenuContent>
+                </DropdownMenu>
             </div>
             <Card className="px-6">
                 <SearchBar onInput={(e: any) => setSearch(e.target.value)} />
@@ -51,7 +92,6 @@ export default function Page() {
                     data={scholars}
                     columns={columns}
                     isFetching={isFetching}
-                    totalPage={pagination?.total_page}
                 />
             </Card>
             <ResponsiveDialog
@@ -62,6 +102,8 @@ export default function Page() {
             >
                 <ViewScholar />
             </ResponsiveDialog>
+            <Directory />
+            <Masterlist />
         </>
     );
 }

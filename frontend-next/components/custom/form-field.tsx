@@ -7,11 +7,11 @@ import {
     FormMessage,
     useFormField,
 } from "@/components/ui/form";
-import { Input } from "./input";
+import { Input } from "../ui/input";
 import { UseFormReturn } from "react-hook-form";
-import { Textarea } from "./textarea";
-import { Select, SelectContent, SelectTrigger, SelectValue } from "./select";
-import { Button } from "./button";
+import { Textarea } from "../ui/textarea";
+import { Select, SelectContent, SelectTrigger, SelectValue } from "../ui/select";
+import { Button } from "../ui/button";
 import {
     Command,
     CommandEmpty,
@@ -41,7 +41,7 @@ export default function FormFieldComponent({
     label: string;
     selectItems?: any;
 }) {
-    const input = ["", undefined, "text", "number", "password", "date"];
+    const input = ["", undefined, "text", "number", "password", "date", "month"];
 
     const content = ({ field }: { field: any }) => {
         const value = field.value == undefined ? "" : field.value;

@@ -1,11 +1,13 @@
 import { useScholarView } from "@/app/global/scholars/useScholarView";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import StatusBar from "@/components/ui/status";
-import { MapPin, Pen, Search } from "lucide-react";
+import { Info, MapPin, Pen, Search } from "lucide-react";
 import Link from "next/link";
 
 export function scholarColumns() {
+    const funds = ["NNC", "LOCAL", "BOTH"];
     const { setOpen, setScholar } = useScholarView();
     return [
         {
@@ -35,8 +37,28 @@ export function scholarColumns() {
             header: "Barangay Name",
         },
         {
-            accessKey: "fund",
             header: "Fund",
+            cell: (data: any) =>
+                data.fund ? (
+                    <>
+                        <Badge>{data.fund}</Badge>
+                        {!funds.includes(data.fund) && (
+                            <div className="flex items-center gap-1">
+                                <Info className="text-yellow-500" size={12} />
+                                <p className="text-xs text-yellow-500">
+                                    Please change
+                                </p>
+                            </div>
+                        )}
+                    </>
+                ) : (
+                    <Badge
+                        variant={"outline"}
+                        className="text-red-500 border-red-500"
+                    >
+                        Unknown
+                    </Badge>
+                ),
         },
         {
             header: "Action",
@@ -48,7 +70,6 @@ export function scholarColumns() {
                             onClick={() => {
                                 setOpen(true);
                                 setScholar(data);
-                                console.log(data);
                             }}
                         >
                             <Search />

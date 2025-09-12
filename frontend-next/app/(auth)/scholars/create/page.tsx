@@ -3,7 +3,7 @@
 import { Card } from "@/components/ui/card";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {  scholarResolver } from "@/app/Schema/ScholarSchema";
+import { scholarResolver } from "@/app/Schema/ScholarSchema";
 import { useMutation } from "@tanstack/react-query";
 import ax from "@/app/axios";
 import { toast } from "sonner";
@@ -35,7 +35,11 @@ export default function Page() {
         <>
             <title>BNS | Create Scholar</title>
             <Card className="px-6">
-                <ScholarForm form={form} handleSubmit={handleSubmit} />
+                <ScholarForm
+                    form={form}
+                    handleSubmit={handleSubmit}
+                    isPending={storeScholar.isPending}
+                />
             </Card>
         </>
     );

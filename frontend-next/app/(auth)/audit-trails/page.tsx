@@ -2,8 +2,8 @@
 
 import ax from "@/app/axios";
 import ContentLayout from "@/app/ContentLayout";
-import DataTable from "@/components/ui/datatable";
-import SearchBar from "@/components/ui/searchbar";
+import DataTable from "@/components/custom/datatable";
+import SearchBar from "@/components/custom/searchbar";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 
@@ -32,9 +32,12 @@ export default function Page() {
             header: "Action",
         },
          {
-            accessKey: "description",
             header: "Description",
-            cellClass: "max-w-[170px]"
+            cell: (item: any) => (
+                <div className="max-w-xs flex">
+                    <p className="break-all">{item.description}</p>
+                </div>
+            )
         },
     ];
     return (

@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import * as React from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -57,7 +57,7 @@ export function ResponsiveDialog({
                     <DrawerTitle>{title}</DrawerTitle>
                     <DrawerDescription />
                 </DrawerHeader>
-                {children}
+                <div className=" overflow-auto">{children}</div>
                 <DrawerFooter className="pt-2">
                     <DrawerClose asChild>
                         <Button variant="outline">Cancel</Button>

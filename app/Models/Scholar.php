@@ -12,12 +12,60 @@ class Scholar extends Model
 	use HasFactory, SoftDeletes;
 	protected $table = 'tbl_scholars';
 
+	protected $fillable = [
+		'first_name',
+		'middle_name',
+		'last_name',
+		'name_extension',
+		'name_on_id',
+		'id_no',
+		'citymuni_id',
+		'barangay_id',
+		'complete_address',
+		'sex',
+		'birth_date',
+		'civil_status',
+		'educational_attainment',
+		'benificiary_name',
+		'relationship',
+		'district_id',
+		'classification',
+		'philhealth_no',
+		'first_employment_date',
+		'end_employment_date',
+		'contact_number',
+		'status',
+		'place_of_assignment',
+		'fund',
+		'bns_type',
+		'incentive_prov',
+		'incentive_mun',
+		'incentive_brgy',
+		'replacement_date',
+		'replaced_scholar_id',
+		'replaced'
+	];
+
+	public function barangay()
+	{
+		return $this->belongsTo(Barangay::class, 'barangay_id', 'code');
+	}
+
+	public function municipality()
+	{
+		return $this->belongsTo(Municipality::class, 'citymuni_id', 'code');
+	}
+
+	public function servicePeriods() {
+		return $this->hasMany(ServicePeriod::class, 'scholar_id');
+	}
+
 
 	public static function getServicePeriodPerRange($parameters)
 	{
 
 		// Parameters From and To Format = yyyy-mm , from input type month
-		$service_periods = ServicePeriod::where("volunteer_id", $parameters['volunteer_id'])
+		$service_periods = ServicePeriod::where("scholar_id", $parameters['scholar_id'])
 			->where("year_from", explode('-', $parameters['from'])[0])
 			->get();
 
@@ -36,7 +84,7 @@ class Scholar extends Model
 				$x[] = $length;
 				//i = month from
 				for ($i = $service_period->month_from; $i <= $length; $i++) {
-				//if merong $i push lang sa get months yung range ng numbers na months
+					//if merong $i push lang sa get months yung range ng numbers na months
 					if ($i) {
 						array_push($get_months, (int)$i);
 					}
@@ -44,8 +92,8 @@ class Scholar extends Model
 			}
 			//iterate
 			foreach ($get_months as $key => $month) {
-			//if month na nasa loob ng array (galing database) is more than or equal to month_from (galing sa request)
-			//and month is less than or equal to month_to, lagay sa array ng result
+				//if month na nasa loob ng array (galing database) is more than or equal to month_from (galing sa request)
+				//and month is less than or equal to month_to, lagay sa array ng result
 				if ($month >= $month_from && $month <= $month_to) {
 					$result[] = $month;
 				}

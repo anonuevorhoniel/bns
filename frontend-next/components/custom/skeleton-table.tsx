@@ -7,7 +7,7 @@ import {
     TableCell,
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Label } from "./label";
+import { Label } from "../ui/label";
 
 export default function SkeletonTable({
     columnTotal,

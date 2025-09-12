@@ -87,6 +87,8 @@ export const useMasterlist = create<any>((set: any, get: any) => ({
             document.body.appendChild(a);
             a.click();
             a.remove();
+            console.log(get().form);
+            
         } catch (error: any) {
             let responseObj = await error.response.data.text();
             const r = JSON.parse(responseObj);

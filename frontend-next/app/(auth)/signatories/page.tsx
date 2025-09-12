@@ -3,7 +3,7 @@
 import ax from "@/app/axios";
 import ContentLayout from "@/app/ContentLayout";
 import { Button } from "@/components/ui/button";
-import DataTable from "@/components/ui/datatable";
+import DataTable from "@/components/custom/datatable";
 import StatusBar from "@/components/ui/status";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { Pen } from "lucide-react";

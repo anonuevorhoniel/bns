@@ -1,18 +1,48 @@
 import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/ui/form";
-import FormFieldComponent from "@/components/ui/form-field";
+import FormFieldComponent from "@/components/custom/form-field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover";
+import ResponsivePagination from "@/components/custom/responsive-pagination";
+import SearchBar from "@/components/custom/searchbar";
 import { SelectItem } from "@/components/ui/select";
-import { ChevronDown } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import useGetScholar from "@/hooks/scholars/useGetScholar";
+import { Check, ChevronDown } from "lucide-react";
+import { useState } from "react";
 import { UseFormReturn } from "react-hook-form";
+import { useDebounce } from "use-debounce";
 
 export default function AdditionalInformationForm({
     form,
 }: {
     form: UseFormReturn;
 }) {
+    const [search, setSearch] = useState("");
+    const [searchDebounce] = useDebounce(search, 500);
+    const searchValue = search == "" ? search : searchDebounce;
     const status = form.watch("status");
+    const municipality_code = form.watch("citymuni_id");
+    const [page, setPage] = useState(1);
+    const [replacedScholar, setReplacedScholar] = useState({
+        full_name: "",
+        id: null,
+    });
+    const [openReplacement, setOpenReplacement] = useState(false);
+
+    const { data, isFetching, isSuccess } = useGetScholar({
+        page: page,
+        search: searchValue,
+        code: municipality_code,
+    });
+
+    const pagination = data?.data?.pagination;
+
     return (
         <>
             <Label className="font-bold text-xl mb-5">
@@ -97,14 +127,83 @@ export default function AdditionalInformationForm({
                     <>
                         <div className="space-y-2">
                             <Label>Select BNS to Replace:</Label>
-                            <Button
-                                className="w-full flex justify-between"
-                                type="button"
-                                variant={"outline"}
+                            <Popover
+                                open={openReplacement}
+                                onOpenChange={setOpenReplacement}
                             >
-                                <Label>Select BNS</Label>
-                                <ChevronDown />
-                            </Button>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                        className="w-full flex justify-between"
+                                        type="button"
+                                        variant={"outline"}
+                                    >
+                                        <Label>
+                                            {replacedScholar.full_name
+                                                ? replacedScholar?.full_name
+                                                : "Select BNS"}
+                                        </Label>
+                                        <ChevronDown />
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent>
+                                    <div className="flex gap-2">
+                                        <SearchBar
+                                            onInput={(e: any) =>
+                                                setSearch(e.target.value)
+                                            }
+                                        />
+                                        <Button onClick={() => setSearch("")}>
+                                            Reset
+                                        </Button>
+                                    </div>
+                                    {data?.data?.get_scholars?.map(
+                                        (scholar: any) => {
+                                            if (isFetching) {
+                                                return (
+                                                    <div
+                                                        className="flex justify-between gap-5 my-2"
+                                                        key={scholar.id}
+                                                    >
+                                                        <Skeleton className="h-8 w-full " />
+                                                        <Skeleton className="h-8 w-10" />
+                                                    </div>
+                                                );
+                                            }
+                                            return (
+                                                <div
+                                                    className="flex justify-between my-2"
+                                                    key={scholar.id}
+                                                >
+                                                    <Label>
+                                                        {scholar.full_name}
+                                                    </Label>
+                                                    <Button
+                                                        size={"sm"}
+                                                        onClick={() => {
+                                                            setReplacedScholar({
+                                                                full_name:
+                                                                    scholar.full_name,
+                                                                id: scholar.id,
+                                                            });
+                                                            setOpenReplacement(
+                                                                false
+                                                            );
+                                                        }}
+                                                    >
+                                                        <Check />
+                                                    </Button>
+                                                </div>
+                                            );
+                                        }
+                                    )}
+                                    <ResponsivePagination
+                                        page={page}
+                                        setPage={setPage}
+                                        totalPage={pagination?.total_page}
+                                        isFetching={isFetching}
+                                    />
+                                </PopoverContent>
+                            </Popover>
                         </div>
                         <FormFieldComponent
                             name="service_period_status"

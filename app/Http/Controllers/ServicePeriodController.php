@@ -24,7 +24,7 @@ class ServicePeriodController extends Controller
         $municipality_codes = array_column($municipalities, 'code');
 
         $volunteers = DB::table('tbl_scholars as v')
-            ->join('tbl_service_periods as sp', 'sp.volunteer_id', 'v.id')
+            ->join('tbl_service_periods as sp', 'sp.scholar_id', 'v.id')
             ->where('sp.deleted_at', null)
             ->leftJoin('tbl_municipalities as m', 'v.citymuni_id', 'm.code')
             ->whereIn('v.citymuni_id', $municipality_codes)
@@ -46,7 +46,7 @@ class ServicePeriodController extends Controller
 
         $volunteers->map(function ($s) {
             $recent_period = DB::table('tbl_service_periods')
-                ->where('volunteer_id', $s->id)
+                ->where('scholar_id', $s->id)
                 ->orderBy('created_at', 'desc')
                 ->where('deleted_at', null)
                 ->first();
@@ -131,12 +131,12 @@ class ServicePeriodController extends Controller
                 ->get();
 
             if ($to == "Present") {
-                $service_period = ServicePeriod::where('volunteer_id', $member)
+                $service_period = ServicePeriod::where('scholar_id', $member)
                     ->where('month_from', '>=', $get_from[1])
                     ->where('year_from', $get_from[0])
                     ->get();
             } else {
-                $service_period = ServicePeriod::where('volunteer_id', $member)
+                $service_period = ServicePeriod::where('scholar_id', $member)
                     ->where('month_from', '>=', $get_from[1])
                     ->where('year_from',  $get_from[0])
                     ->where('month_to', '<=', $get_to[1])
@@ -189,9 +189,7 @@ class ServicePeriodController extends Controller
             $from_date   = DateTime::createFromFormat('!m', $get_from[1]);
             $from_month = $from_date->format('F'); // March
             $from = $from_month . ' ' . $get_from[0];
-
-
-            foreach ($request->members as $volunteer_id) {
+            foreach ($request->members as $scholar_id) {
 
                 $volunteer = DB::table('tbl_scholars as v')
                     ->select(
@@ -202,16 +200,16 @@ class ServicePeriodController extends Controller
                         'm.name'
                     )
                     ->leftJoin('tbl_municipalities as m', 'v.citymuni_id', 'm.code')
-                    ->where('v.id', $volunteer_id)
+                    ->where('v.id', $scholar_id)
                     ->get();
 
                 if ($to == "Present") {
-                    $existing_period = ServicePeriod::where('volunteer_id', $volunteer_id)
+                    $existing_period = ServicePeriod::where('scholar_id', $scholar_id)
                         ->where('month_from', '>=', $get_from[1])
                         ->where('year_from', '=', $get_from[0])
                         ->get();
                 } else {
-                    $existing_period = ServicePeriod::where('volunteer_id', $volunteer_id)
+                    $existing_period = ServicePeriod::where('scholar_id', $scholar_id)
                         ->where('month_from', '>=', $get_from[1])
                         ->where('year_from',  $get_from[0])
                         ->where('month_to', '<=', $get_to[1])
@@ -225,7 +223,7 @@ class ServicePeriodController extends Controller
 
                     // insert data.
                     $period    = new ServicePeriod;
-                    $period->volunteer_id = $volunteer_id;
+                    $period->scholar_id = $scholar_id;
                     $period->month_from = $get_from[1];
                     $period->year_from = $get_from[0];
                     $period->month_to = $month_to;
@@ -287,12 +285,12 @@ class ServicePeriodController extends Controller
 
 
             if ($to == "Present") {
-                $existing_period = ServicePeriod::where('volunteer_id', $request->volunteer_id)
+                $existing_period = ServicePeriod::where('scholar_id', $request->scholar_id)
                     ->where('month_from', '>=', $get_from[1])
                     ->where('year_from', '=', $get_from[0])
                     ->get();
             } else {
-                $existing_period = ServicePeriod::where('volunteer_id', $request->volunteer_id)
+                $existing_period = ServicePeriod::where('scholar_id', $request->scholar_id)
                     ->where('month_from', '>=', $get_from[1])
                     ->where('year_from',  $get_from[0])
                     ->where('month_to', '<=', $get_to[1])
@@ -304,7 +302,7 @@ class ServicePeriodController extends Controller
 
                 // insert data.
                 $period    = new ServicePeriod;
-                $period->volunteer_id = $request->volunteer_id;
+                $period->scholar_id = $request->scholar_id;
                 $period->month_from = $get_from[1];
                 $period->year_from = $get_from[0];
                 $period->month_to = $month_to;
@@ -332,8 +330,8 @@ class ServicePeriodController extends Controller
 
     public function show(Scholar $scholar, Request $request)
     {
-        $service_period_query = ServicePeriod::where('volunteer_id', $scholar->id)
-            ->join('tbl_scholars as s', 'tbl_service_periods.volunteer_id', 's.id')
+        $service_period_query = ServicePeriod::where('scholar_id', $scholar->id)
+            ->join('tbl_scholars as s', 'tbl_service_periods.scholar_id', 's.id')
             ->select(
                 'tbl_service_periods.*',
                 DB::raw('CONCAT ( s.last_name, " ",  s.first_name , " ", COALESCE(s.middle_name, ""), " " , COALESCE(s.name_extension, "" )) as full_name')
@@ -388,13 +386,13 @@ class ServicePeriodController extends Controller
 
 
             if ($to == "Present") {
-                $existing_period = ServicePeriod::where('volunteer_id', $request->volunteer_id)
+                $existing_period = ServicePeriod::where('scholar_id', $request->scholar_id)
                     ->where('month_from', '>=', $get_from[1])
                     ->where('year_from', '=', $get_from[0])
                     ->where('id', '<>', $request->id)
                     ->get();
             } else {
-                $existing_period = ServicePeriod::where('volunteer_id', $request->volunteer_id)
+                $existing_period = ServicePeriod::where('scholar_id', $request->scholar_id)
                     ->where('month_from', '>=', $get_from[1])
                     ->where('year_from',  $get_from[0])
                     ->where('month_to', '<=', $get_to[1])
@@ -409,7 +407,7 @@ class ServicePeriodController extends Controller
 
                 $update_volunteer = ServicePeriod::where('id', $request->id)
                     ->update([
-                        'volunteer_id' => $request->volunteer_id,
+                        'scholar_id' => $request->scholar_id,
                         'month_from' => $get_from[1],
                         'year_from' => $get_from[0],
                         'month_to' => $month_to,

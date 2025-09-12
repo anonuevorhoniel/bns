@@ -49,14 +49,14 @@ class ReportController extends Controller
         $results = array();
         foreach($volunteers as $volunteer){
             $parameters = array(
-                "volunteer_id" => $volunteer->id, 
+                "scholar_id" => $volunteer->id, 
                 "from" => $from, 
                 "to" => $to
             );
             $service_period = Volunteer::getServicePeriodPerRange($parameters);
             if(sizeOf($service_period) > 0){
                 $results[] = array(
-                    "volunteer_id" => $volunteer->id,
+                    "scholar_id" => $volunteer->id,
                     "barangay" => $volunteer->name,
                     "mobile" => $volunteer->mobile,
                     "name" => $volunteer->last_name.', '.$volunteer->first_name.' '.$volunteer->middle_name,
@@ -95,14 +95,14 @@ class ReportController extends Controller
             // Checking of Volunteer's Service Period
             foreach($volunteers as $volunteer){
                 $parameters = array(
-                    "volunteer_id" => $volunteer->id, 
+                    "scholar_id" => $volunteer->id, 
                     "from" => $from, 
                     "to" => $to
                 );
                 $service_period = Volunteer::getServicePeriodPerRange($parameters);
                 if(sizeOf($service_period) > 0){
                     $results[] = array(
-                        "volunteer_id" => $volunteer->id,
+                        "scholar_id" => $volunteer->id,
                         "barangay" => $volunteer->name,
                         "mobile" => $volunteer->mobile,
                         "name" => $volunteer->last_name.', '.$volunteer->first_name.' '.$volunteer->middle_name,

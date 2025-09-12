@@ -26,18 +26,20 @@ class DashboardController extends Controller
         $scholars_count = Scholar::count();
         $total_muni_count =  $scholar_per_mun = DB::table('tbl_municipalities as m')
             ->count();
-        $page = $request->page;
-        $limit = 10;
-        $offset = $limit * ($page - 1);
-        $total_page = ceil($total_muni_count / $limit);
-        
-        $scholar_per_mun = DB::table('tbl_municipalities as m')
+
+        $base = DB::table('tbl_municipalities as m')
             ->leftJoin('tbl_scholars as sc', 'sc.citymuni_id', 'm.code')
             ->groupBy('m.id', 'm.name', 'm.code')
-            ->select(DB::raw('COUNT(sc.id) as total'), 'm.id', 'm.name as month', 'm.code')
-            ->limit($limit)
-            ->offset($offset)
+            ->select(DB::raw('COUNT(sc.id) as total'), 'm.id as id', 'm.name as month', 'm.code',);
+
+        $pagination = pagination($request, $base);
+
+        $scholar_per_mun = (clone $base)
+            ->limit($pagination['limit'])
+            ->offset($pagination['offset'])
             ->get();
+
+        $pagination = pageInfo($pagination, $scholar_per_mun->count());
 
         $scholarsPerMunicipality = DB::table('tbl_municipalities as m')
             ->leftJoin('tbl_scholars as sc', 'sc.citymuni_id', 'm.code')
@@ -51,8 +53,8 @@ class DashboardController extends Controller
             'users',
             'scholar_per_mun',
             'total_muni_count',
-            'total_page',
-            'scholarsPerMunicipality'
+            'scholarsPerMunicipality',
+            'pagination'
         ));
     }
 
@@ -64,7 +66,7 @@ class DashboardController extends Controller
 
         foreach ($municipalities as $municipality) {
 
-            $sp_specific = Volunteer::join('tbl_service_periods', 'tbl_volunteers.id', 'tbl_service_periods.volunteer_id')
+            $sp_specific = Volunteer::join('tbl_service_periods', 'tbl_volunteers.id', 'tbl_service_periods.scholar_id')
                 ->where("month_to", '>=', Quarter::currentMonthNum())
                 ->where("year_from", Quarter::currentYear())
                 ->where("year_to", Quarter::currentYear())
@@ -72,7 +74,7 @@ class DashboardController extends Controller
                 ->count();
 
 
-            $sp_present = Volunteer::join('tbl_service_periods', 'tbl_volunteers.id', 'tbl_service_periods.volunteer_id')
+            $sp_present = Volunteer::join('tbl_service_periods', 'tbl_volunteers.id', 'tbl_service_periods.scholar_id')
                 ->where("status", "present")
                 ->where("municipality_code", $municipality->code)
                 ->count();

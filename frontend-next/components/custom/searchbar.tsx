@@ -1,5 +1,5 @@
 import { Search } from "lucide-react";
-import { Input } from "./input";
+import { Input } from "../ui/input";
 
 export default function SearchBar({ onInput }: { onInput: any }) {
     return (

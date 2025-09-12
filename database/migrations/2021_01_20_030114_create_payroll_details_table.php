@@ -15,7 +15,7 @@ class CreatePayrollDetailsTable extends Migration
     {
         Schema::create('tbl_payroll_details', function (Blueprint $table) {
             $table->id();
-            $table->bigInteger('volunteer_id');
+            $table->bigInteger('scholar_id');
             $table->bigInteger('payroll_id');
             $table->string('month_from');
             $table->string('month_to');

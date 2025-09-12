@@ -15,7 +15,7 @@ class CreateServicePeriodsTable extends Migration
     {
         Schema::create('tbl_service_periods', function (Blueprint $table) {
             $table->id();
-            $table->bigInteger('volunteer_id');
+            $table->bigInteger('scholar_id');
             $table->string('month_from');
             $table->string('month_to');
             $table->string('year_from');
@@ -23,8 +23,6 @@ class CreateServicePeriodsTable extends Migration
             $table->string('status');
             $table->timestamps();
             $table->softDeletes();
-            
-            
         });
     }
 

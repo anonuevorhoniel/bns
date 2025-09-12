@@ -27,7 +27,7 @@ class Volunteer extends Model
 	public static function getServicePeriodPerRange($parameters){
 		
 		// Parameters From and To Format = yyyy-mm , from input type month
-		$service_periods = ServicePeriod::where("volunteer_id", $parameters['volunteer_id'])
+		$service_periods = ServicePeriod::where("scholar_id", $parameters['scholar_id'])
 			->where("year_from", explode('-', $parameters['from'])[0])
 			->get();
 		

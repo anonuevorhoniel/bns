@@ -56,13 +56,14 @@ export const UsePayrollAction = create<any>((set: any, get: any) => ({
         set({ tableLoad: true });
         try {
             let form = get().form;
-            const r = await ax.post("/getScholars", { form, page });
+            const r = await ax.post("/getScholars", form);
             const scholar_data = r.data.results;
             const total_page = r.data.total_page;
             const scholar_ids = r.data.scholar_ids;
             set({ scholars: scholar_data });
             set({ total_page: total_page });
             set({ scholar_ids: scholar_ids });
+            console.log(r.data);
         } catch (err) {
             console.log(err);
         } finally {

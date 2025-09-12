@@ -5,7 +5,7 @@ import ContentLayout from "@/app/ContentLayout";
 import { Button } from "@/components/ui/button";
 import { lorelei, notionists } from "@dicebear/collection";
 
-import DataTable from "@/components/ui/datatable";
+import DataTable from "@/components/custom/datatable";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { MapPin, Pen, Trash2, Unlock } from "lucide-react";
 import { useState } from "react";
@@ -13,7 +13,7 @@ import { createAvatar } from "@dicebear/core";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { AvatarFallback } from "@radix-ui/react-avatar";
 import { Label } from "@/components/ui/label";
-import SearchBar from "@/components/ui/searchbar";
+import SearchBar from "@/components/custom/searchbar";
 import { Badge } from "@/components/ui/badge";
 
 export default function Page() {

@@ -14,6 +14,7 @@ import { useEffect, useState } from "react";
 import SkeletonTable from "./skeleton-table";
 import ResponsivePagination from "./responsive-pagination";
 import { FileX } from "lucide-react";
+import CardSkeleton from "./card-skeleton";
 
 export default function DataTable({
     columns,
@@ -21,7 +22,6 @@ export default function DataTable({
     isFetching,
     page,
     setPage,
-    totalPage,
     pagination,
 }: {
     columns: any;
@@ -29,12 +29,12 @@ export default function DataTable({
     isFetching: boolean;
     page: number;
     setPage: any;
-    totalPage: number;
     pagination: {
         offset: number;
         limit: number;
         total: number;
         total_page: number;
+        total_current: number;
     };
 }) {
     const isDesktop = useMediaQuery("(min-width: 768px)");
@@ -55,14 +55,14 @@ export default function DataTable({
                                     {pagination?.total == 0
                                         ? 0
                                         : pagination?.offset + 1}{" "}
-                                    to {pagination?.offset + pagination?.limit}{" "}
+                                    to {pagination?.offset + pagination?.total_current}{" "}
                                     of {pagination?.total} data
                                 </Label>
                             </div>
                             <div>
                                 <ResponsivePagination
                                     isFetching={isFetching}
-                                    totalPage={totalPage}
+                                    totalPage={pagination?.total_page}
                                     page={page}
                                     setPage={setPage}
                                 />
@@ -75,7 +75,7 @@ export default function DataTable({
                 <>
                     <Card className="py-0 shadow-none">
                         <Table>
-                            <TableHeader>
+                            <TableHeader className="opacity-70">
                                 <TableRow>
                                     {columns?.map((c: any, c_index: number) => (
                                         <TableHead
@@ -148,14 +148,15 @@ export default function DataTable({
                                 {pagination?.total == 0
                                     ? 0
                                     : pagination?.offset + 1}{" "}
-                                to {pagination?.offset + pagination?.limit} of{" "}
-                                {pagination?.total} data
+                                to{" "}
+                                {pagination?.offset + pagination?.total_current}{" "}
+                                of {pagination?.total} data
                             </Label>
                         </div>
                         <div>
                             <ResponsivePagination
                                 isFetching={isFetching}
-                                totalPage={totalPage}
+                                totalPage={pagination?.total_page}
                                 page={page}
                                 setPage={setPage}
                             />
@@ -163,6 +164,10 @@ export default function DataTable({
                     </div>
                 </>
             );
+        }
+
+        if (isFetching) {
+            return <CardSkeleton columnTotal={columns.length} />;
         }
 
         return (
@@ -175,9 +180,9 @@ export default function DataTable({
                                 className="flex justify-between items-center px-6"
                             >
                                 <Label>{c.header}:</Label>
-                                <Label className="font-normal">
+                                <div className="text-wrap">
                                     {c.cell ? c.cell(d) : d[c.accessKey]}
-                                </Label>
+                                </div>
                             </div>
                         ))}
                     </Card>

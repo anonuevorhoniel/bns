@@ -1,12 +1,11 @@
 import { useScholarView } from "@/app/global/scholars/useScholarView";
-import { Card, CardHeader } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import StatusBar from "@/components/ui/status";
 import { lorelei } from "@dicebear/collection";
 import { createAvatar } from "@dicebear/core";
-import { School, User } from "lucide-react";
-import Image from "next/image";
+import { useEffect } from "react";
 
 export default function ViewScholar() {
     const { scholar } = useScholarView();
@@ -163,6 +162,11 @@ export default function ViewScholar() {
                                 First Employment Date:{" "}
                             </Label>
                             <Label>{scholar.first_employment_date}</Label>
+                        </div>
+                        <Separator />
+                        <div className="grid grid-cols-2">
+                            <Label className="opacity-70">Replaced: </Label>
+                            <Label>Scholar</Label>
                         </div>
                     </div>
                 </Card>

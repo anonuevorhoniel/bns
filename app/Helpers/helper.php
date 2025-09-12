@@ -24,3 +24,9 @@ function pageInfo($pagination, $total_current)
     ];
     return $data;
 }
+
+function months()
+{
+    $months = array('January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December');
+    return $months;
+}

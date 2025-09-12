@@ -13,19 +13,25 @@ import {
 import { Label } from "@/components/ui/label";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import ax from "@/app/axios";
-import DataTable from "@/components/ui/datatable";
+import DataTable from "@/components/custom/datatable";
 import { useState } from "react";
+import DashboardSkeleton from "@/components/custom/dashboard-skeleton";
 
 export default function Page() {
     const [page, setPage] = useState(1);
-    const { data, isSuccess, isError, error, isFetching } = useQuery({
-        queryKey: ["dashboard"],
+    const { data, isFetching, isLoading, isError, error } = useQuery({
+        queryKey: ["dashboard", page],
         queryFn: async () => ax.post("/dashboard", { page: page }),
         refetchOnWindowFocus: false,
         placeholderData: keepPreviousData,
     });
 
+    if (isError) {
+        console.log(error);
+    }
+
     const scholarsPerMunicipality = data?.data?.scholarsPerMunicipality;
+    const pagination = data?.data?.pagination;
 
     const chartData = scholarsPerMunicipality?.map((data: any) => ({
         month: data.month,
@@ -50,12 +56,10 @@ export default function Page() {
         },
     } satisfies ChartConfig;
 
-    if (isSuccess) {
-        console.log(data?.data);
+    if (isLoading) {
+        return <DashboardSkeleton />;
     }
-    if (isError) {
-        console.log(error);
-    }
+
     return (
         <>
             <title>BNS | Dashboard</title>
@@ -91,7 +95,7 @@ export default function Page() {
                     </div>
                 </Card>
 
-                 <Card className="px-6 py-4  ">
+                <Card className="px-6 py-4  ">
                     <div className="space-y-3">
                         <div className="flex justify-between">
                             <Label>Total Scholars</Label>
@@ -163,8 +167,8 @@ export default function Page() {
                     setPage={setPage}
                     data={data?.data?.scholar_per_mun}
                     columns={columns}
-                    totalPage={1}
                     isFetching={isFetching}
+                    pagination={pagination}
                 />
             </Card>
         </>

@@ -13,13 +13,16 @@ import BeneficiaryForm from "./BeneficiaryForm";
 import FundForm from "./FundForm";
 import TrainingForm from "./TrainingForm";
 import EligibilityForm from "./EligibilitiesForm";
+import ButtonLoad from "@/components/custom/button-load";
 
 export default function ScholarForm({
     form,
     handleSubmit,
+    isPending
 }: {
     form: UseFormReturn;
     handleSubmit: any;
+    isPending: boolean
 }) {
     return (
         <>
@@ -27,7 +30,7 @@ export default function ScholarForm({
                 <form
                     action=""
                     onSubmit={form.handleSubmit(handleSubmit)}
-                    className="space-y-5"
+                    className="space-y-5 relative"
                 >
                     <PersonalInformationForm form={form} />
                     <Separator />
@@ -42,8 +45,8 @@ export default function ScholarForm({
                     <TrainingForm form={form} />
                     <Separator />
                     <EligibilityForm form={form} />
-                    <div className="flex justify-center">
-                        <Button>Submit</Button>
+                    <div className="flex justify-center sticky bottom-5">
+                        <ButtonLoad label="Submit" className="w-full lg:max-w-xs" isPending={isPending}/>
                     </div>
                 </form>
             </Form>

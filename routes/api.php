@@ -4,6 +4,7 @@ use App\Http\Controllers\APIController;
 use App\Http\Controllers\AuditTrailController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\MunicipalityController;
 use App\Http\Controllers\PayrollController;
 use App\Http\Controllers\RateController;
 use App\Http\Controllers\ServicePeriodController;
@@ -26,14 +27,14 @@ Route::get('/test', function () {
         'time' => now()
     ]);
 });
-
+Route::get('/municipalities', [MunicipalityController::class, 'index']);
 Route::middleware('auth:sanctum')->group(function () {
     
     Route::prefix('/scholars')->controller(ScholarController::class)->group(function () {
-        Route::post('/get', 'municipality_index');
+        Route::post('/', 'index');
         Route::get('/create', 'create');
-        Route::get('/{id}/edit', 'edit');
-        Route::post('/{id}/update', 'update');
+        Route::get('/{scholar}/edit', 'edit');
+        Route::post('/{scholar}/update', 'update');
         Route::get('/getAllMuni', "getAllMuni");
         Route::post('/store', 'store');
         Route::get('/{id}/show', 'show');
@@ -96,6 +97,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/getBarangays', 'getBarangays');
     });
 
-    Route::post('/getScholars', [APIController::class, 'getCompletedVolunteers']);
+    Route::post('/getScholars', [APIController::class, 'get_scholars']);
     Route::post('/gmv/{municipality}',  [APIController::class, 'getMunicipalityVolunteers']);
 });

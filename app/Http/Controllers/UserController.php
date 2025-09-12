@@ -231,12 +231,13 @@ class UserController extends Controller
         $auth = Auth::attempt(['email' => $request->email, 'password' => $request->password]);
 
         if (!$auth) {
-            return response()->json(['message' => 'Incorrect Credentials'], 422);
+            return response()->json(['message' => 'Incorrect Password'], 422);
         }
         $user = Auth::user();
         $token = $user->createToken('user_c')->plainTextToken;
         $cookie = Cookie('user_c', $token);
         $message = "Logged In!";
+        $user = $user->only(['id', 'name', 'email']);
         $data = compact('user', 'token', 'message');
 
         return response()->json($data)->withCookie($cookie);
@@ -244,7 +245,7 @@ class UserController extends Controller
 
     public function check_auth(Request $request)
     {
-        return response()->json($request->user());
+        return response()->json(Auth::user()->only(['id', 'email', 'name']));
     }
 
     public function change_email(Request $request)

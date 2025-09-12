@@ -10,7 +10,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import ScholarForm from "../../(forms)/ScholarForm";
 import { useEffect, useState } from "react";
-import ScholarLoad from "@/components/ui/scholar-load";
+import ScholarLoad from "@/components/custom/scholar-load";
 
 export default function Page() {
     const [delay, setDelay] = useState(true);
@@ -31,11 +31,11 @@ export default function Page() {
         },
         onSuccess: (data: any) => {
             toast.success("Success", { description: data?.data.message });
+            console.log(data);
             window.scrollTo({ top: 0, behavior: "smooth" });
         },
     });
     const handleSubmit = (data: any) => {
-        console.log(data);
         updateScholar.mutate(data);
     };
 
@@ -51,7 +51,10 @@ export default function Page() {
             form.reset({
                 ...scholar,
                 with_philhealth: scholar.classification != null ? "Yes" : "No",
-                place_of_assignment: scholar.place_of_assignment != 'BNS Coordinator' ? 'same_as_barangay' : 'BNS Coordinator'
+                place_of_assignment:
+                    scholar.place_of_assignment != "BNS Coordinator"
+                        ? "same_as_barangay"
+                        : "BNS Coordinator",
             });
             const timer = setTimeout(() => {
                 setDelay(false);
@@ -62,9 +65,11 @@ export default function Page() {
     }, [isSuccess]);
 
     if (isError) {
+        console.log(error);
+
         return (
             <>
-                There seems to be a problem with the data, please try again
+            There seems to be a problem with the data, please try again
                 later
             </>
         );
@@ -78,7 +83,11 @@ export default function Page() {
         <>
             <title>BNS | Create Scholar</title>
             <Card className="px-6">
-                <ScholarForm form={form} handleSubmit={handleSubmit} />
+                <ScholarForm
+                    form={form}
+                    isPending={updateScholar.isPending}
+                    handleSubmit={handleSubmit}
+                />
             </Card>
         </>
     );

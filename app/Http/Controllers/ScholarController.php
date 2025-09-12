@@ -7,30 +7,24 @@ use Exception;
 use Carbon\Carbon;
 use App\Models\Fund;
 use App\Models\User;
-use App\Models\Quarter;
 use App\Models\Scholar;
 use App\Models\Barangay;
 use App\Models\District;
-use App\Models\Position;
 use App\Models\Volunteer;
-use App\Models\Assignment;
 use App\Models\AuditTrail;
 use App\Models\Eligibility;
-use App\Models\Requirement;
-use App\Models\Municipality;
 use Illuminate\Http\Request;
-use App\Models\ServicePeriod;
-use App\Models\Accomplishment;
 use App\Models\Classification;
 use App\Models\ScholarTraining;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use App\Models\EducationalAttainment;
-use App\Models\MunicipalRepresentative;
+use App\Services\Scholars\Download\ScholarDirectoryDownloadService;
+use App\Services\Scholars\Download\ScholarMasterlistService;
 use App\Services\Scholars\ScholarIndexService;
 use App\Services\Scholars\ScholarStoreService;
-use Illuminate\Support\Facades\Log;
+use App\Services\Scholars\ScholarUpdateService;
+use Illuminate\Validation\ValidationException;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Reader\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Border;
@@ -40,113 +34,27 @@ class ScholarController extends Controller
 {
     protected $indexService;
     protected $storeService;
-    public function __construct(ScholarIndexService $indexService, ScholarStoreService $storeService)
-    {
+    protected $updateService;
+    protected $directoryDownloadService;
+    protected $masterlistService;
+    public function __construct(
+        ScholarIndexService $indexService,
+        ScholarStoreService $storeService,
+        ScholarUpdateService $updateService,
+        ScholarDirectoryDownloadService $directoryDownloadService,
+        ScholarMasterlistService $masterlistService,
+    ) {
         $this->indexService = $indexService;
         $this->storeService = $storeService;
+        $this->updateService = $updateService;
+        $this->directoryDownloadService = $directoryDownloadService;
+        $this->masterlistService = $masterlistService;
     }
-    public function municipality_index(Request $request)
+    public function index(Request $request)
     {
         $data = $this->indexService->main($request);
         return response()->json($data);
     }
-
-    // public function datatable_old(Request $request)
-    // {
-    //     $result = Volunteer::select(
-    //         'tbl_volunteers.id as id',
-    //         'tbl_volunteers.first_name',
-    //         'tbl_volunteers.middle_name',
-    //         'tbl_volunteers.last_name',
-    //         'tbl_volunteers.suffix',
-    //         'tbl_volunteers.position_id',
-    //         'tbl_volunteers.mobile',
-    //         'tbl_volunteers.district_id',
-    //         'position.position',
-    //         'district.description',
-    //         'municipality.name as m_name'
-    //     )
-    //         ->leftJoin('tbl_positions as position', 'tbl_volunteers.position_id', 'position.id')
-    //         ->leftJoin('tbl_districts as district', 'tbl_volunteers.district_id', 'district.district_no')
-    //         ->leftJoin('tbl_municipalities as municipality', 'tbl_volunteers.municipality_code', 'municipality.code')
-    //         ->leftJoin('tbl_barangays as barangay', 'tbl_volunteers.barangay_code', 'barangay.code')
-    //         ->where('tbl_volunteers.deleted_at', null);
-    //     // Filter Volunteers based on assignments
-    //     if (Auth::user()->classification == "Field Officer") {
-    //         $result = $result->leftJoin('tbl_assignments as assignment', 'municipality.code', 'assignment.municipality_code')
-    //             ->where('assignment.user_id', Auth::user()->id);
-    //     }
-    //     if (Auth::user()->classification == "Municipal Representative") {
-    //         $rep = MunicipalRepresentative::where('user_id', '=', Auth::user()->id)->first();
-    //         $volunteer_rep = Volunteer::find($rep->volunteer_id);
-    //         $result = $result->where('tbl_volunteers.municipality_code', $volunteer_rep->municipality_code);
-    //     }
-
-    //     $result = $result->where(
-    //         DB::raw(
-    //             "CONCAT(
-    //                     `tbl_volunteers`.`first_name`,
-    //                     `tbl_volunteers`.`last_name`,
-    //                     `tbl_volunteers`.`position_id`,
-    //                     `district`.`description`,
-    //                     `municipality`.`name`,
-    //                     `position`.`position`,
-    //                     `tbl_volunteers`.`id`
-    //                 )"
-    //         ),
-    //         'LIKE',
-    //         "%" . $request->search['value'] . "%"
-    //     )->orderBy('tbl_volunteers.last_name');
-    //     $count_result = $result->get();
-    //     $count_result = $count_result->count();
-
-    //     $result = $result->skip($request->start)->take($request->length)->get();
-
-    //     $total = Volunteer::totalVolunteer();
-
-    //     $filtered = (is_null($request->search['value']) ? $total : $count_result);
-    //     $fin_result = array();
-
-    //     foreach ($result as $key => $rs) {
-    //         $check_requirements = Requirement::where('quarter_id', Quarter::isActive())
-    //             ->where('volunteer_id', $rs->id)
-    //             ->where('completed', 1)->get();
-    //         $requirements = ($check_requirements->count() > 0) ? 1 : 0;
-
-    //         $check_accomplishments = Accomplishment::where('quarter_id', Quarter::isActive())
-    //             ->where('month', Quarter::currentMonthNum())
-    //             ->where('volunteer_id', $rs->id)
-    //             ->where('status', 1)->get();
-    //         $accomplishments = ($check_accomplishments->count() > 0) ? 1 : 0;
-
-    //         $fin_result[] = array(
-    //             'id' => $rs->id,
-    //             'first_name' => $rs->first_name,
-    //             'middle_name' => ($rs->middle_name != null) ? $rs->middle_name : '',
-    //             'last_name' => $rs->last_name,
-    //             'suffix' => $rs->suffix,
-    //             'position_id' => $rs->position_id,
-    //             'mobile' => $rs->mobile,
-    //             'district_id' => $rs->district_id,
-    //             'position' => $rs->position,
-    //             'description' => $rs->description,
-    //             'm_name' => $rs->m_name,
-    //             // 'b_name' => $rs->b_name,
-    //             'requirements' => $requirements,
-    //             'accomplishments' => $accomplishments,
-    //         );
-    //     }
-
-    //     $result = $fin_result;
-    //     return array(
-    //         "draw" => $request->draw,
-    //         "recordsTotal" => $total,
-    //         "recordsFiltered" => $filtered,
-    //         "data" => $result,
-    //         "request" => $request->all()
-    //     );
-    //     return $result;
-    // }
 
     public function create()
     {
@@ -219,335 +127,84 @@ class ScholarController extends Controller
         return response()->json(['message' => 'Scholar Created Successfully']);
     }
 
-
-    public function id(Volunteer $volunteer)
+    public function edit(Scholar $scholar)
     {
-        $municipality = Municipality::where('code', $volunteer->municipality_code)->first();
-        $barangay = Barangay::where('code', $volunteer->barangay_code)->first();
-        $id_code = Municipality::code($municipality->code);
-        $id_code = $id_code . '-' . $volunteer->id;
-        return view('volunteers.include.id', compact('volunteer', 'municipality', 'barangay', 'id_code'));
-    }
-
-
-    public function show($id)
-    {
-        $page = [
-            'name'      =>  'Scholars',
-            'title'     =>  'Scholar Management',
-            'crumb' =>  array('Scholars' => '/Scholars', 'Information' => '')
-        ];
-
-        Scholar::findOrFail($id);
-        $scholar = DB::table('tbl_scholars as sc')->where('sc.id', $id)
-            ->leftjoin('tbl_barangays as b', 'b.code', 'sc.barangay_id')
-            ->leftjoin('tbl_municipalities as m', 'm.code', 'sc.citymuni_id')
-            ->select(
-                DB::raw('CONCAT( sc.last_name, ", " , sc.first_name, " " , COALESCE(sc.name_extension, ""), " " , COALESCE(sc.middle_name, ""))  as full_name'),
-                DB::raw('CONCAT("Brgy. " , COALESCE(b.name, ""), " ", m.name , ", Laguna") as full_address'),
-                'sc.*',
-            )
+        $trainings =  ScholarTraining::select('id', 'date', 'name', 'scholar_id', 'trainor')->where('scholar_id', $scholar->id)->get();
+        $replaced = Scholar::where('id', $scholar->replaced_scholar_id)
+            ->select('id', DB::raw('CONCAT(first_name, " ", middle_name, " ", last_name) as full_name'))
             ->first();
-
-        $replaced = "";
-
-        if ($scholar->status == "REPLACEMENT") {
-            $replaced = DB::table('tbl_scholars')
-                ->where('id', $scholar->replaced_scholar_id)
-                ->select(DB::raw('CONCAT(first_name, " " , COALESCE(middle_name, ""), " ", last_name) as full_name'))
-                ->first();
-            if ($replaced) {
-                $replaced = $replaced->full_name;
-            } else {
-                $replaced = "No Scholar was set";
-            }
-        }
-
-        $service_periods = DB::table('tbl_service_periods as sp')
-            ->where('sp.volunteer_id', $scholar->id)
-            ->where('sp.deleted_at', null)
-            ->orderBy('sp.month_from', 'desc')
-            ->orderBy('sp.month_to', 'desc')
-            ->get();
-
-        $municipality_id = DB::table('tbl_municipalities')
-            ->where('code', $scholar->citymuni_id)
-            ->first()
-            ->id;
-
-        $trainings = DB::table('tbl_scholar_training_name')
-            ->where('scholar_id', $id)
-            ->get();
-
-        $months = array('January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December');
-        $eligibilities = DB::table('tbl_eligibilities')->where('scholar_id', $id)->get();
-        return response()->json(compact('page', 'scholar', 'eligibilities', 'municipality_id', 'service_periods', 'months', 'trainings', 'replaced', 'id'));
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Volunteer  $volunteer
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
-    {
-        $trainings =  ScholarTraining::select('id', 'date', 'name', 'scholar_id', 'trainor')->where('scholar_id', $id)->get();
-        Scholar::findOrFail($id);
-        $scholar = DB::table('tbl_scholars')->where('id', $id)->first();
-        $muni_scholars = DB::table('tbl_scholars')
-            ->where('citymuni_id', $scholar->citymuni_id)
-            ->where('id', '!=', $id)
-            ->select('tbl_scholars.id', DB::raw("CONCAT(tbl_scholars.first_name, ' ', COALESCE(tbl_scholars.middle_name, ''), ' ', tbl_scholars.last_name) as full_name"))
-            ->get();
-
-        $municipality_id = DB::table('tbl_municipalities')
-            ->where('code', $scholar->citymuni_id)
-            ->first()
-            ->id;
-
-        $replaced = DB::table('tbl_scholars as s')
-            ->where('id', $scholar->replaced_scholar_id)
-            ->select('s.id', DB::raw('CONCAT(s.first_name, " ", s.middle_name, " ", s.last_name) as full_name'))
-            ->first();
-        // dd($replaced);
-
-        $districts = District::all();
-        $municipality = DB::table('tbl_municipalities')
-            ->where('code', $scholar->citymuni_id)
-            ->first();
-
-        $barangays = Barangay::where('city_and_municipality_code', $scholar->citymuni_id)->get();
-        // dd($volunteer);
-        $positions = Position::all();
         $eligibilities = DB::table('tbl_eligibilities')
             ->where('scholar_id', $scholar->id)
             ->select('id', 'name as value', 'scholar_id')
             ->get();
-
         $sp_exists = DB::table('tbl_service_periods')
-            ->where('volunteer_id', $id)
+            ->where('scholar_id', $scholar->id)
             ->exists();
 
         return response()->json(compact(
-            'districts',
-            'municipality',
-            'barangays',
             'scholar',
-            'positions',
             'eligibilities',
-            'muni_scholars',
             'replaced',
-            'municipality_id',
             'trainings',
             'sp_exists'
         ));
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Volunteer  $volunteer
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, $id)
+    public function update(Request $request, Scholar $scholar)
     {
-        $scholar = Scholar::findOrFail($id);
         $request->validate([
             'first_name' => 'required',
             'last_name' => 'required',
             'citymuni_id' => 'required',
             'barangay_id' => 'required'
         ]);
-        if ($request->status === 'REP') {
-            $request->validate([
-                'replaced_scholar_id' => 'required|exists:tbl_scholars,id',
-                'replacement_date' => 'required|date',
-                'first_employment_date' => 'required|date',
-            ]);
-            if ($request->replacement_date != null && $request->replacement_date != "" &&  $request->replaced_scholar_id != null && $request->replaced_scholar_id != "") {
-
-                DB::table('tbl_scholars as s')
-                    ->where('s.id', $request->replaced_scholar_id)
-                    ->update([
-                        's.replaced' => 1
-                    ]);
-
-                if ($scholar->replaced_scholar_id != $request->replaced_scholar_id) {
-                    DB::table('tbl_scholars')
-                        ->where('id', $scholar->replaced_scholar_id)
-                        ->update([
-                            'replaced' => 0
-                        ]);
-                }
-                DB::table('tbl_scholars')
-                    ->where('id', $id)
-                    ->update([
-                        'replacement_date' => $request->replacement_date,
-                        'replaced_scholar_id' => $request->replaced_scholar_id,
-                    ]);
-            }
-        } else {
-            try {
-                DB::table('tbl_scholars')
-                    ->where('id', $id)
-                    ->update([
-                        'replacement_date' => null,
-                        'replaced_scholar_id' => null,
-                    ]);
-
-                DB::table('tbl_scholars as s')
-                    ->where('s.id', $scholar->replaced_scholar_id)
-                    ->update([
-                        's.replaced' => 0
-                    ]);
-            } catch (Exception $e) {
-                return response()->json($e->getMessage(), 422);
-            }
-        }
-
-        if ($request->service_period_status !== "null") {
-
-            // $replacement_exists = $request->replacement_date;
-            // if (!$replacement_exists) {
-            //     return response()->json(['message' => "Replacement Date is required"], 422);
-            // }
-
-            try {
-                $month_from =  date('m', strtotime($request->first_employment_date));
-                $year_from =  date('Y', strtotime($request->first_employment_date));
-
-                if ($request->service_period_status == "new_service_period") {
-                    $sp = new ServicePeriod();
-                    $sp->volunteer_id = $id;
-                    $sp->month_from = $month_from;
-                    $sp->year_from = $year_from;
-                    $sp->month_to = $request->replacement_date ?  date('m', strtotime($request->replacement_date)) : 0;
-                    $sp->year_to =  $request->replacement_date ?  date('Y', strtotime($request->replacement_date)) : 0;
-                    $sp->status =  $request->replacement_date ? 'specific' : 'present';
-                    $sp->save();
-                } elseif ($request->service_period_status == "update_service_period") {
-                    $max_id =  DB::table('tbl_service_periods')
-                        ->where('volunteer_id', $request->replaced_scholar_id)
-                        ->max('id');
-
-                    if ($max_id) {
-                        DB::table('tbl_service_periods')
-                            ->where('volunteer_id', $id)
-                            ->where('id', $max_id)
-                            ->update([
-                                'month_from' => $month_from,
-                                'year_from' => $year_from,
-                                'month_to' => $request->replacement_date ?  date('m', strtotime($request->replacement_date)) : 0,
-                                'year_to' =>  $request->replacement_date ?  date('Y', strtotime($request->replacement_date)) : 0,
-                                'status' => $request->replacement_date ? 'specific' : 'present'
-                            ]);
-                    }
-                }
-            } catch (Exception $e) {
-                return response()->json($e->getMessage(), 422);
-            }
-        }
-
-
-        if ($request->place_of_assignment == 'Same as Barangay') {
-            $barangay = DB::table('tbl_barangays')
-                ->where('code', $request->barangay_id)
-                ->first();
-            if (!$barangay) {
-                return response()->json(['message' => 'Error in barangay_name, 422']);
-            }
-
-            $place_of_assignment = $barangay->name;
-        } else {
-            $place_of_assignment = 'BNS Coordinator';
-        }
-
+        DB::beginTransaction();
         try {
-            $replacement = null;
+            if ($request->status === 'REP') {
+                $request->validate([
+                    'replaced_scholar_id' => 'required|exists:tbl_scholars,id',
+                    'replacement_date' => 'required|date',
+                    'first_employment_date' => 'required|date',
+                ]);
+                $this->updateService->ifRep($request, $scholar);
+            } else {
+                $this->updateService->ifNotRep($scholar);
+            }
 
+            if ($request->service_period_status !== "null") {
+                $this->updateService->servicePeriodStore($scholar, $request);
+                $this->updateService->updateServicePeriod($scholar, $request);
+            }
+
+            if ($request->place_of_assignment == 'Same as Barangay') {
+                $barangay = $this->updateService->getBarangay($request);
+                if (!$barangay) {
+                    throw new Exception('Error in barangay');
+                }
+                $place_of_assignment = $barangay->name;
+            } else {
+                $place_of_assignment = 'BNS Coordinator';
+            }
+
+            $replacement = null;
             if ($request->select_end_employ == "specific") {
                 $replacement = $request->replacement_date;
             }
-            DB::table('tbl_scholars')
-                ->where('id', $id)
-                ->update([
-                    'first_name' => $request->first_name ?? null,
-                    'middle_name' => $request->middle_name ?? null,
-                    'last_name' => $request->last_name ?? null,
-                    'name_extension' => $request->name_extension ?? null,
-                    'name_on_id' => $request->name_on_id ?? null,
-                    'id_no' => $request->id_no ?? null,
-                    'citymuni_id' => $request->citymuni_id ?? null,
-                    'bns_type' => $request->bns_type ?? null,
-                    'barangay_id' => $request->barangay_id ?? null,
-                    'complete_address' => $request->complete_address ?? null,
-                    'sex' => $request->sex ?? null,
-                    'birth_date' => $request->birth_date ?? null,
-                    'civil_status' => $request->civil_status ?? null,
-                    'educational_attainment' => $request->educational_attainment ?? null,
-                    'benificiary_name' => $request->benificiary_name ?? null,
-                    'relationship' => $request->relationship ?? null,
-                    'district_id' => $request->district_id ?? null,
-                    'classification' => $request->classification ?? null,
-                    'philhealth_no' => $request->philhealth_no ?? null,
-                    'first_employment_date' => $request->first_employment_date ?? null,
-                    'replacement_date' => $replacement,
-                    'contact_number' => $request->contact_number ?? null,
-                    'status' => $request->status ?? null,
-                    'place_of_assignment' => $place_of_assignment,
-                    'fund' => $request->fund ?? null,
-                    'incentive_prov' => $request->incentive_prov ?? null,
-                    'incentive_mun' => $request->incentive_mun ?? null,
-                    'incentive_brgy' => $request->incentive_brgy ?? null,
-                ]);
+            $this->updateService->updateScholar($scholar, $replacement, $place_of_assignment, $request);
+            $this->updateService->deleteEligibilityTraining($scholar);
+            $this->updateService->eligibilityStore($request, $scholar);
+            $this->updateService->trainingStore($request, $scholar);
 
-            DB::table('tbl_eligibilities')
-                ->where('scholar_id', $id)
-                ->delete();
-
-            DB::table('tbl_scholar_training_name')
-                ->where('scholar_id', $id)
-                ->delete();
-
-            $eligibilities = $request->eligibilities;
-            $trainings = $request->trainings;
-            if ($eligibilities && count($eligibilities) > 0) {
-                foreach ($eligibilities as $el) {
-                    $eligibility = new Eligibility();
-                    $eligibility->scholar_id = $scholar->id;
-                    $eligibility->name = $el["value"];
-                    $eligibility->save();
-                }
-            }
-
-            if ($trainings) {
-                try {
-                    foreach ($trainings as $t) {
-                        $training = new ScholarTraining();
-                        $training->scholar_id = $scholar->id;
-                        $training->name = $t['name'];
-                        $training->date = $t['date'];
-                        $training->trainor = $t['trainor'];
-                        $training->save();
-                    }
-                } catch (Exception $e) {
-                    return response()->json($request->all(), 422);
-                }
-            }
-            return response()->json(['message' => 'Scholar updated successfully', 'request' => $request->all()]);
+            DB::commit();
+            return response()->json(['message' => 'Scholar updated successfully']);
+        } catch (ValidationException $e) {
+            DB::rollBack();
+            return response()->json(['errors' => $e->errors()], 422);
         } catch (Exception $e) {
-            return response()->json($request->all(), 422);
+            DB::rollBack();
+            return response()->json(['error' => $e->getMessage()], 500);
         }
     }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Volunteer  $volunteer
-     * @return \Illuminate\Http\Response
-     */
 
     public function destroy(Volunteer $volunteer)
     {
@@ -561,93 +218,17 @@ class ScholarController extends Controller
         }
     }
 
-
-    public function seed(Request $request)
-    {
-
-        if ($request->keyword != "0893") {
-            return back()->withErrors("Keyword didn't match!");
-        }
-
-        $path = public_path() . "/templates/volunteer.json";
-        $volunteers =   json_decode(File::get($path));
-
-        DB::beginTransaction();
-        try {
-
-            foreach ($volunteers as $row) {
-                $municipality = Municipality::select('code')
-                    ->where('name', 'like', '%' . $row->municipality . '%')
-                    ->first();
-
-                $barangay = Barangay::select('code')
-                    ->where('city_and_municipality_code', $municipality->code)
-                    ->where('name', 'like', '%' . $row->barangay . '%')
-                    ->first();
-                if ($barangay) {
-                } else {
-                    $barangay = Barangay::select('code')
-                        ->where('city_and_municipality_code', $municipality->code)
-                        ->first();
-                }
-
-                $volunteer                        = new Volunteer;
-                $volunteer->first_name            = $row->middle_name;
-                $volunteer->middle_name           = $row->first_name;
-                $volunteer->last_name             = $row->last_name;
-                $volunteer->suffix                = $row->suffix;
-                $volunteer->sex                   = $row->sex;
-                $volunteer->address               = $row->address;
-                $volunteer->mobile                = $row->mobile;
-                $volunteer->birth_date            = $row->birth_date;
-                $volunteer->district_id           = $row->district_id;
-                $volunteer->position_id           = $row->position_id;
-                $volunteer->municipality_code     = $municipality->code;
-                $volunteer->barangay_code         = $barangay->code;
-                $volunteer->save();
-
-                AuditTrail::createTrail("Encode volunteer.", $volunteer);
-
-                if ($row->position_id == 2) {
-                    if ($volunteer->mobile) {
-                        $user = new User();
-                        $user->name = $volunteer->first_name . ' ' . $volunteer->middle_name . ' ' . $volunteer->last_name;
-                        $user->username = $volunteer->mobile;
-                        $user->password = Hash::make('12345');
-                        $user->classification = "Municipal Representative";
-                        $user->mobile = $volunteer->mobile;
-                        $user->save();
-
-                        $mr = new MunicipalRepresentative();
-                        $mr->volunteer_id = $volunteer->id;
-                        $mr->user_id = $user->id;
-                        $mr->status = '1';
-                        $mr->save();
-
-                        AuditTrail::createTrail("New Municipal Representative", $mr);
-                    }
-                }
-            }
-
-            DB::commit();
-            return back()->withSuccess('Seed Successfully!');
-        } catch (\Exception $e) {
-
-            DB::rollBack();
-            return back()->withErrors($e->getMessage());
-        }
-    }
-
     public function upload(Request $request)
     {
         $no_data_added = 0;
         $request->validate([
             'excel' => 'required|mimes:xlsx,xls'
         ]);
+
         $file = $request->file('excel');
         $spreadsheet = IOFactory::load($file);
         $sheets = $spreadsheet->getActiveSheet()->toArray(null, true, true, true);
-        // dd(count($sheets));
+        
         DB::beginTransaction();
 
         for ($i = 4; $i < count($sheets) + 1; $i++) {
@@ -750,128 +331,17 @@ class ScholarController extends Controller
 
     public function directory_download(Request $request)
     {
+        $filePath = public_path('templates/Directory.xlsx');
+        $municipality = DB::table('tbl_municipalities')->where('code', $request->code)->first();
+
         if ($request->year < 2000 || $request->year > 2999 || !$request->year) {
             return response()->json(['message' => 'Invalid Year'], 422);
         }
-        $municipality = DB::table('tbl_municipalities')->where('code', $request->code)->first();
-
         if (!$municipality) {
             return response()->json(['message' => 'Municipality | City not found'], 422);
         }
 
-        $templatePath = public_path('templates/BNS_Directory.xlsx');
-        $filePath = public_path('templates/Directory.xlsx');
-
-        $spreadsheet = IOFactory::load($templatePath);
-        $activeWorksheet = $spreadsheet->getActiveSheet();
-
-        $municity_type = "";
-        $municity_name = str_contains($municipality->name, 'City') ? strtoupper(str_replace("City", "", $municipality->name)) : strtoupper($municipality->name);
-        str_contains($municipality->name, 'City') ? $municity_type = "CITY OF " : $municity_type  = "MUNICIPALITY OF ";
-        $activeWorksheet->setCellValue('A1', "BARANGAY NUTRITION SCHOLAR DIRECTORY -  $municity_type $municity_name  $request->year");
-        $cellrow = 5;
-        $current_no = 1;
-
-        $scholars = DB::table('tbl_scholars')
-            ->leftjoin('tbl_barangays as b', 'b.code', '=', 'tbl_scholars.barangay_id')
-            ->leftJoin('tbl_service_periods', function ($join) {
-                //kunin lang isang service period na latest
-                $join->on('tbl_service_periods.volunteer_id', '=', 'tbl_scholars.id')
-                    ->on('tbl_service_periods.id', '=', DB::raw("(SELECT MAX(id) from tbl_service_periods WHERE tbl_service_periods.volunteer_id = tbl_scholars.id)"));
-            })
-            ->where('citymuni_id', $municipality->code)
-            ->where('fund', 'like', "$request->fund%")
-            // ->where('tbl_scholars.status', '!=', 'INACTIVE')
-            ->where('tbl_service_periods.year_from', '<=', $request->year)
-            ->where(function ($query) use ($request) {
-                //logic lang neto ay kelangan pasok sa range ng year from at year to yung requested year
-                $query->where('tbl_service_periods.year_to', '>=', $request->year)
-                    ->orWhere('tbl_service_periods.year_to', 0);
-            })
-            ->select(
-                'tbl_scholars.*',
-                'b.name as barangay_name',
-                'tbl_service_periods.*',
-                'tbl_scholars.status as status'
-            )
-            ->get();
-
-        if ($scholars->count() == 0) {
-            return response()->json(['message' => "No $request->fund Scholars For $municipality->name in year $request->year"], 422);
-        }
-        $styleArray = [
-            'borders' => [
-                'allBorders' => [
-                    'borderStyle' => Border::BORDER_THIN,
-                    'color' => ['argb' => 'FF000000'], // Black border color
-                ],
-            ],
-        ];
-
-        // dd($scholars);
-        foreach ($scholars as $key => $scholar) {
-            $scholar_eligibility = DB::table('tbl_eligibilities')->where('scholar_id', $scholar->id)->get();
-            $eligibility_all = "";
-            $age = 0;
-
-            if (intval(date('m')) < intval(date('m', strtotime($scholar->birth_date)))) {
-                $age = date('Y') - date('Y', strtotime($scholar->birth_date)) - 1;
-            } elseif (intval(date('m')) >= intval(date('m', strtotime($scholar->birth_date)))) {
-                $age = date('Y') - date('Y', strtotime($scholar->birth_date));
-            }
-
-            // $service_period_from = $months[intval($scholar->month_from) - 1] . ' ' . $scholar->year_from;
-            // $service_period_to =  $scholar->month_to != 0 ? $months[intval($scholar->month_to) - 1] . ' ' . $scholar->year_to : 'To Present';
-
-            foreach ($scholar_eligibility as $se) {
-                $eligibility_all .= "$se->name\n";
-            }
-
-            $scholar_replacement_date = 'N';
-            if ($scholar->first_employment_date == null && $scholar->replacement_date == null) {
-                $scholar_replacement_date = "N/A";
-            } elseif ($scholar->first_employment_date && $scholar->replacement_date == null) {
-                $scholar_replacement_date = "Present";
-            } else {
-                $scholar_replacement_date = date("F j, Y", strtotime($scholar->replacement_date));
-            }
-
-            $activeWorksheet->setCellValue('A' . $cellrow, $current_no);
-            $activeWorksheet->setCellValue('B' . $cellrow, $scholar->id_no);
-            $activeWorksheet->setCellValue('C' . $cellrow, $scholar->first_name);
-            $activeWorksheet->setCellValue('D' . $cellrow, $scholar->middle_name);
-            $activeWorksheet->setCellValue('E' . $cellrow, $scholar->middle_name ? substr($scholar->middle_name, 0, 1) . '.' : '');
-            $activeWorksheet->setCellValue('F' . $cellrow, $scholar->last_name);
-            $activeWorksheet->setCellValue('G' . $cellrow, $scholar->name_on_id);
-            $activeWorksheet->setCellValue('H' . $cellrow, 'IV-A');
-            $activeWorksheet->setCellValue('I' . $cellrow, 'LAGUNA');
-            $activeWorksheet->setCellValue('J' . $cellrow, $scholar->barangay_name);
-            $activeWorksheet->setCellValue('K' . $cellrow, $scholar->complete_address);
-            $activeWorksheet->setCellValue('L' . $cellrow, $scholar->sex);
-            $activeWorksheet->setCellValue('M' . $cellrow, str_replace('-', '/', date('m-d-Y', strtotime($scholar->birth_date))));
-            $activeWorksheet->setCellValue('N' . $cellrow, $age);
-            // $activeWorksheet->setCellValue('K' . $cellrow, $municipality->name);
-            $activeWorksheet->setCellValue('O' . $cellrow, $scholar->civil_status);
-            $activeWorksheet->setCellValue('P' . $cellrow, $scholar->status);
-            $activeWorksheet->setCellValue('Q' . $cellrow, $scholar->fund);
-            $activeWorksheet->setCellValue('R' . $cellrow, $scholar->educational_attainment);
-            $activeWorksheet->setCellValue('S' . $cellrow, $scholar->benificiary_name);
-            $activeWorksheet->setCellValue('T' . $cellrow, $scholar->relationship);
-            $activeWorksheet->setCellValue('U' . $cellrow, $scholar->first_employment_date ? date('F Y', strtotime($scholar->first_employment_date)) : "N/A");
-            $activeWorksheet->setCellValue('V' . $cellrow, $scholar_replacement_date);
-            $activeWorksheet->setCellValue('W' . $cellrow, $scholar->philhealth_no ? '✓' : '');
-            $activeWorksheet->setCellValue('X' . $cellrow, $scholar->classification);
-            $activeWorksheet->setCellValue('Y' . $cellrow, $scholar->philhealth_no ? $scholar->philhealth_no : '');
-            $activeWorksheet->getStyle('A' . $cellrow . ':X' . $cellrow)->applyFromArray($styleArray);
-
-            $cellrow++;
-            $current_no++;
-        }
-        $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
-        // $activeWorksheet->getPageSetup()->setScale(70); // Adjust the scale to your preference, e.g., 85%
-        $activeWorksheet->getPageSetup()->setOrientation(PageSetup::ORIENTATION_LANDSCAPE);
-
-        $writer->save($filePath);
+        $this->directoryDownloadService->main($request, $municipality, $filePath);
 
         return response()->file($filePath, [
             'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -882,6 +352,8 @@ class ScholarController extends Controller
     public function masterlist_download(Request $request)
     {
         $id = $request->code;
+        $filePath = public_path('templates/BNS_Masterlist.xlsx');
+
         if ($request->year < 2000 || $request->year > 2999 || !$request->year) {
             return redirect()->back()->withErrors('Invalid Year');
         }
@@ -892,152 +364,8 @@ class ScholarController extends Controller
         if (!$municipality) {
             return response()->json(['message' => 'Municipality | City not found'], 422);
         }
-
-        $filePath = public_path('templates/BNS_Masterlist.xlsx');
-        $reader = new Xlsx();
-        $spreadsheet = $reader->load(public_path('/templates/BNS_Masterlist_Template.xlsx'));
-        $activeWorksheet = $spreadsheet->getActiveSheet();
-
-        $scholars = DB::table('tbl_scholars as tbl_scholars')
-            ->leftjoin('tbl_barangays as b', 'b.code', '=', 'tbl_scholars.barangay_id')
-            ->leftJoin('tbl_service_periods', function ($join) {
-                //kunin lang isang service period na latest
-                $join->on('tbl_service_periods.volunteer_id', '=', 'tbl_scholars.id')
-                    ->on('tbl_service_periods.id', '=', DB::raw("(SELECT MAX(id) from tbl_service_periods WHERE tbl_service_periods.volunteer_id = tbl_scholars.id)"));
-            })
-            ->where('citymuni_id', $municipality->code)
-            ->where('fund', 'like', "$request->fund%")
-            // ->where('tbl_scholars.status', '!=', 'INACTIVE')
-            ->where('tbl_service_periods.year_from', '<=', $request->year)
-            ->where(function ($query) use ($request) {
-                //logic lang neto ay kelangan pasok sa range ng year from at year to yung requested year
-                $query->where('tbl_service_periods.year_to', '>=', $request->year)
-                    ->orWhere('tbl_service_periods.year_to', 0);
-            })
-            ->select(
-                'tbl_scholars.*',
-                'b.name as barangay_name',
-                'tbl_service_periods.*',
-                'tbl_scholars.status as status',
-                DB::raw('CONCAT(tbl_scholars.last_name, ", ", tbl_scholars.first_name, " " ,  COALESCE(tbl_scholars.middle_name, "")) AS full_name')
-            )
-            ->get();
-
-
-        $signatories = DB::table('tbl_signatories')->get();
-        $action_officer_name = $signatories->where('status', 1)->where('designation_id', 1)->first()->name;
-        $action_officer_position = $signatories->where('status', 1)->where('designation_id', 1)->first()->description;
-        $chairman_name = $signatories->where('status', 1)->where('designation_id', 5)->first();
-
-        if (!$chairman_name) {
-            return response()->json(['message' => 'Missing Provincial Nutrition Action Officer Signatory'], 422);
-        }
-        if ($scholars->count() == 0) {
-            return response()->json(['message' => "No $request->fund Scholars For $municipality->name in year $request->year"], 422);
-        }
-        $styleArray = [
-            'borders' => [
-                'allBorders' => [
-                    'borderStyle' => Border::BORDER_THIN,
-                    'color' => ['argb' => 'FF000000'], // Black border color
-                ],
-            ],
-        ];
-        $scholar_count = $scholars->count();
-        $scholars = $scholars->toArray();
-        $scholars = array_chunk($scholars, 25, true);
-
-        // $activeWorksheet->setCellValue('F3', 'Municipality of ' . $municipality->name);
-        // $activeWorksheet->setCellValue('F5', 'LIST OF BNS  for the year ' . $request->year);
-        $municity_type = "";
-        $municity_name = str_contains($municipality->name, 'City') ? strtoupper(str_replace("City", "", $municipality->name)) : strtoupper($municipality->name);
-        str_contains($municipality->name, 'City') ? $municity_type = "CITY OF " : $municity_type  = "MUNICIPALITY OF ";
-        $activeWorksheet->setCellValue('A1', "$request->year BARANGAY NUTRITION SCHOLAR MASTERLIST -  $municity_type $municity_name");
-
-        $page = 1;
-        $total_page = ceil($scholar_count / 25);
-        $current_no = 1;
-
-
-        foreach ($scholars as $key => $sc) {
-
-            $cellrow = 5;
-            $title = "Page $page of $total_page";
-            $clone_sheet = clone $spreadsheet->getSheet(0);
-            $clone_sheet->setTitle("Page $page");
-            $spreadsheet->addSheet($clone_sheet);
-            $spreadsheet->setActiveSheetIndex($page); // Set the new sheet as active
-            $clone_sheet = $spreadsheet->getActiveSheet(); // Now modify the correct sheet
-
-            foreach ($sc as $key => $scholar) {
-                $age = 0;
-
-                if (intval(date('m')) < intval(date('m', strtotime($scholar->birth_date)))) {
-                    $age = date('Y') - date('Y', strtotime($scholar->birth_date)) - 1;
-                } elseif (intval(date('m')) >= intval(date('m', strtotime($scholar->birth_date)))) {
-                    $age = date('Y') - date('Y', strtotime($scholar->birth_date));
-                }
-                $eligibility_all = "";
-                $scholar_eligibility = DB::table('tbl_eligibilities')->where('scholar_id', $scholar->id)->get();
-
-                $service_period_from = $months[intval($scholar->month_from) - 1] . ' ' . $scholar->year_from;
-                $service_period_to =  $scholar->month_to != 0 ? $months[intval($scholar->month_to) - 1] . ' ' . $scholar->year_to : 'To Present';
-                $clone_sheet->setCellValue("A$cellrow", $current_no);
-                $clone_sheet->setCellValue("B$cellrow", $scholar->id_no);
-                $clone_sheet->setCellValue("C$cellrow", $scholar->first_name);
-                $clone_sheet->setCellValue("D$cellrow", $scholar->middle_name);
-                $clone_sheet->setCellValue("E$cellrow", $scholar->middle_name ? substr($scholar->middle_name, 0, 1) . "." : "");
-                $clone_sheet->setCellValue("F$cellrow", $scholar->last_name);
-                $clone_sheet->setCellValue("G$cellrow", $scholar->name_on_id);
-                $clone_sheet->setCellValue("H$cellrow", "LAGUNA");
-                $clone_sheet->setCellValue("I$cellrow", $municipality->name);
-                $clone_sheet->setCellValue("K$cellrow", $scholar->sex);
-                $clone_sheet->setCellValue("J$cellrow", $scholar->barangay_name);
-                $clone_sheet->setCellValue("K$cellrow", $scholar->sex);
-                $clone_sheet->setCellValue("L$cellrow", $scholar->birth_date ? date('m/d/Y', strtotime($scholar->birth_date)) : "");
-                $clone_sheet->setCellValue("M$cellrow", $age);
-                $clone_sheet->setCellValue("N$cellrow", $scholar->status);
-                $clone_sheet->setCellValue("O$cellrow", $scholar->fund);
-                $clone_sheet->setCellValue("P$cellrow", $scholar->benificiary_name);
-                $clone_sheet->setCellValue("Q$cellrow", $scholar->relationship);
-                $clone_sheet->setCellValue("R$cellrow", $scholar->first_employment_date ? date('F j, Y', strtotime($scholar->first_employment_date)) : "");
-                $clone_sheet->setCellValue("S$cellrow", $service_period_from);
-                $clone_sheet->setCellValue("T$cellrow", $service_period_to);
-
-                foreach ($scholar_eligibility as $se) {
-                    $eligibility_all .= $se->name . "\n";
-                }
-
-                $clone_sheet->getStyle("A$cellrow:N$cellrow")->applyFromArray($styleArray);
-
-                $cellrow++;
-                $current_no++;
-            }
-
-            $clone_sheet->setCellValue("T40", $title);
-
-            $page++;
-        }
-        $spreadsheet->removeSheetByIndex(0); //template
-
-        $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
-        $activeWorksheet->getPageSetup()->setScale(75); // Adjust the scale to your preference, e.g., 85%
-        $activeWorksheet->getPageSetup()->setOrientation(PageSetup::ORIENTATION_LANDSCAPE);
-
-        $writer->save($filePath);
-
+        $this->masterlistService->main($municipality, $request, $months, $filePath);
         return response()->download($filePath)->deleteFileAfterSend(true);
-    }
-
-    public function get_municipal_scholars()
-    {
-        $scholars = DB::table('tbl_scholars as sc')
-            ->where('status', '!=', 'INACTIVE')
-            ->select('sc.id', DB::raw('CONCAT(sc.first_name, " " , COALESCE(sc.middle_name, ""), " " , sc.last_name) as full_name'))
-            ->get();
-
-        return dataTables()->of($scholars)
-            ->make(true);
     }
 
     public function top_bns()

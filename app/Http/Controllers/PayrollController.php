@@ -14,6 +14,8 @@ use App\Models\Municipality;
 use Illuminate\Http\Request;
 use App\Models\ServicePeriod;
 use App\Models\PayrollDetails;
+use App\Services\Payrolls\PayrollShowService;
+use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -26,6 +28,11 @@ use PhpOffice\PhpSpreadsheet\Worksheet\PageSetup;
 
 class PayrollController extends Controller
 {
+    protected $showService;
+    public function __construct(PayrollShowService $showService)
+    {
+        $this->showService = $showService;
+    }
     /**
      * Display a listing of the resource.
      *
@@ -38,7 +45,7 @@ class PayrollController extends Controller
         $total_payroll = DB::table('tbl_payrolls')->count();
         $total_page = ceil($total_payroll / $limit);
         $offset = ($page - 1) * $limit;
-        $payrolls = DB::table('tbl_payrolls as p')
+        $base = DB::table('tbl_payrolls as p')
             ->select(
                 'p.id as id',
                 'p.month_from',
@@ -50,9 +57,12 @@ class PayrollController extends Controller
                 'm.id as municity_id',
                 'p.fund'
             )
-            ->leftJoin('tbl_municipalities as m', 'p.municipality_code', 'm.code')
-            ->limit($limit)
-            ->offset($offset)
+            ->leftJoin('tbl_municipalities as m', 'p.municipality_code', 'm.code');
+        $pagination = pagination($request, $base);
+
+        $payrolls  = $base
+            ->limit($pagination['limit'])
+            ->offset($pagination['offset'])
             ->orderBy('p.created_at', 'desc')
             ->get();
 
@@ -63,9 +73,8 @@ class PayrollController extends Controller
             $p->diff_time = Carbon::parse($p->created_at)->diffForHumans();
             $p->created_at = date('F j, Y | h:i A', strtotime($p->created_at));
         });
-        $current_payroll_count = $payrolls->count();
-        // dd($payrolls);
-        return response()->json(compact('payrolls', 'total_page', 'total_payroll', 'offset', 'limit', 'current_payroll_count'));
+        $pagination = pageInfo($pagination, $payrolls->count());
+        return response()->json(compact('payrolls', 'pagination'));
     }
 
     /**
@@ -95,7 +104,7 @@ class PayrollController extends Controller
     public function download(Payroll $payroll)
     {
         $volunteers = DB::table('tbl_payroll_details as pd')
-            ->leftJoin('tbl_scholars as v', 'pd.volunteer_id', 'v.id')
+            ->leftJoin('tbl_scholars as v', 'pd.scholar_id', 'v.id')
             ->leftjoin('tbl_payrolls as py', 'pd.payroll_id', 'py.id')
             ->where('pd.payroll_id', $payroll->id)
             ->select('pd.*', 'v.*', 'py.month_from as payroll_month_from', 'py.month_to as payroll_month_to', 'py.year_from', 'py.year_to')
@@ -143,7 +152,7 @@ class PayrollController extends Controller
         #Tentative Variable
 
         #Append Values to Sheets
-        $sheet->setCellValue('I5', $payroll_period);
+        $sheet->setCellValue('G5', $payroll_period);
         $sheet->setCellValue('A8', strtoupper($municipality[0]->name) . ", LAGUNA");
         $last_page = ceil($volunteers->count() / 25);
         $volunteers = $volunteers->toArray();
@@ -158,7 +167,7 @@ class PayrollController extends Controller
             $sheet = clone $spreadsheet->getSheet(0);
             $sheet->setTitle($title);
             $spreadsheet->addsheet($sheet);
-            $row_start = '9';
+                $row_start = '9';
             $subtotal = 0;
 
             foreach ($chunk as $key => $volunteer) {
@@ -182,7 +191,6 @@ class PayrollController extends Controller
                 $row_start++;
                 $count++;
 
-                // $sheet->setCellValue('A'.$row_start, '***Nothing Follows***');
                 $sheet->setCellValue('E36', $subtotal);
                 if ($page_number == $last_page) {
                     $sheet->setCellValue('E37', $payroll->grand_total);
@@ -194,8 +202,6 @@ class PayrollController extends Controller
                 $sheet->setCellValue('A44', $head[0]->description);
                 $sheet->setCellValue('D43', $governor[0]->name);
                 $sheet->setCellValue('D44', $governor[0]->description);
-                // $sheet->setCellValue('A50', $accountant[0]->name);
-                // $sheet->setCellValue('A51', $accountant[0]->description);
 
                 $styleArray = array(
                     'borders' => array(
@@ -239,24 +245,25 @@ class PayrollController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'form.rate' => 'required'
+            'rate' => 'required'
         ]);
 
         $scholars = $request->scholars;
-
         // Validate that volunteers are selected
         if (empty($scholars)) {
             // If no volunteers are selected, redirect back with an error message
             return back()->withErrors('Minimum of one Scholar selected is required');
         }
 
-        $month_from = date('m', strtotime($request->form['from']));
-        $month_to = date('m', strtotime($request->form['to']));
-        $year_from = date('Y', strtotime($request->form['from']));
-        $year_to = date('Y', strtotime($request->form['to']));
-        $rate = $request->form['rate'];
-        $fund = $request->form['fund'];
-        $municipality_code = $request->form['municipality_code'];
+        $month_from = date('m', strtotime($request->from));
+        $month_to = date('m', strtotime($request->to));
+        $year_from = date('Y', strtotime($request->from));
+        $year_to = date('Y', strtotime($request->to));
+        $rate = $request->rate;
+        $fund = $request->fund;
+        $municipality_code = $request->municipality_code;
+
+
 
         #Get latest rate.
         #Get active Signatories.
@@ -275,7 +282,6 @@ class PayrollController extends Controller
 
             $payroll = new Payroll;
             $payroll->rate_id = $rate->id;
-            // $payroll->quarter_id = Quarter::isActive();
             $payroll->month_from = $month_from;
             $payroll->month_to = $month_to;
             $payroll->year_from = $year_from;
@@ -289,27 +295,27 @@ class PayrollController extends Controller
             $try = array();
             $total_request_volunteers = array_chunk($scholars, 100);
 
-            foreach ($total_request_volunteers[0] as $volunteer_id) {
+            foreach ($total_request_volunteers[0] as $scholar_id) {
                 #Get Service Period Range
                 #vmf - volunteer_month_from
                 #vmt = volunteer_month_to
 
-                $vmf = ServicePeriod::where('volunteer_id', $volunteer_id)
+                $vmf = ServicePeriod::where('scholar_id', $scholar_id)
                     ->where('year_from', Quarter::currentYear())
                     ->min('month_from');
 
                 $present = ServicePeriod::where('status', 'present')
-                    ->where('volunteer_id', $volunteer_id)->get();
+                    ->where('scholar_id', $scholar_id)->get();
 
                 if ($present->count() > 0) {
                     $vmt = $request->month_to;
                 } else {
-                    $vmt = ServicePeriod::where('volunteer_id', $volunteer_id)
+                    $vmt = ServicePeriod::where('scholar_id', $scholar_id)
                         ->where('year_to', Quarter::currentYear())
                         ->max('month_to');
                 }
                 $parameters = array(
-                    "volunteer_id" => $volunteer_id,
+                    "scholar_id" => $scholar_id,
                     "from" => Carbon::now()->year . '-' . $month_from,
                     "to" => Carbon::now()->year . '-' . $month_to,
                 );
@@ -317,12 +323,11 @@ class PayrollController extends Controller
                 $service_period = Volunteer::getServicePeriodPerRange($parameters);
                 $valid_periods = array_intersect($payroll_period_months, $service_period);
                 $count_months = count($valid_periods);
-                // dd($count_months);
                 $payroll_detail = "false";
                 $try[] = $valid_periods;
                 if ($count_months > 0) {
                     $payroll_detail = new PayrollDetails;
-                    $payroll_detail->volunteer_id = $volunteer_id;
+                    $payroll_detail->scholar_id = $scholar_id;
                     $payroll_detail->payroll_id = $payroll->id;
                     $payroll_detail->month_from = intval($month_from);
                     $payroll_detail->month_to = intval($month_to);
@@ -332,17 +337,15 @@ class PayrollController extends Controller
 
                 AuditTrail::createTrail("Create Payroll", $payroll_detail);
             }
-            // dd($count);
-
             $grand_total = PayrollDetails::where('payroll_id', $payroll->id)->sum('total');
-            $update_payroll = Payroll::where('id', $payroll->id)
+            Payroll::where('id', $payroll->id)
                 ->update(['grand_total' => $grand_total]);
 
             DB::commit();
             return response()->json(['success' => 'A new payroll has been added.']);
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withErrors($e->getMessage());
+            throw new Exception($e->getMessage());
         }
     }
 
@@ -354,89 +357,8 @@ class PayrollController extends Controller
      */
     public function show(Payroll $payroll, Request $request)
     {
-        $page = $request->page;
-        $search = $request->search;
-        $limit = 5;
-        $total_scholar = DB::table('tbl_payroll_details as pd')
-            ->leftJoin('tbl_scholars as v', 'pd.volunteer_id', 'v.id')
-            ->leftjoin('tbl_barangays as b', 'b.code', 'v.barangay_id')
-            ->join('tbl_municipalities as m', 'm.code', 'v.citymuni_id')
-            ->where('pd.payroll_id', $payroll->id)
-            ->when($search, function ($q) use ($search) {
-                $q->where('v.first_name', 'LIKE', "$search%")
-                    ->orWhere('v.last_name', 'LIKE', "$search%");
-            })
-            ->count();
-        $total_page = ceil($total_scholar / $limit);
-        $offset = ($page - 1) * $limit;
-        $volunteers = DB::table('tbl_payroll_details as pd')
-            ->leftJoin('tbl_scholars as v', 'pd.volunteer_id', 'v.id')
-            ->leftjoin('tbl_barangays as b', 'b.code', 'v.barangay_id')
-            ->join('tbl_municipalities as m', 'm.code', 'v.citymuni_id')
-            ->where('pd.payroll_id', $payroll->id)
-            ->when($search, function ($q) use ($search) {
-                $q->where(function ($qv) use ($search) {
-                    $qv->where('v.first_name', 'LIKE', "$search%")
-                        ->orWhere('v.last_name', 'LIKE', "$search%")
-                        ->orWhere('v.middle_name', 'LIKE', "$search%");
-                });
-            })
-            ->orderBy('v.last_name')
-            ->select('v.*', 'b.name as barangay_name', 'm.name as municity_name',)
-            ->limit($limit)
-            ->offset($offset)
-            ->get();
-
-        $rate = Rate::find($payroll->rate_id);
-        $signatories = Signatory::whereIn('id', json_decode($payroll->signatories))->get();
-        $heads = Signatory::where('designation_id', Signatory::HEAD)->get();
-        $administrators = Signatory::where('designation_id', Signatory::ADMINISTRATOR)->get();
-        $governors = Signatory::where('designation_id', Signatory::GOVERNOR)->get();
-        $accountants = Signatory::where('designation_id', Signatory::ACCOUNTANT)->get();
-        $months = array('January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December');
-
-        $volunteers->map(function ($scholar) use ($months) {
-            $service_period = DB::table('tbl_service_periods')
-                ->where('volunteer_id', $scholar->id)
-                ->orderBy('year_from', 'desc')
-                ->orderBy('month_from', 'desc')
-                ->first();
-
-            $month_from = $months[intval($service_period->month_from) - 1];
-            $year_from = $service_period->year_from;
-            $month_to = $service_period->month_to != 0 ? $months[intval($service_period->month_to) - 1] : 'Present';
-            $scholar->service_period = $month_from . ' to ' . $month_to . ', ' . $year_from;
-            return $scholar;
-        });
-        $month_from   = DateTime::createFromFormat('!m', $payroll->month_from)->format('F'); // March
-        $month_to   = DateTime::createFromFormat('!m', $payroll->month_to)->format('F');
-        $year = Quarter::currentYear();
-        $municipality = Municipality::where('code', $payroll->municipality_code)->first();
-        $payroll->month_from = $month_from;
-        $payroll->municipality = $municipality->name;
-        $payroll->month_to = $month_to;
-        $payroll->year = $year;
-        $payroll->signatories = $signatories;
-        $payroll->grand_total = number_format($payroll->grand_total, 2);
-        $payroll->total_scholar = $total_scholar;
-        $payroll->offset = $offset;
-        $payroll->limit = $limit;
-        $payroll->current = $volunteers->count();
-        $payroll->total_scholar = $total_scholar;
-
-        return response()->json(compact(
-            'volunteers',
-            'rate',
-            'payroll',
-            'year',
-            'municipality',
-            'heads',
-            'administrators',
-            'governors',
-            'accountants',
-            'total_page',
-            'total_scholar', 'offset', 'limit'
-        ));
+        $data = $this->showService->main($request, $payroll);
+        return response()->json($data);
     }
 
     /**
@@ -509,10 +431,10 @@ class PayrollController extends Controller
         $scholars =
             DB::table('tbl_payrolls as p')->where('p.id', $id)
             ->leftJoin('tbl_payroll_details as pd', 'pd.payroll_id', 'p.id')
-            ->leftJoin('tbl_scholars as sc', 'sc.id', 'pd.volunteer_id')
+            ->leftJoin('tbl_scholars as sc', 'sc.id', 'pd.scholar_id')
             ->leftjoin('tbl_service_periods', function ($query) {
-                $query->on('tbl_service_periods.volunteer_id', '=', 'sc.id')
-                    ->on('tbl_service_periods.id', '=', DB::raw('(SELECT MAX(id) FROM tbl_service_periods WHERE tbl_service_periods.volunteer_id = sc.id)'));
+                $query->on('tbl_service_periods.scholar_id', '=', 'sc.id')
+                    ->on('tbl_service_periods.id', '=', DB::raw('(SELECT MAX(id) FROM tbl_service_periods WHERE tbl_service_periods.scholar_id = sc.id)'));
             })
             ->leftjoin('tbl_barangays as b', 'b.code', 'sc.barangay_id')
             // ->where('sc.status', 'like', "$request->fund%")

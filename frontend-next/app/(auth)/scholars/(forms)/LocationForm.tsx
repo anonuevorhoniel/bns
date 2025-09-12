@@ -1,6 +1,6 @@
 import ax from "@/app/axios";
 import { FormField } from "@/components/ui/form";
-import FormFieldComponent from "@/components/ui/form-field";
+import FormFieldComponent from "@/components/custom/form-field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SelectItem } from "@/components/ui/select";

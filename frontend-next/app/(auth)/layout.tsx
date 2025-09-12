@@ -63,10 +63,9 @@ export default function AuthLayout({
                             </DropdownMenu>
                         </div>
                     </div>
-                    
                 </header>
                 <div className="flex flex-1 flex-col gap-4 p-4 lg:px-8 pt-0">
-                    <Provider>{children}</Provider>
+                    {children}{" "}
                 </div>
             </SidebarInset>
         </SidebarProvider>

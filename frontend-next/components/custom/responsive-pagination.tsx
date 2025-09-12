@@ -43,9 +43,10 @@ export default function ResponsivePagination({
 
     useEffect(() => {
         if (page > totalPage) {
-            setPage(totalPage);
+            setPage(1);
         }
-    }, [page]);
+    }, [page, totalPage]);
+
     return (
         <Pagination className={`${isFetching && "pointer-events-none"}`}>
             <PaginationContent>
