@@ -21,7 +21,7 @@ import useDownloadLink from "@/hooks/useDownloadLink";
 import payrollColumn from "./(columns)/payrollColumn";
 
 export default function Page() {
-    const {id: downloadID } = useDownload();
+    const { id: downloadID } = useDownload();
     const [search, setSearch] = useState("");
     const [searchDebounce] = useDebounce(search, 500);
     const searchValue = search == "" ? search : searchDebounce;
@@ -41,7 +41,7 @@ export default function Page() {
                 responseType: "blob",
             }),
         onSuccess: (data: any) => {
-            useDownloadLink(data?.data);
+            useDownloadLink({ data: data?.data, name: "Payroll" });
             toast.success("Success", { description: "Downloading Payroll..." });
         },
         onError: (error: any) => {
@@ -55,7 +55,7 @@ export default function Page() {
                 responseType: "blob",
             }),
         onSuccess: (data: any) => {
-            useDownloadLink(data?.data);
+            useDownloadLink({ data: data?.data, name: "Masterlist" });
             toast.success("Success", {
                 description: "Downloading Masterlist...",
             });
