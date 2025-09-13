@@ -86,6 +86,7 @@ class PayrollShowService
     {
         $months = months();
         $data = $scholars->map(function ($scholar) use ($months) {
+            
             $service_period = ServicePeriod::where('scholar_id', $scholar->id)
                 ->orderBy('year_from', 'desc')
                 ->orderBy('month_from', 'desc')

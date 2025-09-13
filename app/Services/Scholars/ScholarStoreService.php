@@ -12,8 +12,6 @@ use Illuminate\Support\Facades\DB;
 
 class ScholarStoreService
 {
-    public function main($request) {}
-
     public function eligibilityStore($eligibilities, $scholar)
     {
         foreach ($eligibilities as $el) {

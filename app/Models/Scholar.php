@@ -60,6 +60,10 @@ class Scholar extends Model
 		return $this->hasMany(ServicePeriod::class, 'scholar_id');
 	}
 
+	public function payrollDetails() {
+		return $this->hasMany(PayrollDetails::class, 'scholar_id');
+	}
+
 
 	public static function getServicePeriodPerRange($parameters)
 	{

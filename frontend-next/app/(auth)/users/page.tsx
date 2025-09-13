@@ -1,7 +1,6 @@
 "use client";
 
 import ax from "@/app/axios";
-import ContentLayout from "@/app/ContentLayout";
 import { Button } from "@/components/ui/button";
 import { lorelei, notionists } from "@dicebear/collection";
 
@@ -94,7 +93,7 @@ export default function Page() {
         },
     ];
     return (
-        <ContentLayout title="Users" buttonEvent={() => console.log("")}>
+        <>
             <title>BNS | Users</title>
             <SearchBar />
             <DataTable
@@ -103,8 +102,7 @@ export default function Page() {
                 isFetching={isFetching}
                 columns={columns}
                 data={data?.data?.users}
-                totalPage={data?.data?.total_page}
             />
-        </ContentLayout>
+        </>
     );
 }

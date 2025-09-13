@@ -31,20 +31,17 @@ export default function Page() {
             accessKey: "action",
             header: "Action",
         },
-         {
+        {
             header: "Description",
             cell: (item: any) => (
                 <div className="max-w-xs flex">
                     <p className="break-all">{item.description}</p>
                 </div>
-            )
+            ),
         },
     ];
     return (
-        <ContentLayout
-            title="Audit Trails"
-            buttonEvent={() => console.log("a")}
-        >
+        <>
             <title>BNS | Audit Trails</title>
             <SearchBar />
             <DataTable
@@ -53,8 +50,7 @@ export default function Page() {
                 isFetching={isFetching}
                 setPage={setPage}
                 page={page}
-                totalPage={1}
             />
-        </ContentLayout>
+        </>
     );
 }

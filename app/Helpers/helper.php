@@ -30,3 +30,15 @@ function months()
     $months = array('January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December');
     return $months;
 }
+
+function styleArray()
+{
+   return array(
+        'borders' => array(
+            'outline' => array(
+                'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                'color' => array('argb' => '#000000'),
+            ),
+        ),
+    );
+}

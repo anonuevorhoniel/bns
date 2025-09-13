@@ -14,7 +14,6 @@ class ScholarIndexService
         $get_scholars = $this->query($base, $pagination);
         $current_scholar_count = $get_scholars->count();
         $pagination = pageInfo($pagination, $current_scholar_count);
-        // $get_scholars = $this->map($get_scholars);
         $except_scholar_id = $request->except_scholar_id;
 
         $data = compact('get_scholars', 'pagination', 'except_scholar_id');

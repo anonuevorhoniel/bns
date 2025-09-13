@@ -14,6 +14,9 @@ use App\Models\Municipality;
 use Illuminate\Http\Request;
 use App\Models\ServicePeriod;
 use App\Models\PayrollDetails;
+use App\Models\Scholar;
+use App\Services\Payrolls\PayrollDownloadService;
+use App\Services\Payrolls\PayrollMasterlistService;
 use App\Services\Payrolls\PayrollShowService;
 use Exception;
 use Illuminate\Support\Facades\DB;
@@ -29,9 +32,13 @@ use PhpOffice\PhpSpreadsheet\Worksheet\PageSetup;
 class PayrollController extends Controller
 {
     protected $showService;
-    public function __construct(PayrollShowService $showService)
+    protected $downloadService;
+    protected $masterlistService;
+    public function __construct(PayrollShowService $showService, PayrollDownloadService $downloadService, PayrollMasterlistService $masterlistService)
     {
         $this->showService = $showService;
+        $this->downloadService = $downloadService;
+        $this->masterlistService = $masterlistService;
     }
     /**
      * Display a listing of the resource.
@@ -40,11 +47,6 @@ class PayrollController extends Controller
      */
     public function index(Request $request)
     {
-        $page = $request->page;
-        $limit = 8;
-        $total_payroll = DB::table('tbl_payrolls')->count();
-        $total_page = ceil($total_payroll / $limit);
-        $offset = ($page - 1) * $limit;
         $base = DB::table('tbl_payrolls as p')
             ->select(
                 'p.id as id',
@@ -59,7 +61,6 @@ class PayrollController extends Controller
             )
             ->leftJoin('tbl_municipalities as m', 'p.municipality_code', 'm.code');
         $pagination = pagination($request, $base);
-
         $payrolls  = $base
             ->limit($pagination['limit'])
             ->offset($pagination['offset'])
@@ -103,136 +104,8 @@ class PayrollController extends Controller
 
     public function download(Payroll $payroll)
     {
-        $volunteers = DB::table('tbl_payroll_details as pd')
-            ->leftJoin('tbl_scholars as v', 'pd.scholar_id', 'v.id')
-            ->leftjoin('tbl_payrolls as py', 'pd.payroll_id', 'py.id')
-            ->where('pd.payroll_id', $payroll->id)
-            ->select('pd.*', 'v.*', 'py.month_from as payroll_month_from', 'py.month_to as payroll_month_to', 'py.year_from', 'py.year_to')
-            ->orderBy('v.last_name', 'asc')
-            ->get();
-
-        #Payroll Details
-        $rate = Rate::find($payroll->rate_id);
-        $municipality = Municipality::where('code', $payroll->municipality_code)->get();
-        if ($payroll->month_from == $payroll->month_to) {
-            $payroll_period = DateTime::createFromFormat('!m', $payroll->month_from)->format('F') . ' 2025';
-        } else {
-            $payroll_period = DateTime::createFromFormat('!m', $payroll->month_from)->format('F') . ' - ' . DateTime::createFromFormat('!m', $payroll->month_to)->format('F') . ' ' . $payroll->year_from;
-        }
-        #Payroll Details -> signatories
-        $head = Signatory::where('status', 1)
-            ->where('designation_id', Signatory::HEAD)
-            ->get();
-
-        $governor = Signatory::where('status', 1)
-            ->where('designation_id', Signatory::GOVERNOR)
-            ->get();
-
-        $accountant = Signatory::where('status', 1)
-            ->where('designation_id', Signatory::ACCOUNTANT)
-            ->get();
-
-        #Load Template
         $filePath = public_path('/templates/Payroll.xlsx');
-        $reader = new Xlsx();
-        $spreadsheet = $reader->load(public_path('/templates/BVW_Payroll_Template.xlsx'));
-        $sheet = $spreadsheet->getActiveSheet();
-
-        $drawing = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
-        $drawing->setName('Paid');
-        $drawing->setDescription('Paid');
-        $drawing->setPath(public_path('/templates/audit_sticker.png')); // put your path and image here
-        $drawing->setCoordinates('F42');
-        $drawing->setOffsetX(200);
-        $drawing->setWidth(345);
-        $drawing->getShadow()->setVisible(true);
-        $drawing->getShadow()->setDirection(45);
-        $drawing->setWorksheet($spreadsheet->getActiveSheet());
-
-        #Tentative Variable
-
-        #Append Values to Sheets
-        $sheet->setCellValue('G5', $payroll_period);
-        $sheet->setCellValue('A8', strtoupper($municipality[0]->name) . ", LAGUNA");
-        $last_page = ceil($volunteers->count() / 25);
-        $volunteers = $volunteers->toArray();
-        $chunks = array_chunk($volunteers, 25, true);
-        $count = 1;
-
-        $sub_total_array = [];
-
-        foreach ($chunks as  $key => $chunk) {
-            $page_number = $key + 1;
-            $title = "Page $page_number of $last_page";
-            $sheet = clone $spreadsheet->getSheet(0);
-            $sheet->setTitle($title);
-            $spreadsheet->addsheet($sheet);
-                $row_start = '9';
-            $subtotal = 0;
-
-            foreach ($chunk as $key => $volunteer) {
-
-                $full_name = $volunteer->last_name . ', ' . $volunteer->first_name . ' ' . $volunteer->middle_name . ' ' . $volunteer->name_extension;
-                // dd($volunteer->month_to);
-                if ($volunteer->payroll_month_from == $volunteer->payroll_month_to) {
-                    $service_period = DateTime::createFromFormat('!m', $volunteer->payroll_month_from)->format('F') . ' ' . $volunteer->year_from;
-                } else {
-                    $service_period = DateTime::createFromFormat('!m', $volunteer->payroll_month_from)->format('F') . ' - ' . DateTime::createFromFormat('!m', $volunteer->payroll_month_to)->format('F') . ", " . $volunteer->year_from;
-                }
-                $rate_final = number_format($rate->rate, 2);
-                $sheet->setCellValue('J1', $title);
-                $sheet->setCellValue('A' . $row_start, $count);
-                $sheet->setCellValue('B' . $row_start, strtoupper($full_name));
-                $sheet->setCellValue('C' . $row_start, $service_period);
-                $sheet->setCellValue('D' . $row_start, $rate_final);
-                $sheet->setCellValue('E' . $row_start, $volunteer->total);
-
-                $subtotal += $volunteer->total;
-                $row_start++;
-                $count++;
-
-                $sheet->setCellValue('E36', $subtotal);
-                if ($page_number == $last_page) {
-                    $sheet->setCellValue('E37', $payroll->grand_total);
-                    $sheet->setCellValue('B37', "TOTAL");
-                }
-
-                $sheet->setCellValue('B36', "SUB-TOTAL $page_number");
-                $sheet->setCellValue('A43', $head[0]->name);
-                $sheet->setCellValue('A44', $head[0]->description);
-                $sheet->setCellValue('D43', $governor[0]->name);
-                $sheet->setCellValue('D44', $governor[0]->description);
-
-                $styleArray = array(
-                    'borders' => array(
-                        'outline' => array(
-                            'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
-                            'color' => array('argb' => '#000000'),
-                        ),
-                    ),
-                );
-                $sheet->getStyle('A' . $row_start - 1)->applyFromArray($styleArray);
-                $sub_total_array[$key] = $subtotal;
-            }
-
-            unset($sheet);
-        }
-
-        $spreadsheet->removeSheetByIndex(0); //template
-        $spreadsheet->setActiveSheetIndex(0);
-
-        /* Setting of workbook properties */
-        $spreadsheet->getProperties()
-            ->setTitle('BNS: SYSTEM GENERATED REPORT')
-            ->setSubject('BNS: SYSTEM GENERATED REPORT')
-            ->setKeywords('PAYROLL') //Tags
-            ->setCategory('BNS Report')
-            ->setDescription('This is a system generated report.') //Comment
-            ->setCreator('Barangay Nutritional Scholar System') //Author
-            ->setLastModifiedBy('Developer - Rhoniel L. Añonuevo');
-
-        $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
-        $writer->save($filePath);
+        $this->downloadService->main($payroll, $filePath);
         return response()->download($filePath)->deleteFileAfterSend(true);
     }
 
@@ -262,8 +135,6 @@ class PayrollController extends Controller
         $rate = $request->rate;
         $fund = $request->fund;
         $municipality_code = $request->municipality_code;
-
-
 
         #Get latest rate.
         #Get active Signatories.
@@ -415,147 +286,10 @@ class PayrollController extends Controller
             return back()->withErrors($e->getMessage());
         }
     }
-    public function masterlist_payroll_download($id, Request $request)
+    public function masterlist_download(Payroll $payroll, Request $request)
     {
-        $months = array('January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December');
-
-        Payroll::findOrFail($id);
-        $payrolls = DB::table('tbl_payrolls')->where('id', $id)->first();
-
-        $municipality = DB::table('tbl_municipalities')->where('code', $payrolls->municipality_code)->first();
-        $templatePath = public_path('templates/BNS_Masterlist_Payroll_Template.xlsx');
         $filePath = public_path('templates/BNS_Masterlist_Payroll.xlsx');
-        $spreadsheet = IOFactory::load($templatePath);
-        $activeWorksheet = $spreadsheet->getActiveSheet();
-
-        $scholars =
-            DB::table('tbl_payrolls as p')->where('p.id', $id)
-            ->leftJoin('tbl_payroll_details as pd', 'pd.payroll_id', 'p.id')
-            ->leftJoin('tbl_scholars as sc', 'sc.id', 'pd.scholar_id')
-            ->leftjoin('tbl_service_periods', function ($query) {
-                $query->on('tbl_service_periods.scholar_id', '=', 'sc.id')
-                    ->on('tbl_service_periods.id', '=', DB::raw('(SELECT MAX(id) FROM tbl_service_periods WHERE tbl_service_periods.scholar_id = sc.id)'));
-            })
-            ->leftjoin('tbl_barangays as b', 'b.code', 'sc.barangay_id')
-            // ->where('sc.status', 'like', "$request->fund%")
-            ->where('citymuni_id', $municipality->code)
-            ->where(function ($q) use ($payrolls) {
-                $q->where('tbl_service_periods.year_from', $payrolls->year_from)
-                    ->orWhere('tbl_service_periods.year_from', '<', $payrolls->year_from);
-            })
-            ->select(DB::raw('CONCAT(sc.last_name, ", " , sc.first_name, " ", COALESCE(SUBSTRING(sc.middle_name, 1, 1), ""), ". ") AS full_name'), 'b.name as barangay_name', 'sc.last_name')
-            ->orderByRaw('TRIM(sc.last_name) ASC')
-            ->get();
-
-        if ($scholars->count() == 0) {
-            return redirect()->back()->withErrors('No Scholars For ' .  $municipality->name . ' in year ' . $request->masterlist_payroll_year);
-        }
-
-        $activeWorksheet->setCellValue('A1', 'MASTERLIST OF BNS FOR ' . strtoupper($months[intVal($payrolls->month_from) - 1]) . ' TO ' . strtoupper($months[intVal($payrolls->month_to) - 1]) . ', ' . $payrolls->year_from);
-        $activeWorksheet->setCellValue('A2', strtoupper($municipality->name) . ', LAGUNA');
-        $current_no = 1;
-
-        $styleArray = [
-            'borders' => [
-                'allBorders' => [
-                    'borderStyle' => Border::BORDER_THIN,
-                    'color' => ['argb' => 'FF000000'], // Black border color
-                ],
-            ],
-        ];
-
-        #Append Values to Sheets
-        $last_page = ceil($scholars->count() / 25);
-        $scholars = $scholars->toArray();
-        $chunks = array_chunk($scholars, 25, true);
-        $count = 1;
-
-        $sub_total_array = [];
-
-        foreach ($chunks as  $key => $chunk) {
-            $page_number = $key + 1;
-            $title = "Page $page_number of $last_page";
-            $activeWorksheet = clone $spreadsheet->getSheet(0);
-            $activeWorksheet->setTitle($title);
-            $spreadsheet->addsheet($activeWorksheet);
-            $cellrow = 6;
-
-            foreach ($chunk as $key => $scholar) {
-                $activeWorksheet->setCellValue('A' . $cellrow, $current_no);
-                $activeWorksheet->setCellValue('B' . $cellrow, strtoupper($scholar->full_name));
-                $activeWorksheet->setCellValue('C' . $cellrow, $scholar->barangay_name);
-
-                $activeWorksheet->getStyle('A' . $cellrow . ':C' . $cellrow)->applyFromArray($styleArray);
-                $cellrow++;
-                $current_no++;
-            }
-
-            $signatories = DB::table('tbl_signatories')->get();
-            $action_officer_name = $signatories->where('status', 1)->where('designation_id', 1)->first()->name;
-            $action_officer_position = $signatories->where('status', 1)->where('designation_id', 1)->first()->description;
-            $chairman_name = $signatories->where('status', 1)->where('designation_id', 5)->first();
-
-            if (!$chairman_name) {
-                return redirect()->back()->withErrors('Missing Provincial Nutrition Action Officer Signatory');
-            }
-            // dd($scholars);
-            $certified_correct = 'A' . $cellrow + 2;
-            $certified_correct2 = 'B' . $cellrow + 2;
-            $certified_correct3 = 'A' . $cellrow + 6;
-            $certified_correct4 = 'B' . $cellrow + 6;
-            $certified_correct5 = 'A' . $cellrow + 7;
-            $certified_correct6 = 'B' . $cellrow + 7;
-
-            $noted_by = 'C' . $cellrow + 2;
-            $noted_by2 = 'C' . $cellrow + 6;
-            $noted_by3 = 'C' . $cellrow + 7;
-            // $noted_by2 = 'B' . $cellrow + 2;
-
-            //all merge
-            $activeWorksheet->mergeCells("$certified_correct:$certified_correct2");
-            $activeWorksheet->mergeCells("$certified_correct3:$certified_correct4");
-            $activeWorksheet->mergeCells("$certified_correct5:$certified_correct6");
-
-            //all set
-            $activeWorksheet->setCellValue($certified_correct, 'Certified Correct:');
-            $activeWorksheet->setCellValue($certified_correct3, $action_officer_name);
-            $activeWorksheet->setCellValue($certified_correct5, $action_officer_position);
-
-            $activeWorksheet->setCellValue($noted_by, 'Noted by:');
-            $activeWorksheet->setCellValue($noted_by2, $chairman_name->name);
-            $activeWorksheet->setCellValue($noted_by3, $chairman_name->description);
-
-            //all style
-            $activeWorksheet->getStyle($certified_correct)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
-            $activeWorksheet->getStyle($certified_correct3)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
-            $activeWorksheet->getStyle($certified_correct5)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
-
-            $activeWorksheet->getStyle($noted_by)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
-            $activeWorksheet->getStyle($noted_by2)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
-            $activeWorksheet->getStyle($noted_by3)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
-
-            $activeWorksheet->getStyle($noted_by2)->getFont()->setBold(true);
-            $activeWorksheet->getStyle($certified_correct3)->getFont()->setBold(true);
-            $activeWorksheet->getStyle('A1')->getFont()->setBold(true);
-            $activeWorksheet->getStyle('A2')->getFont()->setBold(true);
-            $activeWorksheet->getStyle('A3')->getFont()->setBold(true);
-            $activeWorksheet->getStyle('B3')->getFont()->setBold(true);
-            $activeWorksheet->getStyle('C3')->getFont()->setBold(true);
-
-            $activeWorksheet->setCellValue("C4", $title);
-            unset($sheet);
-
-            $count++;
-        }
-        $spreadsheet->removeSheetByIndex(0); //template
-        $spreadsheet->setActiveSheetIndex(0);
-
-        $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
-        $activeWorksheet->getPageSetup()->setScale(83); // Adjust the scale to your preference, e.g., 85%
-        $activeWorksheet->getPageSetup()->setOrientation(PageSetup::ORIENTATION_PORTRAIT);
-
-        $writer->save($filePath);
-
+        $this->masterlistService->main($payroll, $request, $filePath);
         return response()->download($filePath)->deleteFileAfterSend(true);
     }
 

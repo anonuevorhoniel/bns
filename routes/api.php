@@ -65,7 +65,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/', 'index');
             Route::post('/show/{payroll}', 'show');
             Route::get('/{payroll}/download', 'download');
-            Route::get('/masterlists/{id}/download', 'masterlist_payroll_download');
+            Route::get('/masterlists/{payroll}/download', 'masterlist_download');
         });
 
         Route::prefix('/users')->controller(UserController::class)->group(function () {

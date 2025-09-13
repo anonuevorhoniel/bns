@@ -84,7 +84,9 @@ export default function DataTable({
                                             key={c_index}
                                             className={`font-normal ${c.headerClass}`}
                                         >
-                                            {c.header}
+                                            <div className="px-4">
+                                                {c.header}
+                                            </div>
                                         </TableHead>
                                     ))}
                                 </TableRow>
@@ -99,7 +101,7 @@ export default function DataTable({
                                                         key={c_index}
                                                         className={`break-words h-13 ${c.cellClass}`}
                                                     >
-                                                        <div className="text-wrap">
+                                                        <div className="px-4 text-wrap">
                                                             {c.cell
                                                                 ? c.cell(d)
                                                                 : d[

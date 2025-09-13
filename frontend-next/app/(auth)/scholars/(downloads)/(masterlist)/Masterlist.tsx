@@ -32,7 +32,7 @@ export default function Masterlist() {
             document.body.appendChild(a);
             a.click();
             a.remove();
-            toast.success("Success", {
+            toast.success("Downloading Masterlist...", {
                 description: "Masterlist Downloading..",
             });
             console.log(data);

@@ -9,6 +9,7 @@ use App\Models\AuditTrail;
 use App\Models\Scholar;
 use App\Models\Volunteer;
 use App\Services\ServicePeriods\ServicePeriodIndexService;
+use App\Services\ServicePeriods\ServicePeriodStoreService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use DateTime;
@@ -18,9 +19,11 @@ class ServicePeriodController extends Controller
 {
 
     protected $indexService;
-    public function __construct(ServicePeriodIndexService $indexService)
+    protected $storeService;
+    public function __construct(ServicePeriodIndexService $indexService, ServicePeriodStoreService $storeService)
     {
         $this->indexService = $indexService;
+        $this->storeService = $storeService;
     }
     public function index(Request $request)
     {
@@ -28,171 +31,25 @@ class ServicePeriodController extends Controller
         return response()->json($data);
     }
 
-    public function verify(Request $request)
-    {
-
-
-        $page = [
-            'name'  =>  'Settings',
-            'title' =>  'Service Period',
-            'crumb' =>  array(
-                'Settings' => '',
-                'Service Period Management' => '/settings/service_periods',
-                'Add' => '/service_periods/create',
-                'Verify' => ''
-            )
-        ];
-
-
-
-        if ($request->to == "specific") {
-            $get_to = explode('-', $request->specific_date);
-            $to_date   = DateTime::createFromFormat('!m', $get_to[1]);
-            $to_month = $to_date->format('F'); // March
-            $to = $to_month . ' ' . $get_to[0];
-        } else {
-            $to = "Present";
-        }
-
-        $get_from = explode('-', $request->from);
-        $from_date   = DateTime::createFromFormat('!m', $get_from[1]);
-        $from_month = $from_date->format('F'); // March
-        $from = $from_month . ' ' . $get_from[0];
-
-
-        $members = array();
-        foreach ($request->members as $member) {
-            $volunteer = DB::table('tbl_scholars as v')
-                ->select(
-                    'v.id as id',
-                    'v.first_name',
-                    'v.middle_name',
-                    'v.last_name',
-                    'm.name'
-                )
-                ->leftJoin('tbl_municipalities as m', 'v.municipality_code', 'm.code')
-                ->where('v.id', $member)
-                ->get();
-
-            if ($to == "Present") {
-                $service_period = ServicePeriod::where('scholar_id', $member)
-                    ->where('month_from', '>=', $get_from[1])
-                    ->where('year_from', $get_from[0])
-                    ->get();
-            } else {
-                $service_period = ServicePeriod::where('scholar_id', $member)
-                    ->where('month_from', '>=', $get_from[1])
-                    ->where('year_from',  $get_from[0])
-                    ->where('month_to', '<=', $get_to[1])
-                    ->where('year_to', $get_to[0])
-                    ->get();
-            }
-
-            if ($service_period->count() == 0) {
-                $conflict = "Clear";
-                $remark = "Save Service Period.";
-            } else {
-                $conflict = "Conflict with other Service Period.";
-                $remark = "Unsave Service Period.";
-            }
-            $members[] = array(
-                'id' => $volunteer[0]->id,
-                'municipality' => $volunteer[0]->name,
-                'volunteer' => $volunteer[0]->last_name . ', ' . $volunteer[0]->first_name . ' ' . $volunteer[0]->middle_name,
-                'remark' => $remark,
-                'conflict' => $conflict
-            );
-        }
-
-
-        // dd($members);
-        return view('service_periods.verify', compact('page', 'request', 'from', 'to', 'members'));
-    }
-
-
     public function store(Request $request)
     {
-        DB::beginTransaction();
+        $members = array();
+        $get_from = explode('-', $request->from);
+        $from_date   = DateTime::createFromFormat('!m', $get_from[1]);
+        $from_month = $from_date->format('F');
+        $from = $from_month . ' ' . $get_from[0];
+        $get_to = explode('-', $request->specific_date);
+
+    DB::beginTransaction();
         try {
-            $members = array();
-
-            if ($request->to == "specific") {
-                $get_to = explode('-', $request->specific_date);
-                $to_date   = DateTime::createFromFormat('!m', $get_to[1]);
-                $to_month = $to_date->format('F'); // March
-                $to = $to_month . ' ' . $get_to[0];
-                $month_to = $get_to[1];
-                $year_to = $get_to[0];
-            } else {
-                $to = "Present";
-                $month_to = 0;
-                $year_to = 0;
-            }
-
-            $get_from = explode('-', $request->from);
-            $from_date   = DateTime::createFromFormat('!m', $get_from[1]);
-            $from_month = $from_date->format('F'); // March
-            $from = $from_month . ' ' . $get_from[0];
             foreach ($request->members as $scholar_id) {
-
-                $volunteer = DB::table('tbl_scholars as v')
-                    ->select(
-                        'v.id as id',
-                        'v.first_name',
-                        'v.middle_name',
-                        'v.last_name',
-                        'm.name'
-                    )
-                    ->leftJoin('tbl_municipalities as m', 'v.citymuni_id', 'm.code')
-                    ->where('v.id', $scholar_id)
-                    ->get();
-
-                if ($to == "Present") {
-                    $existing_period = ServicePeriod::where('scholar_id', $scholar_id)
-                        ->where('month_from', '>=', $get_from[1])
-                        ->where('year_from', '=', $get_from[0])
-                        ->get();
-                } else {
-                    $existing_period = ServicePeriod::where('scholar_id', $scholar_id)
-                        ->where('month_from', '>=', $get_from[1])
-                        ->where('year_from',  $get_from[0])
-                        ->where('month_to', '<=', $get_to[1])
-                        ->where('year_to', $get_to[0])
-                        ->get();
-                }
-
-                if ($existing_period->count() == 0) {
-                    $conflict = "Clear";
-                    $remark = "Save Service Period.";
-
-                    // insert data.
-                    $period    = new ServicePeriod;
-                    $period->scholar_id = $scholar_id;
-                    $period->month_from = $get_from[1];
-                    $period->year_from = $get_from[0];
-                    $period->month_to = $month_to;
-                    $period->year_to = $year_to;
-                    $period->status = $request->to;
-                    $period->save();
-
-                    AuditTrail::createTrail("Add service period", $period);
-                } else {
-                    $conflict = $existing_period[0]->month_from . '-' . $existing_period[0]->year_from
-                        . ' | ' . $existing_period[0]->month_to . '-' . $existing_period[0]->year_to;
-                    $remark = "Unsave Service Period.";
-                }
-
-                $members[] = array(
-                    'id' => $volunteer[0]->id,
-                    'municipality' => $volunteer[0]->name,
-                    'volunteer' => $volunteer[0]->last_name . ', ' . $volunteer[0]->first_name . ' ' . $volunteer[0]->middle_name,
-                    'remark' => $remark,
-                    'conflict' => $conflict
-                );
+                $dateRange = $this->storeService->getDateRange($request, $get_to);
+                $to = $dateRange['to'];
+                $month_to = $dateRange['month_to'];
+                $year_to = $dateRange['year_to'];
+                $this->storeService->servicePeriodStore($request, $scholar_id, $get_from, $month_to, $year_to);
             }
-
             DB::commit();
-            return response()->json(compact('request', 'from', 'to', 'members'));
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json($e->getMessage(), 422);

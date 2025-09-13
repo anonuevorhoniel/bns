@@ -1,7 +1,8 @@
 import axios from "axios";
 
 const ax = axios.create({
-    baseURL: "http://192.168.5.39:8000/api",
+    // baseURL: "http://localhost:8000/api",
+    baseURL: "http://192.168.5.38:8000/api",
     // baseURL: "http://10.230.239.231:8000/api",
     withCredentials: true,
 });

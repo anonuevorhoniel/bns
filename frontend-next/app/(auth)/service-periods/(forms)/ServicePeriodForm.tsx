@@ -87,7 +87,7 @@ export default function ServicePeriodForm({
                 <div className=" grid grid-cols-1 lg:grid-cols-2 gap-4">
                     <FormFieldComponent
                         label="From"
-                        type="date"
+                        type="month"
                         form={form}
                         name="from"
                     />
@@ -129,7 +129,7 @@ export default function ServicePeriodForm({
                     {to == "specific" && (
                         <FormFieldComponent
                             label="Specific Date"
-                            type="date"
+                            type="month"
                             form={form}
                             name="specific_date"
                         />
@@ -138,19 +138,30 @@ export default function ServicePeriodForm({
 
                 <Card className="mt-5 shadow-none border-none lg:px-6 lg:shadow-md lg:border-20 bg-transparent lg:bg-card">
                     <div className="space-y-4">
-                        <SearchBar
-                            onInput={(e: any) => setSearch(e.target.value)}
-                        />
-                       {municipality_code ?  <DataTable
-                            page={page}
-                            data={scholars?.data?.get_scholars}
-                            setPage={setPage}
-                            isFetching={scholarIsFetching}
-                            pagination={scholars?.data?.pagination}
-                            columns={columns}
-                        /> : <div className="border border-dashed h-30 w-full flex justify-center items-center rounded-lg">
-                            <Label className="opacity-70">Please select City / Municipality to generate Scholars</Label>
-                            </div>}
+                        {municipality_code ? (
+                            <>
+                                <SearchBar
+                                    onInput={(e: any) =>
+                                        setSearch(e.target.value)
+                                    }
+                                />
+                                <DataTable
+                                    page={page}
+                                    data={scholars?.data?.get_scholars}
+                                    setPage={setPage}
+                                    isFetching={scholarIsFetching}
+                                    pagination={scholars?.data?.pagination}
+                                    columns={columns}
+                                />
+                            </>
+                        ) : (
+                            <div className="border-2 border-dashed h-30 w-full flex justify-center items-center rounded-lg">
+                                <Label className="opacity-70">
+                                    Please select City / Municipality to
+                                    generate Scholars
+                                </Label>
+                            </div>
+                        )}
                     </div>
                 </Card>
                 <ButtonLoad

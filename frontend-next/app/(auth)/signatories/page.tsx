@@ -1,7 +1,6 @@
 "use client";
 
 import ax from "@/app/axios";
-import ContentLayout from "@/app/ContentLayout";
 import { Button } from "@/components/ui/button";
 import DataTable from "@/components/custom/datatable";
 import StatusBar from "@/components/ui/status";
@@ -41,31 +40,33 @@ export default function Page() {
         {
             header: "Status",
             cell: (data: any) => {
-                return <StatusBar status={data?.status}/>
-            }
+                return <StatusBar status={data?.status} />;
+            },
         },
         {
             header: "Action",
             cell: (data: any) => {
                 // return <>a</>
-                return <div className="flex">
-                    <Button size={"sm"}><Pen /></Button>
-                </div>
-            }
-        }
-        
+                return (
+                    <div className="flex">
+                        <Button size={"sm"}>
+                            <Pen />
+                        </Button>
+                    </div>
+                );
+            },
+        },
     ];
     return (
-        <ContentLayout title="Signatories" buttonEvent={() => console.log("a")}>
+        <>
             <title>BNS | Signatories</title>
             <DataTable
                 page={page}
                 setPage={setPage}
-                totalPage={1}
                 isFetching={isFetching}
                 data={data?.data?.signatories}
                 columns={columns}
             />
-        </ContentLayout>
+        </>
     );
 }
