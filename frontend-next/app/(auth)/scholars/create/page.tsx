@@ -8,7 +8,9 @@ import { useMutation } from "@tanstack/react-query";
 import ax from "@/app/axios";
 import { toast } from "sonner";
 import ScholarForm from "../(forms)/ScholarForm";
+import { useState } from "react";
 export default function Page() {
+    const [render, setRender] = useState(0);
     const form = useForm<any>({
         resolver: zodResolver(scholarResolver),
     });
@@ -22,13 +24,19 @@ export default function Page() {
         },
         onSuccess: (data: any) => {
             toast.success("Success", { description: data?.data.message });
+            setRender((prev: number) => prev + 1);
             form.reset();
             window.scrollTo({ top: 0, behavior: "smooth" });
         },
     });
     const handleSubmit = (data: any) => {
-        console.log(data);
-        storeScholar.mutate(data);
+        const payload = {
+            ...data,
+            trainings: data.trainings,
+        };
+        console.log(payload);
+        
+        storeScholar.mutate(payload);
     };
 
     return (
@@ -39,6 +47,7 @@ export default function Page() {
                     form={form}
                     handleSubmit={handleSubmit}
                     isPending={storeScholar.isPending}
+                    key={render}
                 />
             </Card>
         </>

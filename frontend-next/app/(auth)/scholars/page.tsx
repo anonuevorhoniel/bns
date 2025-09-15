@@ -31,15 +31,17 @@ import Directory from "./(downloads)/directory/Directory";
 import { useDirectory } from "@/app/global/scholars/downloads/useDirectory";
 import Masterlist from "./(downloads)/(masterlist)/Masterlist";
 import { useMasterlist } from "@/app/global/scholars/downloads/useMasterlist";
+import { useUser } from "@/hooks/user/useUser";
 
 export default function Page() {
     const { open, setOpen } = useScholarView();
-    const { open: directoryOpen, setOpen: setDirectoryOpen } = useDirectory();
-    const {open: materlistOpen, setOpen: setMasterlistOpen} = useMasterlist()
+    const { setOpen: setDirectoryOpen } = useDirectory();
+    const { setOpen: setMasterlistOpen } = useMasterlist();
     const [page, setPage] = useState<number>(1);
     const [search, setSearch] = useState<string>("");
     const [searchDebounce] = useDebounce(search, 500);
     let searchValue = search == "" ? search : searchDebounce;
+    const { data: userData } = useUser();
 
     const { data, isFetching } = useGetScholar({
         page: page,
@@ -47,6 +49,7 @@ export default function Page() {
     });
 
     const scholars = data?.data?.get_scholars;
+    const user = userData?.data;
     const pagination = data?.data?.pagination;
 
     const columns = scholarColumns();
@@ -59,29 +62,35 @@ export default function Page() {
                         <Plus /> Add Scholar
                     </Button>
                 </Link>
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button><Download /> Download</Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-56" align="start">
-                        <DropdownMenuGroup>
-                            <DropdownMenuItem
-                                onClick={() => setDirectoryOpen(true)}
-                            >
-                                Directory
-                                <DropdownMenuShortcut>
-                                    <Download />
-                                </DropdownMenuShortcut>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setMasterlistOpen(true)}> 
-                                Masterlist
-                                <DropdownMenuShortcut>
-                                    <Download />
-                                </DropdownMenuShortcut>
-                            </DropdownMenuItem>
-                        </DropdownMenuGroup>
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                {user?.classification === "System Administrator" && (
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button>
+                                <Download /> Download
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent className="w-56" align="start">
+                            <DropdownMenuGroup>
+                                <DropdownMenuItem
+                                    onClick={() => setDirectoryOpen(true)}
+                                >
+                                    Directory
+                                    <DropdownMenuShortcut>
+                                        <Download />
+                                    </DropdownMenuShortcut>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                    onClick={() => setMasterlistOpen(true)}
+                                >
+                                    Masterlist
+                                    <DropdownMenuShortcut>
+                                        <Download />
+                                    </DropdownMenuShortcut>
+                                </DropdownMenuItem>
+                            </DropdownMenuGroup>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                )}
             </div>
             <Card className="px-6">
                 <SearchBar onInput={(e: any) => setSearch(e.target.value)} />

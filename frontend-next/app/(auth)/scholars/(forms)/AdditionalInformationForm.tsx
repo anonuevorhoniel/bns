@@ -17,22 +17,22 @@ import { Check, ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { useDebounce } from "use-debounce";
+import { useScholarView } from "@/app/global/scholars/useScholarView";
 
 export default function AdditionalInformationForm({
     form,
 }: {
     form: UseFormReturn;
 }) {
+    const status = form.watch("status");
+    const educAttain = form.watch("educational_attainment");
     const [search, setSearch] = useState("");
     const [searchDebounce] = useDebounce(search, 500);
     const searchValue = search == "" ? search : searchDebounce;
-    const status = form.watch("status");
     const municipality_code = form.watch("citymuni_id");
+    const statuses = ["OLD", "REP", "NEW"];
     const [page, setPage] = useState(1);
-    const [replacedScholar, setReplacedScholar] = useState({
-        full_name: "",
-        id: null,
-    });
+    const {setReplacedScholar, replacedScholar} = useScholarView()
     const [openReplacement, setOpenReplacement] = useState(false);
 
     const { data, isFetching, isSuccess } = useGetScholar({
@@ -56,6 +56,13 @@ export default function AdditionalInformationForm({
                     type="select"
                     selectItems={
                         <>
+                            {!statuses.includes(status) &&
+                                status !== null &&
+                                status !== undefined && (
+                                    <SelectItem value={status}>
+                                        {status}
+                                    </SelectItem>
+                                )}
                             <SelectItem value="OLD">OLD</SelectItem>
                             <SelectItem value="REP">REP</SelectItem>
                             <SelectItem value="NEW">NEW</SelectItem>
@@ -145,57 +152,59 @@ export default function AdditionalInformationForm({
                                         <ChevronDown />
                                     </Button>
                                 </PopoverTrigger>
-                                <PopoverContent>
-                                    <div className="flex gap-2">
-                                        <SearchBar
-                                            onInput={(e: any) =>
-                                                setSearch(e.target.value)
-                                            }
-                                        />
-                                        <Button onClick={() => setSearch("")}>
-                                            Reset
-                                        </Button>
-                                    </div>
-                                    {data?.data?.get_scholars?.map(
-                                        (scholar: any) => {
-                                            if (isFetching) {
+                                <PopoverContent className="min-w-[350px]">
+                                    <SearchBar
+                                        onInput={(e: any) =>
+                                            setSearch(e.target.value)
+                                        }
+                                        value={search}
+                                    />
+                                    <div className="my-6">
+                                        {data?.data?.get_scholars?.map(
+                                            (scholar: any) => {
+                                                if (isFetching) {
+                                                    return (
+                                                        <div
+                                                            className="my-2"
+                                                            key={scholar.id}
+                                                        >
+                                                            <Skeleton className="h-8 w-full " />
+                                                        </div>
+                                                    );
+                                                }
                                                 return (
                                                     <div
-                                                        className="flex justify-between gap-5 my-2"
+                                                        className="flex justify-between"
                                                         key={scholar.id}
                                                     >
-                                                        <Skeleton className="h-8 w-full " />
-                                                        <Skeleton className="h-8 w-10" />
+                                                        <Button
+                                                            size={"sm"}
+                                                            className="break-all"
+                                                            variant={"ghost"}
+                                                            onClick={() => {
+                                                                setReplacedScholar(
+                                                                    {
+                                                                        full_name:
+                                                                            scholar.full_name,
+                                                                        id: scholar.id,
+                                                                    }
+                                                                );
+                                                                setOpenReplacement(
+                                                                    false
+                                                                );
+                                                                form.setValue(
+                                                                    "replaced_scholar_id",
+                                                                    scholar?.id
+                                                                );
+                                                            }}
+                                                        >
+                                                            {scholar.full_name}
+                                                        </Button>
                                                     </div>
                                                 );
                                             }
-                                            return (
-                                                <div
-                                                    className="flex justify-between my-2"
-                                                    key={scholar.id}
-                                                >
-                                                    <Label>
-                                                        {scholar.full_name}
-                                                    </Label>
-                                                    <Button
-                                                        size={"sm"}
-                                                        onClick={() => {
-                                                            setReplacedScholar({
-                                                                full_name:
-                                                                    scholar.full_name,
-                                                                id: scholar.id,
-                                                            });
-                                                            setOpenReplacement(
-                                                                false
-                                                            );
-                                                        }}
-                                                    >
-                                                        <Check />
-                                                    </Button>
-                                                </div>
-                                            );
-                                        }
-                                    )}
+                                        )}
+                                    </div>
                                     <ResponsivePagination
                                         page={page}
                                         setPage={setPage}
@@ -205,23 +214,7 @@ export default function AdditionalInformationForm({
                                 </PopoverContent>
                             </Popover>
                         </div>
-                        <FormFieldComponent
-                            name="service_period_status"
-                            label="Service Period Status"
-                            form={form}
-                            type="select"
-                            selectItems={
-                                <>
-                                    <SelectItem value="None">None</SelectItem>
-                                    <SelectItem value="New Service Period">
-                                        New Service Period
-                                    </SelectItem>
-                                    <SelectItem value="Update    Service Period">
-                                        Update Service Period
-                                    </SelectItem>
-                                </>
-                            }
-                        />
+
                         <FormFieldComponent
                             name="replacement_date"
                             type="date"

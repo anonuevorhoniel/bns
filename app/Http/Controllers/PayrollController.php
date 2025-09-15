@@ -47,6 +47,9 @@ class PayrollController extends Controller
      */
     public function index(Request $request)
     {
+        $user = Auth::user();
+        $municipality_code = $user->assigned_muni_code;
+        $classification = $user->classification;
         $base = DB::table('tbl_payrolls as p')
             ->select(
                 'p.id as id',
@@ -56,11 +59,18 @@ class PayrollController extends Controller
                 'p.year_from',
                 'p.year_to',
                 'm.name',
+                'm.code',
                 'm.id as municity_id',
                 'p.fund'
             )
-            ->leftJoin('tbl_municipalities as m', 'p.municipality_code', 'm.code');
+            ->leftJoin('tbl_municipalities as m', 'p.municipality_code', 'm.code')
+            ->when($classification == "Encoder", function ($query) use ($municipality_code) {
+                $query->where(function ($query) use ($municipality_code) {
+                    $query->where('m.code', $municipality_code);
+                });
+            });
         $pagination = pagination($request, $base);
+
         $payrolls  = $base
             ->limit($pagination['limit'])
             ->offset($pagination['offset'])
@@ -122,6 +132,7 @@ class PayrollController extends Controller
         ]);
 
         $scholars = $request->scholars;
+        $user = Auth::user();
         // Validate that volunteers are selected
         if (empty($scholars)) {
             // If no volunteers are selected, redirect back with an error message
@@ -149,6 +160,12 @@ class PayrollController extends Controller
 
             foreach ($signatories as $key => $value) {
                 $signatory[] = $value->id;
+            }
+
+            if ($user->classification == "Encoder") {
+                if ($user->assigned_muni_code != $municipality_code) {
+                    return response()->json(['message' => "DO NOT TAMPER WITH THE PAYLOAD!"], 422);
+                }
             }
 
             $payroll = new Payroll;

@@ -15,7 +15,7 @@ class ServicePeriodIndexService
         $municipality_codes = array_column($municipalities, 'code');
 
         $base = $this->base($request);
-        $pagination = pagination($request, $base);
+        $pagination = pagination($request, $base->pluck('v.id'));
         $scholars = $base->offset($pagination['offset'])->limit($pagination['limit'])->get();
         $pagination = pageInfo($pagination, $scholars->count());
         $scholars = $this->mapQuery($scholars);

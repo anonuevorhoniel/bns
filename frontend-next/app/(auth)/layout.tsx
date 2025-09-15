@@ -17,6 +17,9 @@ import Provider from "../providers";
 import { Button } from "@/components/ui/button";
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
+import { useUser } from "@/hooks/user/useUser";
+import { useEffect, useState } from "react";
+import LoadingScreen from "@/components/custom/loading-screen";
 
 export default function AuthLayout({
     children,
@@ -24,6 +27,16 @@ export default function AuthLayout({
     children: React.ReactNode;
 }>) {
     const { setTheme } = useTheme();
+    const { isLoading } = useUser();
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    if (isLoading || !mounted) {
+        return <LoadingScreen />    ;
+    }
 
     return (
         <SidebarProvider>

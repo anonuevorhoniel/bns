@@ -1,17 +1,18 @@
 "use client";
 
 import ax from "@/app/axios";
-import ContentLayout from "@/app/ContentLayout";
 import DataTable from "@/components/custom/datatable";
 import SearchBar from "@/components/custom/searchbar";
+import { Card } from "@/components/ui/card";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 
 export default function Page() {
     const [page, setPage] = useState<number>(1);
+    const [search, setSearch] = useState("");
     const { data, isFetching, isError, error, isSuccess } = useQuery({
-        queryKey: ["auditTrails"],
-        queryFn: async () => await ax.post("/audit_trails"),
+        queryKey: ["auditTrails", page],
+        queryFn: async () => await ax.post("/audit_trails", { page: page }),
         refetchOnWindowFocus: false,
         placeholderData: keepPreviousData,
     });
@@ -43,14 +44,17 @@ export default function Page() {
     return (
         <>
             <title>BNS | Audit Trails</title>
-            <SearchBar />
-            <DataTable
-                data={data?.data?.trails}
-                columns={columns}
-                isFetching={isFetching}
-                setPage={setPage}
-                page={page}
-            />
+            <Card className="px-6">
+                <SearchBar onInput={(e: any) => setSearch(e.target.value)} />
+                <DataTable
+                    data={data?.data?.trails}
+                    columns={columns}
+                    isFetching={isFetching}
+                    setPage={setPage}
+                    page={page}
+                    pagination={data?.data?.pagination}
+                />
+            </Card>
         </>
     );
 }

@@ -22,11 +22,16 @@ export function LoginForm() {
     const userLogin = useMutation({
         mutationFn: async (data) => await ax.post("/users/authenticate", data),
         onSuccess: (data: any) => {
-            router.push("/dashboard");
-            console.log(data);
+            const user = data?.data?.user;
+            if(user?.classification == "Encoder") {
+                router.push("/scholars");
+            } else {
+                router.push("/dashboard");
+            }
             setUser({
-                email: data?.data?.user?.email,
-                name: data?.data?.user?.name,
+                email: user?.email,
+                name: user?.name,
+                classification: user?.classification
             });
         },
         onError: (error: any) => {

@@ -1,24 +1,20 @@
 "use client";
 
 import ax from "@/app/axios";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import DataTable from "@/components/custom/datatable";
-import { Label } from "@/components/ui/label";
 import SearchBar from "@/components/custom/searchbar";
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
-import { CalendarDays, Download, Plus, Search } from "lucide-react";
 import { useState } from "react";
 import Link from "next/link";
 import ViewPayroll from "./(view)/ViewPayroll";
-import { usePayrollView } from "@/app/global/payrolls/usePayrollView";
 import { useDebounce } from "use-debounce";
-import ButtonLoad from "@/components/custom/button-load";
 import { toast } from "sonner";
 import { useDownload } from "@/app/global/scholars/downloads/useDowload";
 import useDownloadLink from "@/hooks/useDownloadLink";
 import payrollColumn from "./(columns)/payrollColumn";
+import { Plus } from "lucide-react";
 
 export default function Page() {
     const { id: downloadID } = useDownload();

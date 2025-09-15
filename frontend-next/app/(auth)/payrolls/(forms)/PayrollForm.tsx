@@ -11,9 +11,11 @@ import { UseFormReturn } from "react-hook-form";
 export default function PayrollForm({
     form,
     handleSubmit,
+    classification,
 }: {
     form: UseFormReturn;
     handleSubmit: any;
+    classification: string;
 }) {
     const { data } = useQuery({
         queryKey: ["municipalities"],
@@ -45,22 +47,22 @@ export default function PayrollForm({
                             type="number"
                             label="Rate"
                         />
-                        <FormFieldComponent
-                            form={form}
-                            name="municipality_code"
-                            type="select"
-                            selectItems={data?.data?.map(
-                                (item: any) => (
+                        {classification !== "Encoder" && (
+                            <FormFieldComponent
+                                form={form}
+                                name="municipality_code"
+                                type="select"
+                                selectItems={data?.data?.map((item: any) => (
                                     <SelectItem
                                         key={item.id}
                                         value={`${item.code}`}
                                     >
                                         {item.name}
                                     </SelectItem>
-                                )
-                            )}
-                            label="Municipality / City"
-                        />
+                                ))}
+                                label="Municipality / City"
+                            />
+                        )}
                         <FormFieldComponent
                             form={form}
                             name="fund"

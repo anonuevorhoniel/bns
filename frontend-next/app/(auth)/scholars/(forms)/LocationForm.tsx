@@ -7,10 +7,25 @@ import { SelectItem } from "@/components/ui/select";
 import { useQuery } from "@tanstack/react-query";
 import { UseFormReturn } from "react-hook-form";
 import { readonly } from "zod";
+import { useUser } from "@/hooks/user/useUser";
+import { useEffect, useState } from "react";
 
 export default function LocationForm({ form }: { form: UseFormReturn }) {
     const district = form.watch("district_id");
     const municipality = form.watch("citymuni_id");
+    const { data: user, isSuccess: userSuccess } = useUser();
+    const districtId = user?.data?.assigned_district_id;
+    const municipalityCode = user?.data?.assigned_muni_code;
+    const classification = user?.data?.classification;
+
+    useEffect(() => {
+        if (userSuccess && districtId && municipalityCode) {
+            form.setValue("district_id", `${districtId}`);
+            form.setValue("citymuni_id", `${municipalityCode}`);
+            console.log(districtId, municipalityCode);
+        }
+    }, [userSuccess, municipalityCode, districtId]);
+
     const {
         data: municipalities,
         isSuccess,
@@ -20,7 +35,7 @@ export default function LocationForm({ form }: { form: UseFormReturn }) {
         queryKey: ["municipalities", district],
         queryFn: async () =>
             await ax.post("/getMunicipalities", { district: district }),
-        enabled: !!district,
+        enabled: !!district
     });
 
     const { data: barangays } = useQuery({
@@ -37,37 +52,57 @@ export default function LocationForm({ form }: { form: UseFormReturn }) {
         <>
             <Label className="font-bold text-xl mb-5">Location</Label>
 
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-5">
-                <FormFieldComponent
-                    name="district_id"
-                    label="District"
-                    type="select"
-                    selectItems={
-                        <>
-                            <SelectItem value="1">District 1</SelectItem>
-                            <SelectItem value="2">District 2</SelectItem>
-                            <SelectItem value="3">District 3</SelectItem>
-                            <SelectItem value="4">District 4</SelectItem>
-                        </>
-                    }
-                    form={form}
-                />
-                <FormFieldComponent
-                    name="citymuni_id"
-                    label="Municipality"
-                    type="select"
-                    selectItems={municipalities?.data.map((muni: any) => (
-                        <SelectItem key={muni.id} value={muni.code}>
-                            {muni.name}
-                        </SelectItem>
-                    ))}
-                    form={form}
-                />
+            <div
+                className={`grid grid-cols-1 ${
+                    classification === "Encoder"
+                        ? "lg:grid-cols-3"
+                        : "lg:grid-cols-4"
+                } gap-5`}
+            >
+                {classification !== "Encoder" && (
+                    <>
+                        <FormFieldComponent
+                            name="district_id"
+                            label="District"
+                            type="select"
+                            selectItems={
+                                <>
+                                    <SelectItem value="1">
+                                        District 1
+                                    </SelectItem>
+                                    <SelectItem value="2">
+                                        District 2
+                                    </SelectItem>
+                                    <SelectItem value="3">
+                                        District 3
+                                    </SelectItem>
+                                    <SelectItem value="4">
+                                        District 4
+                                    </SelectItem>
+                                </>
+                            }
+                            form={form}
+                        />
+                        <FormFieldComponent
+                            name="citymuni_id"
+                            label="Municipality"
+                            type="select"
+                            selectItems={municipalities?.data.map(
+                                (muni: any) => (
+                                    <SelectItem key={muni.id} value={muni.code}>
+                                        {muni.name}
+                                    </SelectItem>
+                                )
+                            )}
+                            form={form}
+                        />
+                    </>
+                )}
                 <FormFieldComponent
                     name="barangay_id"
                     label="Barangay"
                     type="select"
-                     selectItems={barangays?.data.map((barangay: any) => (
+                    selectItems={barangays?.data.map((barangay: any) => (
                         <SelectItem key={barangay.id} value={barangay.code}>
                             {barangay.name}
                         </SelectItem>

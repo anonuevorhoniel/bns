@@ -3,6 +3,7 @@ import { create } from "zustand";
 type UserType = {
     email: string;
     name: string;
+    classification: string;
 };
 
 type useUserType = {
@@ -11,6 +12,6 @@ type useUserType = {
 };
 
 export const useUser = create<useUserType>((set: any) => ({
-    user: { email: "", name: "" },
+    user: { email: "", name: "", classification: "" },
     setUser: (user: any) => set({ user: user }),
 }));

@@ -36,18 +36,13 @@ class AuditTrailController extends Controller
                 });
             });
 
-        $page = $request->page;
-        $limit = 8;
-        $total_data = (clone $data)->get()->count();
-        $total_page = ceil($total_data / $limit);
-        $offset = ($page - 1) * $limit;
+        $pagination = pagination($request, $data);
 
         $trails = (clone $data)
-            ->limit($limit)->offset($offset)
+            ->limit($pagination['limit'])->offset($pagination['offset'])
             ->orderBy('t.created_at', 'desc')->get();
-        $pages = compact('page', 'limit', 'total_data', 'total_page', 'offset');
-
-        return response()->json(compact('trails', 'pages'));
+        $pagination = pageInfo($pagination, $trails->count());
+        return response()->json(compact('trails', 'pagination'));
     }
 
     /**

@@ -8,7 +8,5 @@ use Illuminate\Database\Eloquent\Model;
 class ScholarTraining extends Model
 {
     use HasFactory;
-    // protected $table = 'tbl_scholar_trainings';
-        protected $table = 'tbl_scholar_training_name';
-
+    protected $table = 'tbl_scholar_trainings';
 }

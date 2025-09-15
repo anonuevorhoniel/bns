@@ -26,6 +26,8 @@ class DashboardController extends Controller
         $scholars_count = Scholar::count();
         $total_muni_count =  $scholar_per_mun = DB::table('tbl_municipalities as m')
             ->count();
+        $activeScholars = Scholar::where('replaced', 0)->count();
+        $inactiveScholars = Scholar::whereNot('replaced', 0)->count();
 
         $base = DB::table('tbl_municipalities as m')
             ->leftJoin('tbl_scholars as sc', 'sc.citymuni_id', 'm.code')
@@ -54,7 +56,9 @@ class DashboardController extends Controller
             'scholar_per_mun',
             'total_muni_count',
             'scholarsPerMunicipality',
-            'pagination'
+            'pagination',
+            'activeScholars',
+            'inactiveScholars'
         ));
     }
 

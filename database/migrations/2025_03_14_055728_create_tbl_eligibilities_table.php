@@ -16,7 +16,9 @@ return new class extends Migration
         Schema::create('tbl_eligibilities', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('scholar_id');
+            $table->date('date');
             $table->string('name');
+            $table->string('number');
             $table->timestamps();
         });
     }

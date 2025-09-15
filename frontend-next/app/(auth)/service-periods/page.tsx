@@ -1,7 +1,6 @@
 "use client";
 
 import ax from "@/app/axios";
-import ContentLayout from "@/app/ContentLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import DataTable from "@/components/custom/datatable";
@@ -14,9 +13,12 @@ import { Card } from "@/components/ui/card";
 import SearchBar from "@/components/custom/searchbar";
 import { useSearch } from "@/hooks/useSearch";
 import { useDebounce } from "use-debounce";
+import { useViewServicePeriod } from "@/app/global/service-periods/useViewServicePeriod";
+import ViewServicePeriod from "./(view)/ViewServicePeriod";
 
 export default function Page() {
     const [page, setPage] = useState<number>(1);
+    const { open, setOpen: setViewOpen, setScholar } = useViewServicePeriod();
     const [search, setSearch] = useState("");
     const [searchDebounce] = useDebounce(search, 500);
     const searchValue = search == "" ? search : searchDebounce;
@@ -31,10 +33,6 @@ export default function Page() {
         placeholderData: keepPreviousData,
         refetchOnWindowFocus: false,
     });
-
-    if (isSuccess) {
-        console.log(data);
-    }
 
     const columns = [
         {
@@ -57,9 +55,14 @@ export default function Page() {
         },
         {
             header: "Action",
-            cell: (data: any) => {
+            cell: (item: any) => {
                 return (
-                    <Button>
+                    <Button
+                        onClick={() => {
+                            setViewOpen(true);
+                            setScholar(item);
+                        }}
+                    >
                         <Search />
                     </Button>
                 );
@@ -86,6 +89,7 @@ export default function Page() {
                 />
             </Card>
             <CreateServicePeriod />
+            <ViewServicePeriod />
         </>
     );
 }

@@ -10,7 +10,12 @@ import {
 import { Input } from "../ui/input";
 import { UseFormReturn } from "react-hook-form";
 import { Textarea } from "../ui/textarea";
-import { Select, SelectContent, SelectTrigger, SelectValue } from "../ui/select";
+import {
+    Select,
+    SelectContent,
+    SelectTrigger,
+    SelectValue,
+} from "../ui/select";
 import { Button } from "../ui/button";
 import {
     Command,
@@ -41,7 +46,15 @@ export default function FormFieldComponent({
     label: string;
     selectItems?: any;
 }) {
-    const input = ["", undefined, "text", "number", "password", "date", "month"];
+    const input = [
+        "",
+        undefined,
+        "text",
+        "number",
+        "password",
+        "date",
+        "month",
+    ];
 
     const content = ({ field }: { field: any }) => {
         const value = field.value == undefined ? "" : field.value;
@@ -74,6 +87,7 @@ export default function FormFieldComponent({
                 <Select
                     value={String(value)}
                     onValueChange={field.onChange}
+                    key={name}
                 >
                     <SelectTrigger
                         className={`w-full ${error && "border-red-500"}`}

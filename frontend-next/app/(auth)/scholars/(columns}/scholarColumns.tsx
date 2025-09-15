@@ -70,6 +70,7 @@ export function scholarColumns() {
                             onClick={() => {
                                 setOpen(true);
                                 setScholar(data);
+                                console.log(data);
                             }}
                         >
                             <Search />

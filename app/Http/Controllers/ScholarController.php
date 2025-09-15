@@ -97,45 +97,32 @@ class ScholarController extends Controller
             return response()->json(['message' => 'Barangay Error'], 422);
         }
 
+        DB::beginTransaction();
         try {
             $scholar = $this->storeService->storeScholar($request);
+            $trainings && $this->storeService->trainingStore($trainings, $scholar);
+            $request->first_employment_date != null &&  $this->storeService->servicePeriodStore($scholar, $request);
+            ($eligibilities && count($eligibilities) > 0) &&  $this->storeService->eligibilityStore($eligibilities, $scholar);
+            $replaced_scholar_id && $this->storeService->updateScholarReplaced($replaced_scholar_id);
+            $replaced_scholar_id && $this->storeService->replacedServicePeriod($replaced_scholar_id, $scholar, $request);
+            AuditTrail::createTrail("Encode scholar.", $scholar);
+            DB::commit();
         } catch (\Exception $e) {
+            DB::rollBack();
             return response()->json($e->getMessage(), 422);
         }
-
-        if ($request->first_employment_date != null) {
-            $this->storeService->servicePeriodStore($scholar, $request);
-        }
-
-        if ($eligibilities && count($eligibilities) > 0) {
-            $this->storeService->eligibilityStore($eligibilities, $scholar);
-        }
-
-        if ($trainings) {
-            try {
-                $this->storeService->trainingStore($trainings, $scholar);
-            } catch (Exception $e) {
-                return response()->json($e->getMessage(), 422);
-            }
-        }
-
-        if ($replaced_scholar_id) {
-            $this->storeService->updateScholarReplaced($replaced_scholar_id, $scholar);
-        }
-
-        AuditTrail::createTrail("Encode scholar.", $scholar);
         return response()->json(['message' => 'Scholar Created Successfully']);
     }
 
     public function edit(Scholar $scholar)
     {
-        $trainings =  ScholarTraining::select('id', 'date', 'name', 'scholar_id', 'trainor')->where('scholar_id', $scholar->id)->get();
+        $trainings =  ScholarTraining::select('id', 'from_date', 'to_date', 'name', 'scholar_id', 'trainor')->where('scholar_id', $scholar->id)->get();
         $replaced = Scholar::where('id', $scholar->replaced_scholar_id)
             ->select('id', DB::raw('CONCAT(first_name, " ", middle_name, " ", last_name) as full_name'))
             ->first();
         $eligibilities = DB::table('tbl_eligibilities')
             ->where('scholar_id', $scholar->id)
-            ->select('id', 'name as value', 'scholar_id')
+            ->select('id', 'name', 'date', 'number', 'scholar_id')
             ->get();
         $sp_exists = DB::table('tbl_service_periods')
             ->where('scholar_id', $scholar->id)
@@ -186,10 +173,7 @@ class ScholarController extends Controller
                 $place_of_assignment = 'BNS Coordinator';
             }
 
-            $replacement = null;
-            if ($request->select_end_employ == "specific") {
-                $replacement = $request->replacement_date;
-            }
+            $replacement = $request->replacement_date;
             $this->updateService->updateScholar($scholar, $replacement, $place_of_assignment, $request);
             $this->updateService->deleteEligibilityTraining($scholar);
             $this->updateService->eligibilityStore($request, $scholar);
@@ -228,7 +212,7 @@ class ScholarController extends Controller
         $file = $request->file('excel');
         $spreadsheet = IOFactory::load($file);
         $sheets = $spreadsheet->getActiveSheet()->toArray(null, true, true, true);
-        
+
         DB::beginTransaction();
 
         for ($i = 4; $i < count($sheets) + 1; $i++) {

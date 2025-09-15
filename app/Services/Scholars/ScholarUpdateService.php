@@ -125,7 +125,7 @@ class ScholarUpdateService
             ->where('scholar_id', $scholar->id)
             ->delete();
 
-        DB::table('tbl_scholar_training_name')
+        DB::table('tbl_scholar_trainings')
             ->where('scholar_id', $scholar->id)
             ->delete();
     }
@@ -137,7 +137,9 @@ class ScholarUpdateService
             foreach ($eligibilities as $el) {
                 $eligibility = new Eligibility();
                 $eligibility->scholar_id = $scholar->id;
-                $eligibility->name = $el["value"];
+                $eligibility->date = $el["date"];
+                $eligibility->name = $el["name"];
+                $eligibility->number = $el["number"];
                 $eligibility->save();
             }
         }
@@ -151,7 +153,8 @@ class ScholarUpdateService
                 $training = new ScholarTraining();
                 $training->scholar_id = $scholar->id;
                 $training->name = $t['name'];
-                $training->date = $t['date'];
+                $training->from_date = $t['from_date'];
+                $training->to_date = $t['to_date'];
                 $training->trainor = $t['trainor'];
                 $training->save();
             }

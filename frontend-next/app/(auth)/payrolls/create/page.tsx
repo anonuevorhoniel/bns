@@ -11,16 +11,24 @@ import ax from "@/app/axios";
 import DataTable from "@/components/custom/datatable";
 import { useEffect, useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import ButtonLoad from "@/components/custom/button-load";
 import { Spinner } from "@/components/ui/shadcn-io/spinner";
+import { useUser } from "@/hooks/user/useUser";
 
 export default function page() {
+    const {
+        data: userData,
+        isLoading: userLoading,
+        isSuccess: userSuccess,
+    } = useUser();
+    const user = userData?.data;
+    const [renderKey, setRenderKey] = useState(1);
+
     const scholarData = () => {
-        if (isLoading) {
+        if (isLoading || userLoading) {
             return (
                 <div className="border border-dashed h-20 rounded-lg flex items-center justify-center">
                     <Label>
@@ -50,11 +58,27 @@ export default function page() {
     const handleSubmit = (data: any) => {
         console.log(data);
     };
+
     const router = useRouter();
     const [page, setPage] = useState(1);
     const [selectAll, setSelectAll] = useState(false);
     const [selected, setSelected] = useState<any>([]);
     const form = useForm<any>({ resolver: zodResolver(payrollResolver) });
+
+    useEffect(() => {
+        if (userSuccess && !userLoading && user?.classification == "Encoder") {
+            form.reset({
+                municipality_code: user?.assigned_muni_code,
+            });
+            setRenderKey((prev: number) => prev + 1);
+        }
+    }, [
+        userSuccess,
+        userLoading,
+        user?.classification,
+        user?.assigned_muni_code,
+    ]);
+
     const fund = form.watch("fund");
     const from = form.watch("from");
     const to = form.watch("to");
@@ -73,8 +97,10 @@ export default function page() {
             router.push("/payrolls");
             toast.success("Success", { description: "Payroll Added" });
         },
-        onError: (error) => {
-            console.log(error);
+        onError: (error: any) => {
+            toast.error("Error", {
+                description: error?.response?.data?.message,
+            });
         },
     });
 
@@ -102,7 +128,6 @@ export default function page() {
     const removeId = (id: any) => {
         setSelected((item: any) => item.filter((prev: any) => prev != id));
     };
-
     useEffect(() => {
         if (scholarIds?.length > 0 && selectAll) {
             setSelected([...scholarIds]);
@@ -147,7 +172,12 @@ export default function page() {
         <>
             <title>BNS | Create Payroll</title>
             <Card className="px-6">
-                <PayrollForm form={form} handleSubmit={handleSubmit} />
+                <PayrollForm
+                    form={form}
+                    classification={user?.classification}
+                    handleSubmit={handleSubmit}
+                    key={renderKey}
+                />
             </Card>
             <Card className="px-6">
                 <div className="flex gap-5 items-center cursor-pointer">

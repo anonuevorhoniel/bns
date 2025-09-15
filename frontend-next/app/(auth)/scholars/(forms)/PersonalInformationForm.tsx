@@ -43,8 +43,8 @@ export default function PersonalInformationForm({
                     type="select"
                     selectItems={
                         <>
-                            <SelectItem value="Male">Male</SelectItem>
-                            <SelectItem value="Female">Female</SelectItem>
+                            <SelectItem value="M">Male</SelectItem>
+                            <SelectItem value="F">Female</SelectItem>
                         </>
                     }
                     form={form}

@@ -72,7 +72,9 @@ export default function Page() {
                             <ShieldCheck size={25} />
                         </div>
                         <div>
-                            <Label className="text-xl font-bold">1200</Label>
+                            <Label className="text-xl font-bold">
+                                {data?.data?.activeScholars}
+                            </Label>
                             <Label className="text-xs opacity-60 font-normal">
                                 Showing the total active scholars
                             </Label>
@@ -87,7 +89,7 @@ export default function Page() {
                             <ShieldX size={25} />
                         </div>
                         <div>
-                            <Label className="text-xl font-bold">1200</Label>
+                            <Label className="text-xl font-bold">{data?.data?.inactiveScholars}</Label>
                             <Label className="text-xs opacity-60 font-normal">
                                 Showing overall inactive scholars
                             </Label>

@@ -6,6 +6,7 @@ import {
     ChevronsUpDown,
     CreditCard,
     LogOut,
+    LogOutIcon,
     Sparkles,
 } from "lucide-react";
 
@@ -26,11 +27,28 @@ import {
     useSidebar,
 } from "@/components/ui/sidebar";
 import { useUser } from "@/hooks/user/useUser";
+import { useMutation } from "@tanstack/react-query";
+import ax from "@/app/axios";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { Button } from "./ui/button";
+import ButtonLoad from "./custom/button-load";
 
 export function NavUser() {
     const { data } = useUser();
     const user = data?.data;
+    const router = useRouter();
     const { isMobile } = useSidebar();
+    const logout = useMutation({
+        mutationFn: async () => await ax.post("/logout"),
+        onSuccess: (data: any) => {
+            router.push("/");
+            toast.warning("Logged out");
+        },
+        onError: (error: any) => {
+            console.log(error);
+        },
+    });
     return (
         <SidebarMenu>
             <SidebarMenuItem>
@@ -95,9 +113,18 @@ export function NavUser() {
                             </DropdownMenuItem>
                         </DropdownMenuGroup>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem>
-                            <LogOut />
-                            Log out
+                        <DropdownMenuItem asChild>
+                            <ButtonLoad
+                                onClick={() => logout.mutate()}
+                                isPending={logout.isPending}
+                                label={
+                                    <div className="flex w-full justify-start items-start gap-2">
+                                        <LogOutIcon /> Logout
+                                    </div>
+                                }
+                                className="w-full text-left"
+                                variant={"ghost"}
+                            />
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>

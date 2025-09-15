@@ -166,7 +166,7 @@ export default function ViewScholar() {
                         <Separator />
                         <div className="grid grid-cols-2">
                             <Label className="opacity-70">Replaced: </Label>
-                            <Label>Scholar</Label>
+                            <Label>{scholar?.replaced_scholar?.full_name || 'N/A'}</Label>
                         </div>
                     </div>
                 </Card>
@@ -200,26 +200,94 @@ export default function ViewScholar() {
                     <Card className="p-4 m-2">
                         <div className="space-y-2">
                             <Label className="font-bold">Trainings</Label>
-                            {/* <div className="border border-dashed h-20 rounded-lg flex justify-center items-center">
-                                <div className="flex  flex-col  gap-2 items-center">
-                                    <div className="bg-primary text-primary-foreground rounded-full p-1">
-                                        <School  className="stroke-1" size={20} />
-                                    </div>
+                            {scholar?.trainings?.length == 0 ? (
+                                <div className="h-10 border border-dashed rounded-lg flex justify-center items-center">
                                     <p className="text-sm">No Trainings</p>
                                 </div>
-                            </div> */}
-                            <div className="h-10 border border-dashed rounded-lg flex justify-center items-center">
-                                <p className="text-sm">No Trainings</p>
-                            </div>
+                            ) : (
+                                scholar?.trainings?.map(
+                                    (item: any, index: number) => (
+                                        <div key={item.id}>
+                                            <div className="mt-5 flex flex-col gap-2">
+                                                <div className="grid grid-cols-2">
+                                                    <Label className="opacity-70">
+                                                        Name:{" "}
+                                                    </Label>
+                                                    <Label>{item.name}</Label>
+                                                </div>
+                                                <div className="grid grid-cols-2">
+                                                    <Label className="opacity-70">
+                                                        From Date:{" "}
+                                                    </Label>
+                                                    <Label>
+                                                        {item.from_date}
+                                                    </Label>
+                                                </div>
+                                                <div className="grid grid-cols-2">
+                                                    <Label className="opacity-70">
+                                                        To Date:{" "}
+                                                    </Label>
+                                                    <Label>
+                                                        {item.to_date}
+                                                    </Label>
+                                                </div>
+                                                {index + 1 !==
+                                                    scholar?.trainings
+                                                        ?.length && (
+                                                    <Separator />
+                                                )}
+                                            </div>
+                                            {index + 1 !==
+                                                scholar?.trainings?.length && (
+                                                <Separator className="mt-2" />
+                                            )}
+                                        </div>
+                                    )
+                                )
+                            )}
                         </div>
                     </Card>
 
                     <Card className="p-4 m-2">
                         <div className="space-y-2">
                             <Label className=" font-bold">Eligibilities</Label>
-                            <div className="h-10 border border-dashed rounded-lg flex justify-center items-center">
-                                <p className="text-sm">No Eligibilities</p>
-                            </div>
+                            {scholar?.eligibilities?.length == 0 ? (
+                                <div className="h-10 border border-dashed rounded-lg flex justify-center items-center">
+                                    <p className="text-sm">No Eligibilities</p>
+                                </div>
+                            ) : (
+                                scholar?.eligibilities?.map(
+                                    (item: any, index: number) => (
+                                        <div key={item.id}>
+                                            <div className="mt-5 flex flex-col gap-2">
+                                                <div className="grid grid-cols-2">
+                                                    <Label className="opacity-70">
+                                                        Name:{" "}
+                                                    </Label>
+                                                    <Label>{item.name}</Label>
+                                                </div>
+                                                <div className="grid grid-cols-2">
+                                                    <Label className="opacity-70">
+                                                        Date:{" "}
+                                                    </Label>
+                                                    <Label>{item.date}</Label>
+                                                </div>
+                                                <div className="grid grid-cols-2">
+                                                    <Label className="opacity-70">
+                                                        Number:{" "}
+                                                    </Label>
+                                                    <Label>{item.number}</Label>
+                                                </div>
+                                            </div>
+                                            {index + 1 !==
+                                                scholar?.eligibilities
+                                                    ?.length && (
+                                                <Separator className="mt-2" />
+                                            )}
+                                        </div>
+                                    )
+                                )
+                            )}
                         </div>
                     </Card>
                 </div>

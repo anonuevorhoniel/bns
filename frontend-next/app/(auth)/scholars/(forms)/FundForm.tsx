@@ -6,6 +6,8 @@ import { SelectItem } from "@/components/ui/select";
 import { UseFormReturn } from "react-hook-form";
 
 export default function FundForm({ form }: { form: UseFormReturn }) {
+    const fund = form.watch("fund");
+    const fundSelection = ["NNC", "LOCAL", "BOTH"];
     return (
         <>
             <Label className="font-bold text-xl mb-5">Fund</Label>
@@ -17,6 +19,9 @@ export default function FundForm({ form }: { form: UseFormReturn }) {
                     type="select"
                     selectItems={
                         <>
+                            {!fundSelection.includes(fund) && fund != null && (
+                                <SelectItem value={fund}>{fund}</SelectItem>
+                            )}
                             <SelectItem value="NNC">NNC</SelectItem>
                             <SelectItem value="LOCAL">LOCAL</SelectItem>
                             <SelectItem value="BOTH">BOTH</SelectItem>

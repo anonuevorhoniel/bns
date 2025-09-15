@@ -2,6 +2,10 @@
 
 namespace App\Services\Scholars;
 
+use App\Models\Eligibility;
+use App\Models\Scholar;
+use App\Models\ScholarTraining;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -12,6 +16,7 @@ class ScholarIndexService
         $base = $this->base($request);
         $pagination = pagination($request, $base);
         $get_scholars = $this->query($base, $pagination);
+        $get_scholars = $this->scholarMap($get_scholars);
         $current_scholar_count = $get_scholars->count();
         $pagination = pageInfo($pagination, $current_scholar_count);
         $except_scholar_id = $request->except_scholar_id;
@@ -85,6 +90,23 @@ class ScholarIndexService
             ->orderBy('tbl_scholars.last_name', 'asc')
             ->get();
 
+        return $data;
+    }
+
+    private function scholarMap($data,)
+    {
+        $data = $data->map(function ($scholar) {
+            $scholar->trainings = ScholarTraining::where('scholar_id', $scholar->id)->get();
+            $scholar->eligibilities = Eligibility::where('scholar_id', $scholar->id)->get()->map(function ($scholar) {
+                $scholar->date = Carbon::parse($scholar->date)->format('F j, Y');
+                return $scholar;
+            });
+            $scholar->replaced_scholar = Scholar::select(
+                DB::raw('CONCAT(first_name, " ", COALESCE(middle_name, ""), " ", last_name) as full_name')
+            )->find($scholar->replaced_scholar_id);
+
+            return $scholar;
+        });
         return $data;
     }
 }

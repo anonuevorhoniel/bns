@@ -10,6 +10,7 @@ use App\Models\Scholar;
 use App\Models\Volunteer;
 use App\Services\ServicePeriods\ServicePeriodIndexService;
 use App\Services\ServicePeriods\ServicePeriodStoreService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use DateTime;
@@ -40,7 +41,7 @@ class ServicePeriodController extends Controller
         $from = $from_month . ' ' . $get_from[0];
         $get_to = explode('-', $request->specific_date);
 
-    DB::beginTransaction();
+        DB::beginTransaction();
         try {
             foreach ($request->members as $scholar_id) {
                 $dateRange = $this->storeService->getDateRange($request, $get_to);
@@ -131,25 +132,24 @@ class ServicePeriodController extends Controller
 
     public function show(Scholar $scholar, Request $request)
     {
-        $service_period_query = ServicePeriod::where('scholar_id', $scholar->id)
-            ->join('tbl_scholars as s', 'tbl_service_periods.scholar_id', 's.id')
-            ->select(
-                'tbl_service_periods.*',
-                DB::raw('CONCAT ( s.last_name, " ",  s.first_name , " ", COALESCE(s.middle_name, ""), " " , COALESCE(s.name_extension, "" )) as full_name')
-            );
-
-        $total = (clone $service_period_query)->count();
-        $page = $request->page ?? 1;
-        $limit = 5;
-        $total_page = ceil($total / $limit);
-        $offset = ($page - 1) * $limit;
-        $service_periods = (clone $service_period_query)
-            ->offset($offset)
-            ->limit($limit)
+        // $service_period_query = ServicePeriod::where('scholar_id', $scholar->id)
+        //     ->join('tbl_scholars as s', 'tbl_service_periods.scholar_id', 's.id')
+        //     ->select(
+        //         'tbl_service_periods.*',
+        //         DB::raw('CONCAT ( s.last_name, " ",  s.first_name , " ", COALESCE(s.middle_name, ""), " " , COALESCE(s.name_extension, "" )) as full_name')
+        //     );
+        $base = ServicePeriod::where('scholar_id', $scholar->id);
+        $pagination = pagination($request, $base);
+        $service_periods = (clone $base)
+            ->offset($pagination['offset'])
+            ->limit($pagination['limit'])
             ->get();
-        $current_total = $service_periods->count();
-        $page_info = compact('offset', 'limit', 'total_page', 'total', 'current_total');
-        return response()->json(compact('service_periods', 'page_info'));
+        $pagination = pageInfo($pagination, $service_periods->count());
+        $service_periods->map(function ($q) {
+            $q->from = Carbon::parse("$q->year_from-$q->month_from")->format('F Y');
+            $q->to = $q->year_to != 0 && $q->month_to != 0 ? Carbon::parse("$q->year_to-$q->month_to")->format('F Y') : 'Present';
+        });
+        return response()->json(compact('service_periods', 'pagination'));
     }
 
 

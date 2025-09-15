@@ -44,4 +44,8 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
+    public function municipality() {
+        return $this->belongsTo(Municipality::class, 'assigned_muni_code', 'code');
+    }
+
 }

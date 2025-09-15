@@ -23,21 +23,20 @@ class UserController extends Controller
      */
     public function index(Request $request)
     {
+        $search = $request->search;
+        $users_data = User::with(['municipality'])->whereNot('tbl_users.id', Auth::id())
+            ->when(function ($q) use ($search) {
+                $q->where(function ($q) use ($search) {
+                    $q->where('tbl_users.name', 'like', "%$search%")
+                        ->orWhere('tbl_users.classification', 'like', "%$search%")
+                        ->orWhere('tbl_users.email', 'like', "%$search%");
+                });
+            });
 
-        if (Auth::user()->classification == "Field Officer") {
-            return back()->withErrors('Permission Denied!');
-        } else {
-            $users_data = User::whereNot('tbl_users.id', Auth::id())
-                ->join('tbl_municipalities as m', 'm.code', 'tbl_users.assigned_muni_code')
-                ->select('tbl_users.*', 'm.name as municipality_name');
-            $page = $request->page;
-            $limit = 8;
-            $total = (clone $users_data)->get()->count();
-            $total_page = ceil($total / $limit);
-            $offset = ($page - 1) * $limit;
-            $users = (clone $users_data)->offset($offset)->limit($limit)->get();
-            return response()->json(compact('users', 'total_page'));
-        }
+        $pagination = pagination($request, (clone $users_data)->pluck('id'));
+        $users = (clone $users_data)->skip($pagination['offset'])->take($pagination['limit'])->get();
+        $pagination = pageInfo($pagination, $users->count());
+        return response()->json(compact('users', 'pagination'));
     }
 
     /**
@@ -237,15 +236,15 @@ class UserController extends Controller
         $token = $user->createToken('user_c')->plainTextToken;
         $cookie = Cookie('user_c', $token);
         $message = "Logged In!";
-        $user = $user->only(['id', 'name', 'email']);
+        $user = $user->only(['id', 'name', 'email', 'classification']);
         $data = compact('user', 'token', 'message');
 
         return response()->json($data)->withCookie($cookie);
     }
 
-    public function check_auth(Request $request)
+    public function check_auth()
     {
-        return response()->json(Auth::user()->only(['id', 'email', 'name']));
+        return response()->json(Auth::user()->only(['id', 'email', 'name', 'classification', 'assigned_district_id', 'assigned_muni_code']));
     }
 
     public function change_email(Request $request)

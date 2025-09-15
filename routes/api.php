@@ -29,7 +29,7 @@ Route::get('/test', function () {
 });
 Route::get('/municipalities', [MunicipalityController::class, 'index']);
 Route::middleware('auth:sanctum')->group(function () {
-    
+
     Route::prefix('/scholars')->controller(ScholarController::class)->group(function () {
         Route::post('/', 'index');
         Route::get('/create', 'create');
@@ -60,14 +60,6 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/', 'index');
         });
 
-        Route::prefix('/payrolls')->controller(PayrollController::class)->group(function () {
-            Route::post('/store', 'store');
-            Route::post('/', 'index');
-            Route::post('/show/{payroll}', 'show');
-            Route::get('/{payroll}/download', 'download');
-            Route::get('/masterlists/{payroll}/download', 'masterlist_download');
-        });
-
         Route::prefix('/users')->controller(UserController::class)->group(function () {
             Route::post('/', 'index');
         });
@@ -91,7 +83,13 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::post('/logout', [AuthController::class, 'destroy']);
-
+    Route::prefix('/payrolls')->controller(PayrollController::class)->group(function () {
+        Route::post('/store', 'store');
+        Route::post('/', 'index');
+        Route::post('/show/{payroll}', 'show');
+        Route::get('/{payroll}/download', 'download');
+        Route::get('/masterlists/{payroll}/download', 'masterlist_download');
+    });
     Route::controller(APIController::class)->group(function () {
         Route::post('/getMunicipalities', 'getMunicipalities');
         Route::post('/getBarangays', 'getBarangays');

@@ -17,7 +17,9 @@ class ScholarStoreService
         foreach ($eligibilities as $el) {
             $eligibility = new Eligibility();
             $eligibility->scholar_id = $scholar->id;
-            $eligibility->name = $el["value"];
+            $eligibility->date = $el["date"];
+            $eligibility->name = $el["name"];
+            $eligibility->number = $el["number"];
             $eligibility->save();
         }
     }
@@ -28,7 +30,8 @@ class ScholarStoreService
             $training = new ScholarTraining();
             $training->scholar_id = $scholar->id;
             $training->name = $t['name'];
-            $training->date = $t['date'];
+            $training->from_date = $t['from_date'];
+            $training->to_date = $t['to_date'];
             $training->trainor = $t['trainor'];
             $training->save();
         }
@@ -37,7 +40,7 @@ class ScholarStoreService
     public function servicePeriodStore($scholar, $request)
     {
         $sp = new ServicePeriod();
-        $sp->volunteer_id = $scholar->id;
+        $sp->scholar_id = $scholar->id;
         $sp->month_from = date('m', strtotime($request->first_employment_date));
         $sp->year_from = date('Y', strtotime($request->first_employment_date));
         $sp->month_to = 0;
@@ -71,7 +74,7 @@ class ScholarStoreService
         $scholar->classification = $request->classification ?? null;
         $scholar->philhealth_no = $request->philhealth_no ?? null;
         $scholar->status = $request->status ?? null;
-        $scholar->replaced_scholar_id = $replaced_scholar_id ?? null;
+        $scholar->replaced_scholar_id = $request->replaced_scholar_id ?? null;
         $scholar->replacement_date = $request->replacement_date ?? null;
         $scholar->place_of_assignment = $this->placeOfAssignment($request, $scholar);
         $scholar->first_employment_date = $request->first_employment_date ?? null;
@@ -83,7 +86,7 @@ class ScholarStoreService
         return $scholar;
     }
 
-    public function updateScholarReplaced($replaced_scholar_id, $scholar)
+    public function updateScholarReplaced($replaced_scholar_id,)
     {
         if ($replaced_scholar_id) {
             DB::table('tbl_scholars')
@@ -91,6 +94,38 @@ class ScholarStoreService
                 ->update([
                     'tbl_scholars.replaced' => 1,
                 ]);
+        }
+    }
+
+    public function replacedServicePeriod($replaced_scholar_id, $scholar, $request)
+    {
+        //kapag merong present to scholar, update nalang
+        //if wala naman create new
+        $month_to = date('m', strtotime($request->replacement_date));
+        $year_to = date('Y', strtotime($request->replacement_date));
+        $service_period_present = DB::table('tbl_service_periods as sp')
+            ->where('sp.scholar_id', $replaced_scholar_id)
+            ->where('sp.status', 'present')
+            ->first();
+
+        if ($service_period_present) {
+            DB::table('tbl_service_periods as sp')
+                ->where('sp.scholar_id', $replaced_scholar_id)
+                ->where('sp.status', 'present')
+                ->update([
+                    'status' => 'specific',
+                    'month_to' => $month_to,
+                    'year_to' => $year_to,
+                ]);
+        } else {
+            $sp = new ServicePeriod();
+            $sp->scholar_id = $replaced_scholar_id;
+            $sp->month_from = date('m', strtotime($request->first_employment_date));
+            $sp->year_from = date('Y', strtotime($request->first_employment_date));
+            $sp->month_to = $month_to;
+            $sp->year_to =  $year_to;
+            $sp->status = 'specific';
+            $sp->save();
         }
     }
 

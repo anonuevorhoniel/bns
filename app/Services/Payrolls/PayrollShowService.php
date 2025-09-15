@@ -2,13 +2,15 @@
 
 namespace App\Services\Payrolls;
 
-
+use App\Models\Eligibility;
 use DateTime;
 use App\Models\Rate;
 use App\Models\Quarter;
 use App\Models\Signatory;
 
 use App\Models\Municipality;
+use App\Models\Scholar;
+use App\Models\ScholarTraining;
 use App\Models\ServicePeriod;
 use Illuminate\Support\Facades\DB;
 
@@ -25,8 +27,8 @@ class PayrollShowService
         $payroll = $this->payrollQuery($payroll);
 
         $scholars = (clone $base)
-            ->limit($pagination['limit'])
-            ->offset($pagination['offset'])
+            ->take($pagination['limit'])
+            ->skip($pagination['offset'])
             ->get();
 
         $pagination = pageInfo($pagination, $scholars->count());
@@ -42,25 +44,11 @@ class PayrollShowService
 
     private function base($payroll, $search)
     {
-        $data = DB::table('tbl_payroll_details as pd')
-            ->leftJoin('tbl_scholars as v', 'pd.scholar_id', 'v.id')
-            ->leftjoin('tbl_barangays as b', 'b.code', 'v.barangay_id')
-            ->join('tbl_municipalities as m', 'm.code', 'v.citymuni_id')
-            ->where('pd.payroll_id', $payroll->id)
-            ->when($search, function ($q) use ($search) {
-                $q->where(function ($qv) use ($search) {
-                    $qv->where('v.first_name', 'LIKE', "$search%")
-                        ->orWhere('v.last_name', 'LIKE', "$search%")
-                        ->orWhere('v.middle_name', 'LIKE', "$search%");
-                });
-            })
-            ->orderBy('v.last_name')
-            ->select(
-                'v.*',
-                'b.name as barangay_name',
-                'm.name as municity_name',
-                DB::raw('CONCAT(v.first_name, " ", COALESCE(v.middle_name,""), " ", v.last_name) as full_name')
-            );
+        $data = Scholar::select('*', DB::raw("CONCAT(first_name, ' ', last_name) as full_name"))
+            ->with(['barangay', 'municipality', 'servicePeriods', 'payrollDetails'])
+            ->whereHas('payrollDetails', function ($query) use ($payroll) {
+                $query->where('payroll_id', $payroll->id);
+            });
 
         return $data;
     }
@@ -86,7 +74,7 @@ class PayrollShowService
     {
         $months = months();
         $data = $scholars->map(function ($scholar) use ($months) {
-            
+
             $service_period = ServicePeriod::where('scholar_id', $scholar->id)
                 ->orderBy('year_from', 'desc')
                 ->orderBy('month_from', 'desc')
@@ -96,6 +84,8 @@ class PayrollShowService
             $year_from = $service_period->year_from;
             $month_to = $service_period->month_to != 0 ? $months[intval($service_period->month_to) - 1] : 'Present';
             $scholar->service_period = $month_from . ' to ' . $month_to . ', ' . $year_from;
+            $scholar->eligibilities = Eligibility::where('scholar_id', $scholar->id)->get();
+            $scholar->trainings = ScholarTraining::where('scholar_id', $scholar->id)->get();
 
             return $scholar;
         });

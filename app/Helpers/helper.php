@@ -6,7 +6,7 @@ function pagination($request, $data)
 {
     $page = $request->page;
     $limit = 8;
-    $total = (clone $data)->pluck('id')->count();
+    $total = (clone $data)->count();
     $offset = ($page - 1) * $limit;
     $total_page = ceil($total / $limit);
     $data = compact('limit', 'total', 'offset', 'total_page');

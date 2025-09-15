@@ -11,12 +11,13 @@ import { toast } from "sonner";
 import ScholarForm from "../../(forms)/ScholarForm";
 import { useEffect, useState } from "react";
 import ScholarLoad from "@/components/custom/scholar-load";
+import { useScholarView } from "@/app/global/scholars/useScholarView";
 
 export default function Page() {
     const [delay, setDelay] = useState(true);
     const params = useParams();
     const id = params.id;
-
+    const { setReplacedScholar } = useScholarView();
     const form = useForm<any>({
         resolver: zodResolver(scholarResolver),
     });
@@ -47,9 +48,11 @@ export default function Page() {
     useEffect(() => {
         if (isSuccess) {
             const scholar = data?.data?.scholar;
-            console.log(scholar);
+            setReplacedScholar(data?.data?.replaced);
             form.reset({
                 ...scholar,
+                trainings: data?.data?.trainings,
+                eligibilities: data?.data?.eligibilities,
                 with_philhealth: scholar.classification != null ? "Yes" : "No",
                 place_of_assignment:
                     scholar.place_of_assignment != "BNS Coordinator"
@@ -64,12 +67,15 @@ export default function Page() {
         }
     }, [isSuccess]);
 
+    useEffect(() => {
+        console.log(form.getValues());
+    }, [form]);
+
     if (isError) {
         console.log(error);
-
         return (
             <>
-            There seems to be a problem with the data, please try again
+                There seems to be a problem with the data, please try again
                 later
             </>
         );

@@ -19,22 +19,16 @@ class SignatoryController extends Controller
     {
         $page = $request->page;
         $base_data = DB::table('tbl_signatories')->where('deleted_at', null);
-        $designations = Signatory::DESIGNATION; 
-        $limit = 8;
-        $total_data = (clone $base_data)->pluck('id')->count();
-        $total_page = ceil($total_data / $limit);
-        $offset = ($page - 1) * $limit;
+        $pagination = pagination($request, $base_data);
 
-        $signatories = (clone $base_data)->offset($offset)->limit($limit)->get();
+        $signatories = (clone $base_data)->offset($pagination['offset'])->limit($pagination['limit'])->get();
         $current_data_count = $signatories->count();
+        $pagination = pageInfo($pagination, $current_data_count);
         $signatories->map(function ($s) {
             $designation = $s->designation_id;
             switch ($designation) {
                 case "1":
                     $s->designation = "Office Head";
-                    break;
-                case "2":
-                    $s->designation = "Provincial Administrator";
                     break;
                 case "3":
                     $s->designation = "Governor";
@@ -51,8 +45,7 @@ class SignatoryController extends Controller
             }
         });
 
-        $page_info = compact('limit', 'total_data', 'offset', 'total_page', 'current_data_count');
-        return response()->json(compact('signatories', 'page_info', 'designations'));
+        return response()->json(compact('signatories', 'pagination'));
     }
 
     /**
@@ -107,7 +100,6 @@ class SignatoryController extends Controller
 
                     AuditTrail::createTrail("Update Active Signatory", $signatory);
                 }
-
                 DB::commit();
                 return response()->json(['message' => 'A new signatory has been added.']);
             } catch (\Exception $e) {
@@ -115,7 +107,7 @@ class SignatoryController extends Controller
                 return response()->json($e->getMessage(), 422);
             }
         } else {
-           return response()->json(['message' => 'Duplicate Entry!'], 422);
+            return response()->json(['message' => 'Duplicate Entry!'], 422);
         }
     }
 

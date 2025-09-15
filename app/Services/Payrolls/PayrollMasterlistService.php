@@ -90,7 +90,7 @@ class PayrollMasterlistService
                 $query->where('payroll_id', $payroll->id);
             })
             ->get();
-        $data = $data->chunk(5, true);
+        $data = $data->chunk(25, true);
 
         return $data;
     }
