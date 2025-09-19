@@ -131,7 +131,10 @@ class ScholarStoreService
 
     public function placeOfAssignment($request)
     {
-        if ($request->place_of_assignment == 'Same as Barangay') {
+        if ($request->place_of_assignment_others) {
+            return $request->place_of_assignment_others;
+        }
+        if ($request->place_of_assignment == "same_as_barangay") {
             $barangay = DB::table('tbl_barangays')
                 ->where('code', $request->barangay_id)
                 ->first();

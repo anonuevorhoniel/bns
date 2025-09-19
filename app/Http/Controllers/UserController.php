@@ -10,7 +10,6 @@ use Carbon\Carbon;
 use App\Models\User;
 use App\Models\AuditTrail;
 use App\Models\Municipality;
-use App\Models\Assignment;
 use Exception;
 use Illuminate\Support\Facades\Cookie;
 
@@ -44,18 +43,7 @@ class UserController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function create()
-    {
-
-        $page = [
-            'name'  =>  'Users',
-            'title' =>  'Create New User',
-            'crumb' =>  array('Users' => '/users', 'Create' => '')
-        ];
-
-        $municipalities = Municipality::all();
-        return view('users.create', compact('page',  'municipalities'));
-    }
+    public function create() {}
 
     /**
      * Store a newly created resource in storage.
@@ -72,11 +60,8 @@ class UserController extends Controller
             'mobile' => 'required',
             'classification' => 'required'
         ]);
-
-
         DB::beginTransaction();
         try {
-
             $user = new User;
             $user->name = $request->name;
             $user->username = $request->username;
@@ -84,20 +69,7 @@ class UserController extends Controller
             $user->classification = $request->classification;
             $user->mobile = $request->mobile;
             $user->save();
-
-            if ($request->classification === "Field Officer") {
-
-                foreach ($request->municipalities as $code) {
-                    // dd($code);
-                    $assignment = new Assignment;
-                    $assignment->user_id = $user->id;
-                    $assignment->municipality_code = $code;
-                    $assignment->save();
-                }
-            }
-
             AuditTrail::createTrail("Create user account", $user);
-
             DB::commit();
             return back()->withSuccess('A new user has been added.');
         } catch (\Exception $e) {
@@ -113,25 +85,7 @@ class UserController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show(User $user)
-    {
-        //
-        $page = [
-            'name'  =>  'Users',
-            'title' =>  'View User',
-            'crumb' =>  array('Users' => '/users', 'View' => '')
-        ];
-
-        $assignments = DB::table('tbl_assignments')
-            ->select('tbl_assignments.id as id', 'name')
-            ->leftJoin('tbl_municipalities', 'tbl_assignments.municipality_code', 'tbl_municipalities.code')
-            ->where('user_id', $user->id)
-            ->get();
-        $municipalities = Municipality::all();
-
-        $classification = $user->classification;
-        return view('users.show', compact('page', 'user', 'assignments', 'municipalities', 'classification', 'assignments'));
-    }
+    public function show(User $user) {}
 
     /**
      * Show the form for editing the specified resource.

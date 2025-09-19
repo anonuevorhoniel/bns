@@ -6,27 +6,28 @@ import SearchBar from "@/components/custom/searchbar";
 import { Card } from "@/components/ui/card";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
+import { useDebounce } from "use-debounce";
 
 export default function Page() {
     const [page, setPage] = useState<number>(1);
     const [search, setSearch] = useState("");
+    const [searchDebounce] = useDebounce(search, 500);
+    const searchValue = search == "" ? search : searchDebounce;
     const { data, isFetching, isError, error, isSuccess } = useQuery({
-        queryKey: ["auditTrails", page],
-        queryFn: async () => await ax.post("/audit_trails", { page: page }),
+        queryKey: ["auditTrails", page, searchValue],
+        queryFn: async () =>
+            await ax.post("/audit_trails", { page: page, search: searchValue }),
         refetchOnWindowFocus: false,
         placeholderData: keepPreviousData,
     });
 
-    if (isSuccess) {
-        console.log(data?.data);
-    }
     if (isError) {
-        console.log(isError);
+        console.log(error);
     }
     const columns = [
         {
-            accessKey: "name",
             header: "User",
+            cell: (item: any) => <>{item?.user?.name}</>,
         },
         {
             accessKey: "action",
@@ -35,7 +36,7 @@ export default function Page() {
         {
             header: "Description",
             cell: (item: any) => (
-                <div className="max-w-xs flex">
+                <div className=" flex">
                     <p className="break-all">{item.description}</p>
                 </div>
             ),

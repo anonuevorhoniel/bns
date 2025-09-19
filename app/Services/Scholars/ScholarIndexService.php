@@ -96,7 +96,11 @@ class ScholarIndexService
     private function scholarMap($data,)
     {
         $data = $data->map(function ($scholar) {
-            $scholar->trainings = ScholarTraining::where('scholar_id', $scholar->id)->get();
+            $scholar->trainings = ScholarTraining::where('scholar_id', $scholar->id)->get()->map(function ($scholar) {
+                $scholar->from_date = Carbon::parse($scholar->from_date)->format('F j, Y');
+                $scholar->to_date = Carbon::parse($scholar->to_date)->format('F j, Y');
+                return $scholar;
+            });
             $scholar->eligibilities = Eligibility::where('scholar_id', $scholar->id)->get()->map(function ($scholar) {
                 $scholar->date = Carbon::parse($scholar->date)->format('F j, Y');
                 return $scholar;

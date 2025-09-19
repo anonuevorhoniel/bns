@@ -10,6 +10,19 @@ class Payroll extends Model
 	use SoftDeletes;
 	protected $table = 'tbl_payrolls';
 
+	protected $fillable = [
+		'rate_id',
+		'municipality_code',
+		'year_from',
+		'year_to',
+		'month_from',
+		'month_to',
+		'grand_total',
+		'signatories',
+		'fund',
+		'status',
+	];
+
 	public function payrollDetails()
 	{
 		return $this->hasMany(PayrollDetails::class, 'payroll_id');

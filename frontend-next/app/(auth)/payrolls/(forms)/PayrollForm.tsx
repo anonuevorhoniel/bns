@@ -2,31 +2,50 @@
 
 import ax from "@/app/axios";
 import FormFieldComponent from "@/components/custom/form-field";
+import LoadingScreen from "@/components/custom/loading-screen";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { SelectItem } from "@/components/ui/select";
+import { useUser } from "@/hooks/user/useUser";
 import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { UseFormReturn } from "react-hook-form";
 
 export default function PayrollForm({
     form,
-    handleSubmit,
     classification,
 }: {
     form: UseFormReturn;
-    handleSubmit: any;
     classification: string;
 }) {
-    const { data } = useQuery({
+    const { data, isFetching: municipalitiesLoading } = useQuery({
         queryKey: ["municipalities"],
         queryFn: async () => await ax.get("/municipalities"),
         refetchOnWindowFocus: false,
     });
+    const [isMounted, setIsMounted] = useState(false);
+    const { data: rateData, isFetching: ratesLoading } = useQuery({
+        queryKey: ["rates"],
+        queryFn: async () => await ax.get("/rates"),
+        enabled: classification == "System Administrator",
+        refetchOnWindowFocus: false,
+    });
+
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
+
+    if (!isMounted) {
+        return <LoadingScreen />;
+    }
+
+    const rates = rateData?.data?.rates;
+    const fund = form.watch("fund");
 
     return (
         <>
             <Form {...form}>
-                <form action="" onSubmit={form.handleSubmit(handleSubmit)}>
+                <form action="">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                         <FormFieldComponent
                             form={form}
@@ -41,13 +60,8 @@ export default function PayrollForm({
                             type="month"
                             label="To"
                         />
-                        <FormFieldComponent
-                            form={form}
-                            name="rate"
-                            type="number"
-                            label="Rate"
-                        />
-                        {classification !== "Encoder" && (
+
+                        {classification == "System Administrator" && (
                             <FormFieldComponent
                                 form={form}
                                 name="municipality_code"
@@ -63,19 +77,44 @@ export default function PayrollForm({
                                 label="Municipality / City"
                             />
                         )}
-                        <FormFieldComponent
-                            form={form}
-                            name="fund"
-                            type="select"
-                            label="Fund"
-                            selectItems={
-                                <>
-                                    <SelectItem value="NNC">NNC</SelectItem>
-                                    <SelectItem value="LOCAL">LOCAL</SelectItem>
-                                    <SelectItem value="BOTH">BOTH</SelectItem>
-                                </>
-                            }
-                        />
+                        {classification == "System Administrator" && (
+                            <FormFieldComponent
+                                form={form}
+                                name="fund"
+                                type="select"
+                                label="Fund"
+                                selectItems={
+                                    <>
+                                        <SelectItem value="NNC">NNC</SelectItem>
+                                        <SelectItem value="Province">
+                                            PROVINCE
+                                        </SelectItem>
+                                    </>
+                                }
+                            />
+                        )}
+
+                        {classification == "System Administrator" &&
+                            fund == "NNC" && (
+                                <FormFieldComponent
+                                    form={form}
+                                    name="rate"
+                                    type="select"
+                                    selectItems={
+                                        <>
+                                            {rates?.map((item: any) => (
+                                                <SelectItem
+                                                    value={`${item.id}`}
+                                                    key={item.id}
+                                                >
+                                                    {item.rate}
+                                                </SelectItem>
+                                            ))}
+                                        </>
+                                    }
+                                    label="Rate"
+                                />
+                            )}
                     </div>
                 </form>
             </Form>

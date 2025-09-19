@@ -32,7 +32,7 @@ export default function AdditionalInformationForm({
     const municipality_code = form.watch("citymuni_id");
     const statuses = ["OLD", "REP", "NEW"];
     const [page, setPage] = useState(1);
-    const {setReplacedScholar, replacedScholar} = useScholarView()
+    const { setReplacedScholar, replacedScholar } = useScholarView();
     const [openReplacement, setOpenReplacement] = useState(false);
 
     const { data, isFetching, isSuccess } = useGetScholar({
@@ -40,7 +40,7 @@ export default function AdditionalInformationForm({
         search: searchValue,
         code: municipality_code,
     });
-
+    const placeOfAssignment = form.watch("place_of_assignment");
     const pagination = data?.data?.pagination;
 
     return (
@@ -96,9 +96,17 @@ export default function AdditionalInformationForm({
                             <SelectItem value="BNS Coordinator">
                                 BNS Coordinator
                             </SelectItem>
+                            <SelectItem value="OTHERS">OTHERS</SelectItem>
                         </>
                     }
                 />
+                {placeOfAssignment == "OTHERS" && (
+                    <FormFieldComponent
+                        name="place_of_assignment_others"
+                        label="OTHERS"
+                        form={form}
+                    />
+                )}
                 <FormFieldComponent
                     name="educational_attainment"
                     label="Educational Attainment"
@@ -106,14 +114,23 @@ export default function AdditionalInformationForm({
                     type="select"
                     selectItems={
                         <>
+                            <SelectItem value="Elementary Level">
+                                Elementary Level
+                            </SelectItem>
                             <SelectItem value="Elementary Graduate">
                                 Elementary Graduate
+                            </SelectItem>
+                            <SelectItem value="High School Level">
+                                High School Level
                             </SelectItem>
                             <SelectItem value="High School Graduate">
                                 High School Graduate
                             </SelectItem>
                             <SelectItem value="Vocational">
                                 Vocational
+                            </SelectItem>
+                            <SelectItem value="College Level">
+                                College Level
                             </SelectItem>
                             <SelectItem value="College Graduate">
                                 College Graduate
@@ -145,7 +162,7 @@ export default function AdditionalInformationForm({
                                         variant={"outline"}
                                     >
                                         <Label>
-                                            {replacedScholar.full_name
+                                            {replacedScholar?.full_name
                                                 ? replacedScholar?.full_name
                                                 : "Select BNS"}
                                         </Label>

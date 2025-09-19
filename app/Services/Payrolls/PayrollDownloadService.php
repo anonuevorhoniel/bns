@@ -17,7 +17,8 @@ class PayrollDownloadService
     public function main($payroll, $filePath)
     {
         $scholars = $this->getScholars($payroll);
-        $rate = Rate::find($payroll->rate_id);
+        $rate_id = $payroll->rate_id;
+        $rate = $rate_id ? Rate::find($payroll->rate_id) : null;
         $municipality = Municipality::where('code', $payroll->municipality_code)->get();
 
         $payroll_period = $this->payrollPeriod($payroll);
@@ -105,7 +106,6 @@ class PayrollDownloadService
         $sub_total_array = [];
 
         foreach ($chunks as  $key => $chunk) {
-            $rate_final = number_format($rate->rate, 2);
             $styleArray = styleArray();
 
             $page_number = $key + 1;
@@ -119,6 +119,17 @@ class PayrollDownloadService
 
 
             foreach ($chunk as $key => $scholar) {
+
+                // $rate_final = $rate ? number_format($rate->rate, 2);
+                if ($rate) {
+                    $rate_final = number_format($rate->rate, 2);
+                } else {
+                    if ($payroll->fund == "Municipal") {
+                        $rate_final =  number_format(($scholar->incentive_mun ?? 0), 2);
+                    } else if ($payroll->fund == "Province") {
+                        $rate_final =  number_format(($scholar->incentive_prov ?? 0), 2);
+                    }
+                }
                 $subtotal += $scholar->total;
                 $row_start++;
                 $count++;

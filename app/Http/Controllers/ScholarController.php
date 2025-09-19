@@ -2,33 +2,26 @@
 
 namespace App\Http\Controllers;
 
-use File;
 use Exception;
 use Carbon\Carbon;
 use App\Models\Fund;
-use App\Models\User;
 use App\Models\Scholar;
-use App\Models\Barangay;
 use App\Models\District;
-use App\Models\Volunteer;
 use App\Models\AuditTrail;
 use App\Models\Eligibility;
 use Illuminate\Http\Request;
 use App\Models\Classification;
 use App\Models\ScholarTraining;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
 use App\Models\EducationalAttainment;
 use App\Services\Scholars\Download\ScholarDirectoryDownloadService;
 use App\Services\Scholars\Download\ScholarMasterlistService;
 use App\Services\Scholars\ScholarIndexService;
 use App\Services\Scholars\ScholarStoreService;
 use App\Services\Scholars\ScholarUpdateService;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use PhpOffice\PhpSpreadsheet\IOFactory;
-use PhpOffice\PhpSpreadsheet\Reader\Xlsx;
-use PhpOffice\PhpSpreadsheet\Style\Border;
-use PhpOffice\PhpSpreadsheet\Worksheet\PageSetup;
 
 class ScholarController extends Controller
 {
@@ -52,21 +45,18 @@ class ScholarController extends Controller
     }
     public function index(Request $request)
     {
+        $code = $request->code;
+        $assigned_town_code = Auth::user()->assigned_muni_code;
+
+        if ($code != null && $assigned_town_code != null && $assigned_town_code != $code) {
+            return response()->json(['message' => 'UNAUTHORIZED'], 422);
+        }
+
         $data = $this->indexService->main($request);
         return response()->json($data);
     }
 
-    public function create()
-    {
-        $districts = District::all();
-        $funds = Fund::all();
-        $educ_attain = EducationalAttainment::all();
-        $class = Classification::all();
-        $muni_scholars = DB::table('tbl_scholars')
-            ->select('tbl_scholars.id', DB::raw("CONCAT(tbl_scholars.first_name, ' ', COALESCE(tbl_scholars.middle_name, ''), ' ', tbl_scholars.last_name) as full_name"))
-            ->get();
-        return response()->json(compact('districts', 'funds', 'educ_attain', 'class', 'muni_scholars'));
-    }
+    public function create() {}
 
     /**
      * Store a newly created resource in storage.
@@ -187,18 +177,6 @@ class ScholarController extends Controller
         } catch (Exception $e) {
             DB::rollBack();
             return response()->json(['error' => $e->getMessage()], 500);
-        }
-    }
-
-    public function destroy(Volunteer $volunteer)
-    {
-
-        if (Auth::user()->classification == "Office Administrator") {
-            $volunteer->delete();
-            AuditTrail::createTrail("Deleted User Account.", $volunteer);
-            return back()->withSuccess("Volunteer Worker Successfully Deleted.");
-        } else {
-            return redirect('/forbidden');
         }
     }
 

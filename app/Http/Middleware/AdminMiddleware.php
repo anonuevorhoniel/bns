@@ -15,7 +15,7 @@ class AdminMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-         if($request->user()->assigned_muni_code == null) {
+         if($request->user()->assigned_muni_code == null && $request->user()->classification == 'System Administrator') {
             return $next($request);
         }
         abort(401);

@@ -20,6 +20,7 @@ class CreatePayrollsTable extends Migration
             $table->string('year_from');
             $table->string('year_to');
             // $table->bigInteger('quarter_id');
+            $table->integer('status')->default(0);
             $table->string('month_from');
             $table->string('month_to');
             $table->string('grand_total')->nullable();

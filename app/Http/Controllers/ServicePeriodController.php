@@ -3,11 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\ServicePeriod;
-use App\Models\Municipality;
-use App\Models\Assignment;
 use App\Models\AuditTrail;
 use App\Models\Scholar;
-use App\Models\Volunteer;
 use App\Services\ServicePeriods\ServicePeriodIndexService;
 use App\Services\ServicePeriods\ServicePeriodStoreService;
 use Carbon\Carbon;

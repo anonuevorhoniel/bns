@@ -56,7 +56,7 @@ export default function ViewScholar() {
                         <Separator />
                         <div className="grid grid-cols-2">
                             <Label className="opacity-70">Civil Status: </Label>
-                            <Label>{scholar.civil_Status}</Label>
+                            <Label>{scholar.civil_status}</Label>
                         </div>
                         <Separator />
                         <div className="grid grid-cols-2">
@@ -113,14 +113,14 @@ export default function ViewScholar() {
                             <Separator />
                             <div className="grid grid-cols-2">
                                 <Label className="opacity-70">
-                                    Incentive:{" "}
+                                    Incentive Municipal:{" "}
                                 </Label>
                                 <Label>{scholar.incentive_mun}</Label>
                             </div>
                             <Separator />
                             <div className="grid grid-cols-2">
                                 <Label className="opacity-70">
-                                    Incentive:{" "}
+                                    Incentive Barangay:{" "}
                                 </Label>
                                 <Label>{scholar.incentive_brgy}</Label>
                             </div>
@@ -147,14 +147,14 @@ export default function ViewScholar() {
                             <Label className="opacity-70">
                                 Place of Assignment:{" "}
                             </Label>
-                            <Label></Label>
+                            <Label>{scholar.place_of_assignment}</Label>
                         </div>
                         <Separator />
                         <div className="grid grid-cols-2">
                             <Label className="opacity-70">
                                 Education Attainment:{" "}
                             </Label>
-                            <Label></Label>
+                            <Label>{scholar.educational_attainment}</Label>
                         </div>
                         <Separator />
                         <div className="grid grid-cols-2">
@@ -166,7 +166,9 @@ export default function ViewScholar() {
                         <Separator />
                         <div className="grid grid-cols-2">
                             <Label className="opacity-70">Replaced: </Label>
-                            <Label>{scholar?.replaced_scholar?.full_name || 'N/A'}</Label>
+                            <Label>
+                                {scholar?.replaced_scholar?.full_name || "N/A"}
+                            </Label>
                         </div>
                     </div>
                 </Card>
@@ -196,6 +198,34 @@ export default function ViewScholar() {
                         </div>
                     </div>
                 </Card> */}
+                <Card className="m-2 p-4">
+                    <Label className="font-bold">Beneficiary</Label>
+                    <div className="space-y-2">
+                        <div className="grid grid-cols-2">
+                            <Label className="opacity-70">Beneficiary: </Label>
+                            <Label>{scholar?.benificiary_name}</Label>
+                        </div>
+                        <Separator />
+                        <div className="grid grid-cols-2">
+                            <Label className="opacity-70">Relationship: </Label>
+                            <Label>{scholar?.relationship}</Label>
+                        </div>
+                        <Separator />
+                        <div className="grid grid-cols-2">
+                            <Label className="opacity-70">
+                                Classification:{" "}
+                            </Label>
+                            <Label>{scholar?.classification}</Label>
+                        </div>
+                        <Separator />
+                        <div className="grid grid-cols-2">
+                            <Label className="opacity-70">
+                                PhilHealth Number:{" "}
+                            </Label>
+                            <Label>{scholar?.philhealth_no}</Label>
+                        </div>
+                    </div>
+                </Card>
                 <div>
                     <Card className="p-4 m-2">
                         <div className="space-y-2">
@@ -247,7 +277,9 @@ export default function ViewScholar() {
                             )}
                         </div>
                     </Card>
+                </div>
 
+                <div>
                     <Card className="p-4 m-2">
                         <div className="space-y-2">
                             <Label className=" font-bold">Eligibilities</Label>

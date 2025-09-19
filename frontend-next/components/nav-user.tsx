@@ -33,6 +33,8 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "./ui/button";
 import ButtonLoad from "./custom/button-load";
+import { createAvatar } from "@dicebear/core";
+import { lorelei } from "@dicebear/collection";
 
 export function NavUser() {
     const { data } = useUser();
@@ -41,7 +43,7 @@ export function NavUser() {
     const { isMobile } = useSidebar();
     const logout = useMutation({
         mutationFn: async () => await ax.post("/logout"),
-        onSuccess: (data: any) => {
+        onSuccess: () => {
             router.push("/");
             toast.warning("Logged out");
         },
@@ -49,6 +51,12 @@ export function NavUser() {
             console.log(error);
         },
     });
+
+    const avatarBase = createAvatar(lorelei, {
+        seed: user?.id,
+    });
+    const avatar = avatarBase.toDataUri();
+
     return (
         <SidebarMenu>
             <SidebarMenuItem>
@@ -58,9 +66,9 @@ export function NavUser() {
                             size="lg"
                             className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                         >
-                            <Avatar className="h-8 w-8 rounded-lg">
+                            <Avatar className="h-8 w-8 rounded-lg border">
                                 <AvatarImage
-                                    src={user?.avatar}
+                                    src={avatar}
                                     alt={user?.name}
                                 />
                                 <AvatarFallback className="rounded-lg">
@@ -86,9 +94,9 @@ export function NavUser() {
                     >
                         <DropdownMenuLabel className="p-0 font-normal">
                             <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                                <Avatar className="h-8 w-8 rounded-lg">
+                                <Avatar className="h-8 w-8 rounded-lg border">
                                     <AvatarImage
-                                        src={user?.avatar}
+                                        src={avatar}
                                         alt={user?.name}
                                     />
                                     <AvatarFallback className="rounded-lg">

@@ -34,6 +34,10 @@ export default function Page() {
         refetchOnWindowFocus: false,
     });
 
+    if (isError) {
+        console.log(error);
+    }
+
     const columns = [
         {
             header: "Fund",

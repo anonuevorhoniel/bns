@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Auth;
+use Illuminate\Support\Facades\Auth;
 
 class AuditTrail extends Model
 {
@@ -19,5 +19,9 @@ class AuditTrail extends Model
         $trail->action = $action;
         $trail->description = $description;
         $trail->save();
+    }
+
+    public function user() {
+        return $this->belongsTo(User::class, 'user_id', 'id');
     }
 }

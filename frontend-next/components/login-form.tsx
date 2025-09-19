@@ -23,7 +23,7 @@ export function LoginForm() {
         mutationFn: async (data) => await ax.post("/users/authenticate", data),
         onSuccess: (data: any) => {
             const user = data?.data?.user;
-            if(user?.classification == "Encoder") {
+            if (user?.classification == "Encoder") {
                 router.push("/scholars");
             } else {
                 router.push("/dashboard");
@@ -31,7 +31,7 @@ export function LoginForm() {
             setUser({
                 email: user?.email,
                 name: user?.name,
-                classification: user?.classification
+                classification: user?.classification,
             });
         },
         onError: (error: any) => {
@@ -73,16 +73,23 @@ export function LoginForm() {
                         name="password"
                         label="Password"
                     />
-                 <ButtonLoad
+                    <ButtonLoad
                         isPending={userLogin.isPending}
                         label="Login"
                         className="w-full"
                     />
                 </div>
-                <div className="text-center text-sm">
-                    Don&apos;t have an account?{" "}
-                    <a href="#" className="underline underline-offset-4">
-                        Sign up
+                <div className="text-center text-sm flex gap-1">
+                    Don&apos;t have an account? Contact{" "}
+                    <a href="" className="underline">
+                        PNAO
+                    </a>
+                    or
+                    <a
+                        href="https://www.facebook.com/pgl.lagunamiso"
+                        className="underline underline-offset-4"
+                    >
+                        MISO
                     </a>
                 </div>
             </form>

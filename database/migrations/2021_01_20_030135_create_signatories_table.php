@@ -18,6 +18,7 @@ class CreateSignatoriesTable extends Migration
             $table->string('name');
             $table->string('description');
             $table->string('designation_id');
+            $table->string('municipality_code');    
             $table->string('status');
             $table->timestamps();
             $table->softDeletes();

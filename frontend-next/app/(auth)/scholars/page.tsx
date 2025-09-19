@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import SearchBar from "@/components/custom/searchbar";
 import { Download, Plus } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useDebounce } from "use-debounce";
 import DataTable from "@/components/custom/datatable";
 import Link from "next/link";
@@ -32,9 +32,18 @@ import { useDirectory } from "@/app/global/scholars/downloads/useDirectory";
 import Masterlist from "./(downloads)/(masterlist)/Masterlist";
 import { useMasterlist } from "@/app/global/scholars/downloads/useMasterlist";
 import { useUser } from "@/hooks/user/useUser";
-
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import useMunicipalities from "@/hooks/municipalities/useMunicipalities";
+const municipalities = await useMunicipalities();
 export default function Page() {
     const { open, setOpen } = useScholarView();
+    const [code, setCode] = useState("");
     const { setOpen: setDirectoryOpen } = useDirectory();
     const { setOpen: setMasterlistOpen } = useMasterlist();
     const [page, setPage] = useState<number>(1);
@@ -42,12 +51,15 @@ export default function Page() {
     const [searchDebounce] = useDebounce(search, 500);
     let searchValue = search == "" ? search : searchDebounce;
     const { data: userData } = useUser();
-
     const { data, isFetching } = useGetScholar({
         page: page,
         search: searchValue,
+        code: code,
+        changeVariable: [code],
     });
+    // const { data: municipalitiesData } = useMunicipalities();
 
+    // const municipalities = municipalitiesData?.data;
     const scholars = data?.data?.get_scholars;
     const user = userData?.data;
     const pagination = data?.data?.pagination;
@@ -93,7 +105,40 @@ export default function Page() {
                 )}
             </div>
             <Card className="px-6">
-                <SearchBar onInput={(e: any) => setSearch(e.target.value)} />
+                <div
+                    className={`grid grid-cols-1 ${
+                        user?.classification == "System Administrator" &&
+                        "lg:grid-cols-5"
+                    } gap-5`}
+                >
+                    <div className="w-full lg:col-span-4">
+                        <SearchBar
+                            onInput={(e: any) => setSearch(e.target.value)}
+                        />
+                    </div>
+                    {user?.classification == "System Administrator" && (
+                        <div>
+                            <Select
+                                value={code}
+                                onValueChange={(e) => setCode(e)}
+                            >
+                                <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Municipality / City" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {municipalities?.map((item: any) => (
+                                        <SelectItem
+                                            value={`${item.code}`}
+                                            key={item.id}
+                                        >
+                                            {item.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    )}
+                </div>
                 <DataTable
                     pagination={pagination}
                     page={page}

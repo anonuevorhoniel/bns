@@ -42,3 +42,11 @@ function styleArray()
         ),
     );
 }
+
+function user() {
+    $user = Auth::user();
+    $classification = $user->classification;
+    $municipality_code = $user->assigned_muni_code;
+
+    return [$user, $classification, $municipality_code];
+}

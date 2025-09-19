@@ -10,7 +10,7 @@ export default function useGetScholar({
 }: {
     page: number;
     search?: string;
-    code?: string;
+    code?: string | null;
     exceptID?: number;
     changeVariable?: any[];
 }) {

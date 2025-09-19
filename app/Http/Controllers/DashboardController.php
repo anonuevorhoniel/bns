@@ -24,69 +24,23 @@ class DashboardController extends Controller
     {
 
         $scholars_count = Scholar::count();
-        $total_muni_count =  $scholar_per_mun = DB::table('tbl_municipalities as m')
-            ->count();
         $activeScholars = Scholar::where('replaced', 0)->count();
         $inactiveScholars = Scholar::whereNot('replaced', 0)->count();
-
-        $base = DB::table('tbl_municipalities as m')
-            ->leftJoin('tbl_scholars as sc', 'sc.citymuni_id', 'm.code')
-            ->groupBy('m.id', 'm.name', 'm.code')
-            ->select(DB::raw('COUNT(sc.id) as total'), 'm.id as id', 'm.name as month', 'm.code',);
-
+        $base = Municipality::withCount(['scholars']);
         $pagination = pagination($request, $base);
-
         $scholar_per_mun = (clone $base)
-            ->limit($pagination['limit'])
-            ->offset($pagination['offset'])
+            ->take($pagination['limit'])
+            ->skip($pagination['offset'])
             ->get();
-
         $pagination = pageInfo($pagination, $scholar_per_mun->count());
-
-        $scholarsPerMunicipality = DB::table('tbl_municipalities as m')
-            ->leftJoin('tbl_scholars as sc', 'sc.citymuni_id', 'm.code')
-            ->groupBy('m.id', 'm.name', 'm.code')
-            ->select(DB::raw('COUNT(sc.id) as total'), 'm.id', 'm.name as month', 'm.code')
-            ->get();
-        $users = User::all();
-
+        $scholar_per_city_chart = (clone $base)->get();
         return response()->json(compact(
             'scholars_count',
-            'users',
             'scholar_per_mun',
-            'total_muni_count',
-            'scholarsPerMunicipality',
+            'scholar_per_city_chart',
             'pagination',
             'activeScholars',
             'inactiveScholars'
         ));
-    }
-
-    public function countTotalActiveVolunteers()
-    {
-
-        $municipalities = Assignment::getMunicipalities();
-        $total_volunteers = 0;
-
-        foreach ($municipalities as $municipality) {
-
-            $sp_specific = Volunteer::join('tbl_service_periods', 'tbl_volunteers.id', 'tbl_service_periods.scholar_id')
-                ->where("month_to", '>=', Quarter::currentMonthNum())
-                ->where("year_from", Quarter::currentYear())
-                ->where("year_to", Quarter::currentYear())
-                ->where("municipality_code", $municipality->code)
-                ->count();
-
-
-            $sp_present = Volunteer::join('tbl_service_periods', 'tbl_volunteers.id', 'tbl_service_periods.scholar_id')
-                ->where("status", "present")
-                ->where("municipality_code", $municipality->code)
-                ->count();
-
-            $municipal_volunteers = $sp_specific + $sp_present;
-            $total_volunteers += $municipal_volunteers;
-        }
-
-        return $total_volunteers;
     }
 }

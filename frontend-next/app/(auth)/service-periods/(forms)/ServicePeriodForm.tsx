@@ -12,33 +12,43 @@ import { Label } from "@/components/ui/label";
 import { SelectItem } from "@/components/ui/select";
 import useMunicipalities from "@/hooks/municipalities/useMunicipalities";
 import useGetScholar from "@/hooks/scholars/useGetScholar";
+import { useUser } from "@/hooks/user/useUser";
 import { formType } from "@/types/formType";
-import { useQuery } from "@tanstack/react-query";
 import { Search } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useDebounce } from "use-debounce";
 
+const municipalities = await useMunicipalities();
 export default function ServicePeriodForm({
     form,
     handleSubmit,
     isPending,
 }: formType) {
+    const { data: user, isSuccess: userSuccess } = useUser();
+    const classification = user?.data?.classification;
     const to = form.watch("to");
     const municipality_code = form.watch("municipality_code");
+    const from = form.watch("from");
     const { selectedIds, setSelectedIds, removeSeleted } =
         useCreateServicePeriod();
     const [page, setPage] = useState(1);
-    const { data: municipalities } = useMunicipalities();
     const [search, setSearch] = useState("");
     const [searchDebounce] = useDebounce(search, 500);
     const searchValue = search == "" ? search : searchDebounce;
+    const [selectAll, setSelectAll] = useState<boolean>(false);
 
     const { data: scholars, isFetching: scholarIsFetching } = useGetScholar({
         page: page,
-        changeVariable: [municipality_code],
+        changeVariable: [municipality_code, from],
         search: searchValue,
         code: municipality_code,
     });
+
+    useEffect(() => {
+        if (classification == "Encoder") {
+            form.setValue("municipality_code", user?.data?.assigned_muni_code);
+        }
+    }, [userSuccess]);
 
     const columns = [
         {
@@ -107,24 +117,26 @@ export default function ServicePeriodForm({
                         }
                     />
 
-                    <FormFieldComponent
-                        label="City / Municipality"
-                        type="select"
-                        form={form}
-                        name="municipality_code"
-                        selectItems={
-                            <>
-                                {municipalities?.data?.map((item: any) => (
-                                    <SelectItem
-                                        key={item.id}
-                                        value={`${item.code}`}
-                                    >
-                                        {item.name}
-                                    </SelectItem>
-                                ))}
-                            </>
-                        }
-                    />
+                    {classification == "System Administrator" && (
+                        <FormFieldComponent
+                            label="City / Municipality"
+                            type="select"
+                            form={form}
+                            name="municipality_code"
+                            selectItems={
+                                <>
+                                    {municipalities?.map((item: any) => (
+                                        <SelectItem
+                                            key={item.id}
+                                            value={`${item.code}`}
+                                        >
+                                            {item.name}
+                                        </SelectItem>
+                                    ))}
+                                </>
+                            }
+                        />
+                    )}
 
                     {to == "specific" && (
                         <FormFieldComponent
@@ -145,6 +157,28 @@ export default function ServicePeriodForm({
                                         setSearch(e.target.value)
                                     }
                                 />
+                                {/* <div className="grid grid-cols-4 gap-5">
+                                    <div className="w-full col-span-3">
+                                        <SearchBar
+                                            onInput={(e: any) =>
+                                                setSearch(e.target.value)
+                                            }
+                                        />
+                                    </div>
+                                    <div
+                                        className={`border rounded-md flex justify-center items-center gap-2 ${
+                                            selectAll && "border-primary"
+                                        }`}
+                                    >
+                                        <Checkbox
+                                            checked={selectAll}
+                                            onCheckedChange={(e: boolean) =>
+                                                setSelectAll(e)
+                                            }
+                                        />{" "}
+                                        Select All
+                                    </div>
+                                </div> */}
                                 <DataTable
                                     page={page}
                                     data={scholars?.data?.get_scholars}

@@ -4,10 +4,12 @@ import FormFieldComponent from "@/components/custom/form-field";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { SelectItem } from "@/components/ui/select";
+import useMunicipalities from "@/hooks/municipalities/useMunicipalities";
 import { useQuery } from "@tanstack/react-query";
 import { Download } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
 
+const municipalities = await useMunicipalities();
 export default function MasterlistDirectoryForm({
     form,
     handleSubmit,
@@ -17,14 +19,6 @@ export default function MasterlistDirectoryForm({
     handleSubmit: any;
     isPending: boolean;
 }) {
-    const { data } = useQuery({
-        queryKey: ["municipalities"],
-        queryFn: async () => await ax.get("/scholars/getAllMuni"),
-        refetchOnWindowFocus: false,
-    });
-
-    const municipalities = data?.data?.cities;
-
     return (
         <>
             <Form {...form}>

@@ -57,29 +57,33 @@ Route::middleware('auth:sanctum')->group(function () {
         });
 
         Route::prefix('/rates')->controller(RateController::class)->group(function () {
-            Route::get('/', 'index');
+            Route::get('/', 'index')->withoutMiddleware('admin');
+            Route::post('/all', 'all')->withoutMiddleware('admin');
+            Route::post('/store', 'store');
+            Route::post('/{rate}/destroy', 'destroy');
         });
 
         Route::prefix('/users')->controller(UserController::class)->group(function () {
             Route::post('/', 'index');
         });
 
-        Route::prefix('/service_periods')->controller(ServicePeriodController::class)->group(function () {
-            Route::post('/', 'index');
-            Route::post('/{scholar}/show', 'show');
-            Route::post('/store', 'store');
-            Route::get('/{service_period}/destroy', 'destroy');
-            Route::post('/single_store', 'single_store');
-        });
 
-        Route::prefix('/signatories')->controller(SignatoryController::class)->group(function () {
-            Route::post('/store', 'store');
-            Route::post('/', 'index');
-            Route::get('/{signatory}/edit', 'edit');
-            Route::post('/{signatory}/update', 'update');
-        });
 
         Route::post('/audit_trails', [AuditTrailController::class, 'index']);
+    });
+    
+    Route::prefix('/signatories')->controller(SignatoryController::class)->group(function () {
+        Route::post('/store', 'store');
+        Route::post('/', 'index');
+        Route::get('/{signatory}/edit', 'edit');
+        Route::post('/{signatory}/update', 'update');
+    });
+    Route::prefix('/service_periods')->controller(ServicePeriodController::class)->group(function () {
+        Route::post('/', 'index');
+        Route::post('/{scholar}/show', 'show');
+        Route::post('/store', 'store');
+        Route::get('/{service_period}/destroy', 'destroy');
+        Route::post('/single_store', 'single_store');
     });
 
     Route::post('/logout', [AuthController::class, 'destroy']);
@@ -87,8 +91,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/store', 'store');
         Route::post('/', 'index');
         Route::post('/show/{payroll}', 'show');
+        Route::post('/{payroll}/approve', 'approve')->middleware('admin');
         Route::get('/{payroll}/download', 'download');
         Route::get('/masterlists/{payroll}/download', 'masterlist_download');
+        Route::post('/summary', 'summary');
     });
     Route::controller(APIController::class)->group(function () {
         Route::post('/getMunicipalities', 'getMunicipalities');
@@ -96,5 +102,4 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::post('/getScholars', [APIController::class, 'get_scholars']);
-    Route::post('/gmv/{municipality}',  [APIController::class, 'getMunicipalityVolunteers']);
 });

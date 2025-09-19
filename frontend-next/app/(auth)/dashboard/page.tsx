@@ -19,32 +19,29 @@ import DashboardSkeleton from "@/components/custom/dashboard-skeleton";
 
 export default function Page() {
     const [page, setPage] = useState(1);
-    const { data, isFetching, isLoading, isError, error } = useQuery({
-        queryKey: ["dashboard", page],
-        queryFn: async () => ax.post("/dashboard", { page: page }),
-        refetchOnWindowFocus: false,
-        placeholderData: keepPreviousData,
-    });
-
-    if (isError) {
-        console.log(error);
-    }
-
-    const scholarsPerMunicipality = data?.data?.scholarsPerMunicipality;
+    const { data, isFetching, isLoading} = useQuery(
+        {
+            queryKey: ["dashboard", page],
+            queryFn: async () => ax.post("/dashboard", { page: page }),
+            refetchOnWindowFocus: false,
+            placeholderData: keepPreviousData,
+        }
+    );
+    const scholarPerCityChart = data?.data?.scholar_per_city_chart;
     const pagination = data?.data?.pagination;
 
-    const chartData = scholarsPerMunicipality?.map((data: any) => ({
-        month: data.month,
-        total: data.total,
+    const chartData = scholarPerCityChart?.map((data: any) => ({
+        city: data.name,
+        total: data.scholars_count,
     }));
 
     const columns = [
         {
-            accessKey: "month",
-            header: "Month",
+            accessKey: "name",
+            header: "City / Municipality",
         },
         {
-            accessKey: "total",
+            accessKey: "scholars_count",
             header: "Total",
         },
     ];
@@ -89,7 +86,9 @@ export default function Page() {
                             <ShieldX size={25} />
                         </div>
                         <div>
-                            <Label className="text-xl font-bold">{data?.data?.inactiveScholars}</Label>
+                            <Label className="text-xl font-bold">
+                                {data?.data?.inactiveScholars}
+                            </Label>
                             <Label className="text-xs opacity-60 font-normal">
                                 Showing overall inactive scholars
                             </Label>
@@ -133,7 +132,7 @@ export default function Page() {
                         >
                             <CartesianGrid vertical={false} />
                             <XAxis
-                                dataKey="month"
+                                dataKey="city"
                                 tickLine={false}
                                 axisLine={false}
                                 tickMargin={8}

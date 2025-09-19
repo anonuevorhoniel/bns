@@ -9,11 +9,12 @@ import { UseFormReturn } from "react-hook-form";
 import { readonly } from "zod";
 import { useUser } from "@/hooks/user/useUser";
 import { useEffect, useState } from "react";
+import LoadingScreen from "@/components/custom/loading-screen";
 
 export default function LocationForm({ form }: { form: UseFormReturn }) {
     const district = form.watch("district_id");
     const municipality = form.watch("citymuni_id");
-    const { data: user, isSuccess: userSuccess } = useUser();
+    const { data: user, isSuccess: userSuccess, isLoading:userLoading } = useUser();
     const districtId = user?.data?.assigned_district_id;
     const municipalityCode = user?.data?.assigned_muni_code;
     const classification = user?.data?.classification;
@@ -28,9 +29,6 @@ export default function LocationForm({ form }: { form: UseFormReturn }) {
 
     const {
         data: municipalities,
-        isSuccess,
-        isError,
-        error,
     } = useQuery({
         queryKey: ["municipalities", district],
         queryFn: async () =>
@@ -45,9 +43,10 @@ export default function LocationForm({ form }: { form: UseFormReturn }) {
         enabled: !!municipality,
     });
 
-    if (isError) {
-        console.log(error);
+    if(userLoading) {
+        <LoadingScreen />
     }
+
     return (
         <>
             <Label className="font-bold text-xl mb-5">Location</Label>
@@ -59,7 +58,7 @@ export default function LocationForm({ form }: { form: UseFormReturn }) {
                         : "lg:grid-cols-4"
                 } gap-5`}
             >
-                {classification !== "Encoder" && (
+                {classification == "System Administrator" && (
                     <>
                         <FormFieldComponent
                             name="district_id"

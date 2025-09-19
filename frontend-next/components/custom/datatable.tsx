@@ -131,8 +131,8 @@ export default function DataTable({
                                                             No Data Found
                                                         </Label>
                                                         <Label className="text-xs">
-                                                            There are no items
-                                                            to display at the
+                                                            There are no item to
+                                                            display at the
                                                             moment
                                                         </Label>
                                                     </div>

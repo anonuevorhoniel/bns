@@ -11,12 +11,15 @@ import ax from "@/app/axios";
 import DataTable from "@/components/custom/datatable";
 import { useEffect, useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus } from "lucide-react";
+import { Plus, Shield } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import ButtonLoad from "@/components/custom/button-load";
 import { Spinner } from "@/components/ui/shadcn-io/spinner";
 import { useUser } from "@/hooks/user/useUser";
+import { Button } from "@/components/ui/button";
+import Rates from "../(rates)/(view)/Rates";
+import { useRates } from "@/app/global/payrolls/rates/useRates";
 
 export default function page() {
     const {
@@ -24,46 +27,43 @@ export default function page() {
         isLoading: userLoading,
         isSuccess: userSuccess,
     } = useUser();
-    const user = userData?.data;
-    const [renderKey, setRenderKey] = useState(1);
-
-    const scholarData = () => {
-        if (isLoading || userLoading) {
-            return (
-                <div className="border border-dashed h-20 rounded-lg flex items-center justify-center">
-                    <Label>
-                        <Spinner /> Loading.. Please wait
-                    </Label>
-                </div>
-            );
-        }
-        return data?.data ? (
-            <DataTable
-                data={data?.data?.results}
-                columns={columns}
-                page={page}
-                setPage={setPage}
-                isFetching={isFetching}
-                pagination={data?.data?.pagination}
-            />
-        ) : (
-            <div className="border border-dashed h-20 rounded-lg flex items-center justify-center">
-                <Label>
-                    Please enter the filter above to generate scholars
-                </Label>
-            </div>
-        );
-    };
-
-    const handleSubmit = (data: any) => {
-        console.log(data);
-    };
-
     const router = useRouter();
     const [page, setPage] = useState(1);
+    const { open: openRates, setOpen: setOpenRates } = useRates();
     const [selectAll, setSelectAll] = useState(false);
     const [selected, setSelected] = useState<any>([]);
     const form = useForm<any>({ resolver: zodResolver(payrollResolver) });
+    const fund = form.watch("fund");
+    const from = form.watch("from");
+    const to = form.watch("to");
+    const municipality_code = form.watch("municipality_code");
+    const rate = form.watch("rate");
+    const user = userData?.data;
+    const [renderKey, setRenderKey] = useState(1);
+
+    const { data, isFetching, isLoading } = useQuery({
+        queryKey: ["scholars", fund, from, to, municipality_code, page],
+        queryFn: async () => await ax.post("/getScholars", formData),
+        enabled: () => {
+            if (user?.classification == "System Administrator") {
+                if (fund == "NNC") {
+                    return (
+                        !!from &&
+                        !!to &&
+                        !!rate &&
+                        !!fund &&
+                        !!municipality_code
+                    );
+                } else {
+                    return !!from && !!to && !!fund && !!municipality_code;
+                }
+            } else {
+                return !!from && !!to;
+            }
+        },
+        refetchOnWindowFocus: false,
+        placeholderData: keepPreviousData,
+    });
 
     useEffect(() => {
         if (userSuccess && !userLoading && user?.classification == "Encoder") {
@@ -79,10 +79,6 @@ export default function page() {
         user?.assigned_muni_code,
     ]);
 
-    const fund = form.watch("fund");
-    const from = form.watch("from");
-    const to = form.watch("to");
-    const municipality_code = form.watch("municipality_code");
     const storePayroll = useMutation({
         mutationFn: async () =>
             await ax.post("/payrolls/store", {
@@ -91,7 +87,7 @@ export default function page() {
                 from: from,
                 to: to,
                 municipality_code: municipality_code,
-                rate: 1,
+                rate: rate,
             }),
         onSuccess: (data: any) => {
             router.push("/payrolls");
@@ -101,6 +97,7 @@ export default function page() {
             toast.error("Error", {
                 description: error?.response?.data?.message,
             });
+            console.log(error);
         },
     });
 
@@ -112,22 +109,12 @@ export default function page() {
         municipality_code: municipality_code,
     };
 
-    const { data, isFetching, isLoading, isError, error } = useQuery({
-        queryKey: ["scholars", fund, from, to, municipality_code, page],
-        queryFn: async () => await ax.post("/getScholars", formData),
-        enabled: !!fund && !!from && !!to && !!municipality_code,
-        refetchOnWindowFocus: false,
-        placeholderData: keepPreviousData,
-    });
     const scholarIds = data?.data?.scholar_ids;
-
-    if (isError) {
-        console.log(error);
-    }
 
     const removeId = (id: any) => {
         setSelected((item: any) => item.filter((prev: any) => prev != id));
     };
+
     useEffect(() => {
         if (scholarIds?.length > 0 && selectAll) {
             setSelected([...scholarIds]);
@@ -168,14 +155,49 @@ export default function page() {
         },
     ];
 
+    const scholarData = () => {
+        if (isLoading || userLoading) {
+            return (
+                <div className="border border-dashed h-20 rounded-lg flex items-center justify-center">
+                    <Label>
+                        <Spinner /> Loading.. Please wait
+                    </Label>
+                </div>
+            );
+        }
+        return data?.data ? (
+            <DataTable
+                data={data?.data?.results}
+                columns={columns}
+                page={page}
+                setPage={setPage}
+                isFetching={isFetching}
+                pagination={data?.data?.pagination}
+            />
+        ) : (
+            <div className="border border-dashed h-20 rounded-lg flex items-center justify-center">
+                <Label>
+                    Please enter the filter above to generate scholars
+                </Label>
+            </div>
+        );
+    };
+
     return (
         <>
             <title>BNS | Create Payroll</title>
+            {user?.classification == "System Administrator" && (
+                <div className="flex justify-end">
+                    <Button onClick={() => setOpenRates(true)}>
+                        Manage Rates
+                    </Button>
+                </div>
+            )}
+
             <Card className="px-6">
                 <PayrollForm
                     form={form}
                     classification={user?.classification}
-                    handleSubmit={handleSubmit}
                     key={renderKey}
                 />
             </Card>
@@ -204,19 +226,17 @@ export default function page() {
                     />
 
                     <div
-                        className={`flex gap-2 border p-2 rounded-md ${
+                        className={`border rounded-md flex justify-center p-2 items-center gap-2 select-none ${
                             selectAll && "border-primary"
                         }`}
-                        onClick={() => {
-                            setSelectAll((prev) => !prev);
-                        }}
+                        onClick={() => setSelectAll((prev: boolean) => !prev)}
                     >
-                        <Checkbox checked={selectAll} />{" "}
-                        <Label className="cursor-pointer">Select All</Label>
+                        <Checkbox checked={selectAll} /> Select All
                     </div>
                 </div>
                 {scholarData()}
             </Card>
+            {user?.classification == "System Administrator" && <Rates />}
         </>
     );
 }

@@ -19,28 +19,18 @@ class AuditTrailController extends Controller
     public function index(Request $request)
     {
         $search = $request->search;
-        $data = DB::table('tbl_audit_trails as t')
-            ->select(
-                'u.name',
-                't.id',
-                't.created_at',
-                't.action',
-                't.description'
-
-            )
-            ->leftJoin('tbl_users as u', 't.user_id', 'u.id')
-            ->when($search, function ($q) use ($search) {
-                $q->where(function ($r) use ($search) {
-                    $r->where('u.name', 'like', "$search%")
-                        ->orWhere('t.action', 'like', "$search%");
+        $data = AuditTrail::with(['user'])
+            ->when($search, function ($query) use ($search) {
+                $query->whereHas('user', function ($query) use ($search) {
+                    $query->where('name', 'like', "%$search%");
                 });
             });
 
         $pagination = pagination($request, $data);
 
         $trails = (clone $data)
-            ->limit($pagination['limit'])->offset($pagination['offset'])
-            ->orderBy('t.created_at', 'desc')->get();
+            ->take($pagination['limit'])->skip($pagination['offset'])
+            ->orderBy('created_at', 'desc')->get();
         $pagination = pageInfo($pagination, $trails->count());
         return response()->json(compact('trails', 'pagination'));
     }

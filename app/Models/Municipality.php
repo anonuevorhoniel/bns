@@ -11,74 +11,39 @@ use App\Models\Quarter;
 
 class Municipality extends Model
 {
-    CONST DISTRICTS = array(
-    	'0' => array(
-    		'district_no' => "1",
-    		'description' => "District 1"
-    	),
-    	'1' => array(
-    		'district_no' => "2",
-    		'description' => "District 2"
-    	),
-    	'2' => array(
-    		'district_no' => "3",
-    		'description' => "District 3"
-    	),
-    	'3' => array(
-    		'district_no' => "4",
-    		'description' => "District 4"
-    	),
+    const DISTRICTS = array(
+        '0' => array(
+            'district_no' => "1",
+            'description' => "District 1"
+        ),
+        '1' => array(
+            'district_no' => "2",
+            'description' => "District 2"
+        ),
+        '2' => array(
+            'district_no' => "3",
+            'description' => "District 3"
+        ),
+        '3' => array(
+            'district_no' => "4",
+            'description' => "District 4"
+        ),
     );
-    
+
     protected $table = 'tbl_municipalities';
 
-    public static function assignments(){
-        
-        // if(Auth::user()->classification == "Field Officer"){
-
-        //     $municipalities = DB::table('tbl_assignments as a')
-        //     ->leftJoin('tbl_municipalities as m', 'a.municipality_code', 'm.code')
-        //     ->where('user_id', Auth::user()->id)
-        //     ->toBase()
-        //     ->get();
-            
-        // }elseif(Auth::user()->classification == "Municipal Representative"){
-        //     $rep = MunicipalRepresentative::where('user_id', '=', Auth::user()->id)->first();
-        //     $volunteer_rep = Volunteer::find($rep->volunteer_id); 
-        //     $municipalities = Municipality::where('code', $volunteer_rep->municipality_code)->get();
-        // }else{
-        //     $municipalities = Municipality::all();
-        // }
-            $municipalities = Municipality::all();
-
-
+    public static function assignments()
+    {
+        $municipalities = Municipality::all();
         return $municipalities;
-    
     }
 
-    public static function countVolunteers(){
-
-        $breakdowns = array();
-        $municipalities = Municipality::assignments();
-
-        $count = 1;
-        foreach ($municipalities as $municipality) {
-
-            $volunteers = Volunteer::where('municipality_code', $municipality->code)->toBase()->get();
-
-            $breakdowns[] = array(
-                "number" => $count++,
-                "code" => $municipality->code,
-                "municipality" => $municipality->name,
-                "count" => $volunteers->count()
-            );
-        }
-
-        return $breakdowns;
+    public function scholars() {
+        return $this->hasMany(Scholar::class, 'citymuni_id', 'code');
     }
 
-
-    public static function code($key){
+    public static function code($key)
+    {
         $key = (int)$key;
         $codes = array(
             "43401" => "ALA",
@@ -113,5 +78,4 @@ class Municipality extends Model
 
         return $codes[$key];
     }
-
 }

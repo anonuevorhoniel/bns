@@ -21,7 +21,16 @@ class RateController extends Controller
     public function index()
     {
         $rates = Rate::all();
-        return response()->json(compact( 'rates'));
+        return response()->json(compact('rates'));
+    }
+
+    public function all(Request $request)
+    {
+        $base = Rate::query();
+        $pagination = pagination($request, $base);
+        $rates = (clone $base)->skip($pagination['offset'])->take($pagination['limit'])->get();
+        $pagination = pageInfo($pagination, $rates->count());
+        return response()->json(compact('rates', 'pagination'));
     }
 
     /**
@@ -45,39 +54,28 @@ class RateController extends Controller
 
         $this->validate($request, [
             'rate' => 'required',
-            'month' => 'required'
         ]);
 
-
-        $date = explode('-', $request->month); # [0] year [1] month
-
-        $is_existing = Rate::where('year', $date[0])
-            ->where('month', $date[1])
-            ->where('rate', $request->rate)
-            ->get();
-
+        $is_existing = Rate::where('rate', $request->rate);
 
         if ($is_existing->count() == 0) {
-
             DB::beginTransaction();
             try {
 
                 $rate = new Rate;
-                $rate->year = $date[0];
                 $rate->rate = $request->rate;
-                $rate->month = $date[1];
                 $rate->save();
 
                 AuditTrail::createTrail("Create Rate", $rate);
 
                 DB::commit();
-                return back()->withSuccess('A new rate has been added.');
+                return response()->json(['message' => "Rate Added"]);
             } catch (\Exception $e) {
                 DB::rollBack();
-                return back()->withErrors($e->getMessage());
+                return  response()->json($e->getMessage(), 422);
             }
         } else {
-            return back()->withErrors("Duplicate Entry!");
+           return response()->json(['message' => "Duplicate Entry"], 422);
         }
     }
 
@@ -142,17 +140,13 @@ class RateController extends Controller
      * @param  \App\Rate  $rate
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy(Rate $rate)
     {
-        $rate = Rate::find($id);
-        if (!$rate) {
-            abort(404);
-        }
         try {
             $rate->delete();
-            return redirect()->back()->with('success', 'Deleted Successfully');
+            return response()->json(['success' => 'Deleted Successfully']);
         } catch (Exception $e) {
-            return redirect()->back()->withErrors($e->getMessage());
+            return response()->json($e->getMessage(), 422);
         }
     }
 }

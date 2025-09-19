@@ -26,16 +26,7 @@ class APIController extends Controller
     public function getMunicipalities(Request $request)
     {
         $district = $request->district;
-        if (Auth::user()->classification == "Field Officer") {
-            $data = DB::table('tbl_assignments as a')
-                ->leftJoin('tbl_municipalities as m', 'a.municipality_code', 'm.code')
-                ->where('district_no', $district)
-                ->where('user_id', Auth::user()->id)
-                ->get();
-        } else {
-            $data = Municipality::where('district_no', $district)->get();
-        }
-
+        $data = Municipality::where('district_no', $district)->get();
         return response()->json($data);
     }
 
@@ -46,75 +37,9 @@ class APIController extends Controller
         return $data;
     }
 
-    public function getMunicipalityVolunteers(Request $request, $municipality)
-    {
-        $page = $request->page;
-        $scholars = Scholar::where('citymuni_id', $municipality)
-            ->where('deleted_at', null);
-        $pagination = pagination($request, $scholars);
-
-        $data = (clone $scholars)
-            ->offset($pagination['offset'])
-            ->limit($pagination['limit'])
-            ->select('tbl_scholars.id as id', DB::raw('CONCAT(tbl_scholars.last_name, " ", tbl_scholars.first_name, " ", COALESCE(tbl_scholars.middle_name, ""), " ", COALESCE(tbl_scholars.name_extension, ""))  as full_name'))
-            ->get();
-
-        return response()->json(compact('data', 'pagination'));
-    }
-
-    public function getVolunteerInfo($scholar)
-    {
-        $data = Volunteer::where('id', $scholar)->get();
-        return $data;
-    }
-
     public function get_scholars(Request $request)
     {
         $data = $this->getScholarService->main($request);
         return response()->json($data);
-    }
-
-    public function getVolunteerRequirementsPerQuarter(Request $request)
-    {
-
-        $quarter = Quarter::find($request->quarter_id);
-        $has_requirement = Requirement::where('quarter_id', $request->quarter_id)
-            ->where('scholar_id', $request->scholar_id)
-            ->first();
-
-        $requirements = array();
-        $requirements['voters_id'] = ($has_requirement) ? $has_requirement->voters_id : 0;
-        $requirements['completed'] = ($has_requirement) ? $has_requirement->completed : 0;
-        $requirements['cedula'] = ($has_requirement) ? $has_requirement->cedula : 0;
-        $requirements['signature_bvw'] = ($has_requirement) ? $has_requirement->signature_bvw : 0;
-        $requirements['signature_mr'] = ($has_requirement) ? $has_requirement->signature_mr : 0;
-
-
-        $quarter_months = Quarter::quarterMonths($quarter->quarter);
-
-        foreach ($quarter_months as $key => $month) {
-
-            $check_accomplishment = Accomplishment::where('quarter_id', $request->quarter_id)
-                ->where('month', $month)
-                ->where('scholar_id', $request->scholar_id)
-                ->first();
-
-            $accomplishment_status = 0;
-            if ($check_accomplishment != null) {
-                if ($check_accomplishment->status == 1) {
-                    $accomplishment_status = 1;
-                } else {
-                    $accomplishment_status =  $check_accomplishment->status;
-                }
-            }
-
-            $accomplishments[$month] = $accomplishment_status;
-        }
-
-        $data = array(
-            "accomplishments" => $accomplishments,
-            "requirements" => $requirements,
-        );
-        return $data;
     }
 }

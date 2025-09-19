@@ -21,7 +21,7 @@ export default function ViewPayroll() {
         usePayrollView();
     const { setScholar } = useScholarView();
 
-    const { data, isFetching, isError, error, isSuccess } = useQuery({
+    const { data, isFetching} = useQuery({
         queryKey: ["viewPayroll", id, page],
         queryFn: async () =>
             await ax.post(`/payrolls/show/${id}`, { page: page }),
@@ -29,14 +29,6 @@ export default function ViewPayroll() {
         enabled: !!id,
         refetchOnWindowFocus: false,
     });
-
-    if (isSuccess) {
-        console.log(data?.data);
-    }
-
-    if (isError) {
-        console.log(error);
-    }
 
     const payroll = data?.data?.payroll;
     const signatories = payroll?.signatories;

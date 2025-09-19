@@ -15,9 +15,11 @@ use Illuminate\Http\Request;
 use App\Models\ServicePeriod;
 use App\Models\PayrollDetails;
 use App\Models\Scholar;
+use App\Models\Signatories;
 use App\Services\Payrolls\PayrollDownloadService;
 use App\Services\Payrolls\PayrollMasterlistService;
 use App\Services\Payrolls\PayrollShowService;
+use App\Services\Payrolls\PayrollStoreService;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -32,13 +34,19 @@ use PhpOffice\PhpSpreadsheet\Worksheet\PageSetup;
 class PayrollController extends Controller
 {
     protected $showService;
+    protected $storeService;
     protected $downloadService;
     protected $masterlistService;
-    public function __construct(PayrollShowService $showService, PayrollDownloadService $downloadService, PayrollMasterlistService $masterlistService)
-    {
+    public function __construct(
+        PayrollShowService $showService,
+        PayrollDownloadService $downloadService,
+        PayrollMasterlistService $masterlistService,
+        PayrollStoreService $storeService
+    ) {
         $this->showService = $showService;
         $this->downloadService = $downloadService;
         $this->masterlistService = $masterlistService;
+        $this->storeService = $storeService;
     }
     /**
      * Display a listing of the resource.
@@ -48,6 +56,7 @@ class PayrollController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
+        $status = $request->status;
         $municipality_code = $user->assigned_muni_code;
         $classification = $user->classification;
         $base = DB::table('tbl_payrolls as p')
@@ -61,12 +70,15 @@ class PayrollController extends Controller
                 'm.name',
                 'm.code',
                 'm.id as municity_id',
-                'p.fund'
+                'p.fund',
+                'r.rate as rate'
             )
             ->leftJoin('tbl_municipalities as m', 'p.municipality_code', 'm.code')
+            ->leftJoin('tbl_rates as r', 'r.id', 'p.rate_id')
             ->when($classification == "Encoder", function ($query) use ($municipality_code) {
                 $query->where(function ($query) use ($municipality_code) {
-                    $query->where('m.code', $municipality_code);
+                    $query->where('m.code', $municipality_code)
+                    ->where('p.fund', 'Municipal');
                 });
             });
         $pagination = pagination($request, $base);
@@ -93,27 +105,14 @@ class PayrollController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function create()
-    {
-
-        $page = [
-            'name'      =>  'Payroll',
-            'title'     =>  'Payroll Management',
-            'crumb'     =>  array('Payrolls' => '/payrolls', 'Create' => '')
-        ];
-
-        $rates = Rate::all();
-        if ($rates->count() > 0) {
-            $municipalities = Municipality::assignments();
-            return view('payrolls.create', compact('page', 'municipalities', "rates"));
-        } else {
-            return back()->withErrors('No Active Rate! Go to "Settings" > "Rates" and set active rate.');
-        }
-    }
+    public function create() {}
 
 
     public function download(Payroll $payroll)
     {
+        if ($payroll->status == 0) {
+            return response()->json(['message' => 'Payroll not approved'], 422);
+        }
         $filePath = public_path('/templates/Payroll.xlsx');
         $this->downloadService->main($payroll, $filePath);
         return response()->download($filePath)->deleteFileAfterSend(true);
@@ -127,113 +126,28 @@ class PayrollController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'rate' => 'required'
-        ]);
-
-        $scholars = $request->scholars;
         $user = Auth::user();
-        // Validate that volunteers are selected
+        $municipality_code = $request->municipality_code;
+            $scholars = $request->scholars;
+
         if (empty($scholars)) {
-            // If no volunteers are selected, redirect back with an error message
-            return back()->withErrors('Minimum of one Scholar selected is required');
+            return response()->json(['message' => 'Minimum of one Scholar selected is required'], 422);
         }
 
-        $month_from = date('m', strtotime($request->from));
-        $month_to = date('m', strtotime($request->to));
-        $year_from = date('Y', strtotime($request->from));
-        $year_to = date('Y', strtotime($request->to));
-        $rate = $request->rate;
-        $fund = $request->fund;
-        $municipality_code = $request->municipality_code;
+        if ($user->classification == "Encoder") {
+            if ($user->assigned_muni_code != $municipality_code) {
+                return response()->json(['message' => "DO NOT TAMPER WITH THE PAYLOAD!"], 422);
+            }
+        }
 
-        #Get latest rate.
-        #Get active Signatories.
         DB::beginTransaction();
         try {
-            $payroll_period_months = range($month_from, $month_to);
-            $rate_id = $rate;
-            $rate = Rate::find($rate_id);
-
-            $signatories = Signatory::where('status', 1)->get();
-            $count_months = 1;
-
-            foreach ($signatories as $key => $value) {
-                $signatory[] = $value->id;
-            }
-
-            if ($user->classification == "Encoder") {
-                if ($user->assigned_muni_code != $municipality_code) {
-                    return response()->json(['message' => "DO NOT TAMPER WITH THE PAYLOAD!"], 422);
-                }
-            }
-
-            $payroll = new Payroll;
-            $payroll->rate_id = $rate->id;
-            $payroll->month_from = $month_from;
-            $payroll->month_to = $month_to;
-            $payroll->year_from = $year_from;
-            $payroll->year_to = $year_to;
-            $payroll->signatories = json_encode($signatory);
-            $payroll->municipality_code = $municipality_code;
-            $payroll->fund = $fund;
-            $payroll->save();
-
-            AuditTrail::createTrail("Create Payroll", $payroll);
-            $try = array();
-            $total_request_volunteers = array_chunk($scholars, 100);
-
-            foreach ($total_request_volunteers[0] as $scholar_id) {
-                #Get Service Period Range
-                #vmf - volunteer_month_from
-                #vmt = volunteer_month_to
-
-                $vmf = ServicePeriod::where('scholar_id', $scholar_id)
-                    ->where('year_from', Quarter::currentYear())
-                    ->min('month_from');
-
-                $present = ServicePeriod::where('status', 'present')
-                    ->where('scholar_id', $scholar_id)->get();
-
-                if ($present->count() > 0) {
-                    $vmt = $request->month_to;
-                } else {
-                    $vmt = ServicePeriod::where('scholar_id', $scholar_id)
-                        ->where('year_to', Quarter::currentYear())
-                        ->max('month_to');
-                }
-                $parameters = array(
-                    "scholar_id" => $scholar_id,
-                    "from" => Carbon::now()->year . '-' . $month_from,
-                    "to" => Carbon::now()->year . '-' . $month_to,
-                );
-
-                $service_period = Volunteer::getServicePeriodPerRange($parameters);
-                $valid_periods = array_intersect($payroll_period_months, $service_period);
-                $count_months = count($valid_periods);
-                $payroll_detail = "false";
-                $try[] = $valid_periods;
-                if ($count_months > 0) {
-                    $payroll_detail = new PayrollDetails;
-                    $payroll_detail->scholar_id = $scholar_id;
-                    $payroll_detail->payroll_id = $payroll->id;
-                    $payroll_detail->month_from = intval($month_from);
-                    $payroll_detail->month_to = intval($month_to);
-                    $payroll_detail->total = $rate->rate * $count_months;
-                    $payroll_detail->save();
-                }
-
-                AuditTrail::createTrail("Create Payroll", $payroll_detail);
-            }
-            $grand_total = PayrollDetails::where('payroll_id', $payroll->id)->sum('total');
-            Payroll::where('id', $payroll->id)
-                ->update(['grand_total' => $grand_total]);
-
+            $this->storeService->main($request, $user);
             DB::commit();
-            return response()->json(['success' => 'A new payroll has been added.']);
-        } catch (\Exception $e) {
+            return response()->json(['message' => 'Payroll Created']);
+        } catch (Exception $e) {
             DB::rollBack();
-            throw new Exception($e->getMessage());
+            return response()->json($e->getMessage(), 422);
         }
     }
 
@@ -305,6 +219,9 @@ class PayrollController extends Controller
     }
     public function masterlist_download(Payroll $payroll, Request $request)
     {
+        if ($payroll->status == 0) {
+            return response()->json(['message' => 'Unauthorized'], 422);
+        }
         $filePath = public_path('templates/BNS_Masterlist_Payroll.xlsx');
         $this->masterlistService->main($payroll, $request, $filePath);
         return response()->download($filePath)->deleteFileAfterSend(true);
@@ -398,5 +315,21 @@ class PayrollController extends Controller
         $writer->save($filePath);
 
         return response()->download($filePath)->deleteFileAfterSend(true);
+    }
+
+    public function approve(Payroll $payroll)
+    {
+        $classification = Auth::user()->classification;
+        if ($classification !== "System Administrator") {
+            return response()->json(['message' => 'DO NOT TAMPER WITH THE SYSTEM'], 422);
+        }
+        try {
+            $payroll->update([
+                'status' => 1
+            ]);
+            return response()->json(['message' => 'Payroll Approved']);
+        } catch (Exception $e) {
+            return response()->json($e->getMessage(), 422);
+        }
     }
 }

@@ -12,6 +12,7 @@ use App\Models\Municipality;
 use App\Models\Scholar;
 use App\Models\ScholarTraining;
 use App\Models\ServicePeriod;
+use App\Models\Signatories;
 use Illuminate\Support\Facades\DB;
 
 
@@ -55,7 +56,7 @@ class PayrollShowService
 
     private function payrollQuery($payroll)
     {
-        $signatories = Signatory::whereIn('id', json_decode($payroll->signatories))->get();
+        $signatories = Signatories::whereIn('id', json_decode($payroll->signatories))->get();
         $month_from   = DateTime::createFromFormat('!m', $payroll->month_from)->format('F'); // March
         $month_to   = DateTime::createFromFormat('!m', $payroll->month_to)->format('F');
         $year = date('Y');

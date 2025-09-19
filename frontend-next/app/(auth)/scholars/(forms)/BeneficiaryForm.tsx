@@ -1,10 +1,16 @@
-import { FormField } from "@/components/ui/form";
+import { FormField, FormItem, FormLabel } from "@/components/ui/form";
 import FormFieldComponent from "@/components/custom/form-field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SelectItem } from "@/components/ui/select";
 import { useEffect } from "react";
 import { UseFormReturn } from "react-hook-form";
+import {
+    InputOTP,
+    InputOTPGroup,
+    InputOTPSeparator,
+    InputOTPSlot,
+} from "@/components/ui/input-otp";
 
 export default function BeneficiaryForm({ form }: { form: UseFormReturn }) {
     const withPhilHealth = form.watch("with_philhealth");
@@ -48,6 +54,26 @@ export default function BeneficiaryForm({ form }: { form: UseFormReturn }) {
                         <FormFieldComponent
                             name="classification"
                             label="Classification"
+                            type="select"
+                            selectItems={
+                                <>
+                                    <SelectItem value="Individually Paying">
+                                        Individually Paying
+                                    </SelectItem>
+                                    <SelectItem value="Funded by LGU">
+                                        Funded by LGU
+                                    </SelectItem>
+                                    <SelectItem value="4Ps Member">
+                                        4Ps Member
+                                    </SelectItem>
+                                    <SelectItem value="Senior Citizen">
+                                        Senior Citizen
+                                    </SelectItem>
+                                    <SelectItem value="Benificiary">
+                                        Benificiary
+                                    </SelectItem>
+                                </>
+                            }
                             form={form}
                         />
                         <FormFieldComponent

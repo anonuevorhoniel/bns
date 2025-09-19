@@ -4,7 +4,7 @@ import ax from "@/app/axios";
 import { scholarResolver } from "@/app/Schema/ScholarSchema";
 import { Card } from "@/components/ui/card";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -15,6 +15,8 @@ import { useScholarView } from "@/app/global/scholars/useScholarView";
 
 export default function Page() {
     const [delay, setDelay] = useState(true);
+    const [scholarKey, setScholarKey] = useState(1);
+    const qclient = useQueryClient();
     const params = useParams();
     const id = params.id;
     const { setReplacedScholar } = useScholarView();
@@ -32,18 +34,23 @@ export default function Page() {
         },
         onSuccess: (data: any) => {
             toast.success("Success", { description: data?.data.message });
-            console.log(data);
+            setScholarKey((prev: any) => prev + 1);
             window.scrollTo({ top: 0, behavior: "smooth" });
+            qclient.invalidateQueries({
+                queryKey: ["editScholar"],
+            });
         },
     });
     const handleSubmit = (data: any) => {
         updateScholar.mutate(data);
     };
 
-    const { data, isSuccess, isError, error, isFetching } = useQuery({
-        queryKey: ["editScholar", id],
-        queryFn: async () => ax.get(`/scholars/${id}/edit`),
-    });
+    const { data, isSuccess, isError, error,  isLoading } = useQuery(
+        {
+            queryKey: ["editScholar", id],
+            queryFn: async () => ax.get(`/scholars/${id}/edit`),
+        }
+    );
 
     useEffect(() => {
         if (isSuccess) {
@@ -81,7 +88,7 @@ export default function Page() {
         );
     }
 
-    if (isFetching || delay) {
+    if (isLoading || delay) {
         return <ScholarLoad />;
     }
 
@@ -93,6 +100,7 @@ export default function Page() {
                     form={form}
                     isPending={updateScholar.isPending}
                     handleSubmit={handleSubmit}
+                    key={scholarKey}
                 />
             </Card>
         </>

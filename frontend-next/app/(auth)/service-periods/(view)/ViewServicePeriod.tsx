@@ -44,7 +44,7 @@ export default function ViewServicePeriod() {
             title="View Service Period"
             open={open}
             setOpen={setOpen}
-            className="min-w-[700px]"
+            className="min-w-[700px] max-h-[91vh] overflow-auto"
         >
             <div className="flex gap-2">
                 <Avatar className="h-15 w-15">
